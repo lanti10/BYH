@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { ensureFriendlyReferralCode } from "@/lib/referral";
-import { ShareReferral } from "@/components/trainer/share-referral";
+import { InviteHub } from "@/components/trainer/invite-hub";
 import { AddClientForm } from "./add-client-form";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -27,12 +27,12 @@ export default async function NewClientPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-semibold text-slate-800">1. Invita un nuovo cliente</h2>
+          <h2 className="font-semibold text-slate-800">1. Invita con QR o link</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Condividi il link: chi crea l&apos;account viene collegato automaticamente a te.
+            Fai scansionare il QR o condividi il link: chi crea l&apos;account viene collegato automaticamente a te.
           </p>
         </div>
-        <ShareReferral code={code} />
+        <InviteHub code={code} defaultTab="client" />
       </section>
 
       <section className="space-y-4">

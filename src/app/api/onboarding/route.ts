@@ -25,18 +25,41 @@ export async function POST(req: Request) {
     create: { clerkId: userId, email, name, avatarUrl, role },
   });
 
+  const cookieStore = await cookies();
+
   if (role === "TRAINER") {
     const existing = await prisma.trainerProfile.findUnique({ where: { userId: user.id } });
     if (!existing) {
+      // MLM: se invitato da un altro trainer, collega la rete
+      const trainerRefCode = (cookieStore.get("byh_ref_trainer")?.value || "")
+        .toString()
+        .trim()
+        .toUpperCase();
+      let referredById: string | undefined;
+      let referralLevel = 0;
+      if (trainerRefCode) {
+        const inviter = await prisma.trainerProfile.findUnique({
+          where: { referralCode: trainerRefCode },
+        });
+        if (inviter) {
+          referredById = inviter.id;
+          referralLevel = inviter.referralLevel + 1;
+        }
+      }
       await prisma.trainerProfile.create({
-        data: { userId: user.id, referralCode: await generateUniqueReferralCode() },
+        data: {
+          userId: user.id,
+          referralCode: await generateUniqueReferralCode(),
+          referredById,
+          referralLevel,
+        },
       });
+      cookieStore.delete("byh_ref_trainer");
     }
     return NextResponse.json({ ok: true, redirect: "/trainer" });
   }
 
   // role === CLIENT — collega al trainer tramite codice referral (body o cookie d'invito)
-  const cookieStore = await cookies();
   const code = (referralCode || cookieStore.get("byh_ref")?.value || "")
     .toString()
     .trim()

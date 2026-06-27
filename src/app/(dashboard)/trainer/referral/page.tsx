@@ -1,7 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureFriendlyReferralCode } from "@/lib/referral";
-import { ShareReferral } from "@/components/trainer/share-referral";
+import { InviteHub } from "@/components/trainer/invite-hub";
 import { Users, UserPlus } from "lucide-react";
 
 export default async function ReferralPage() {
@@ -24,7 +24,7 @@ export default async function ReferralPage() {
         </p>
       </div>
 
-      <ShareReferral code={code} />
+      <InviteHub code={code} />
 
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-2xl border border-slate-100 bg-white p-5">
