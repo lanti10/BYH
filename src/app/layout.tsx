@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
@@ -12,6 +12,13 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "BYH — Build Your Health",
   description: "La piattaforma per personal trainer e i loro clienti.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // La tastiera virtuale ridimensiona il contenuto (l'input sale con la tastiera)
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
