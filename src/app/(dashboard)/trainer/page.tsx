@@ -1,9 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Activity, ShoppingBag, TrendingUp } from "lucide-react";
+import { Users, MessageCircle, ShoppingBag, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
@@ -40,112 +38,138 @@ export default async function TrainerDashboard() {
 
   const totalEarnings = earnings._sum.amount ?? 0;
 
+  const stats = [
+    { label: "Clienti attivi", value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
+    { label: "Messaggi non letti", value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
+    { label: "Da validare", value: pendingRecs.length, icon: ShoppingBag, tint: "bg-amber-500/10 text-amber-600" },
+    { label: "Guadagni totali", value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-[#D42B27]/10 text-[#D42B27]" },
+  ];
+
   return (
-    <div className="p-4 sm:p-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Ciao, {user.name.split(" ")[0]}
-        </h1>
-        <p className="text-slate-500 mt-1">Ecco il riepilogo di oggi</p>
+    <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
+      {/* Hero */}
+      <div className="rounded-3xl bg-gradient-to-br from-[#D42B27] to-[#a81f1c] p-6 sm:p-8 text-white shadow-lg">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-white/70 text-sm">Bentornato</p>
+            <h1 className="text-3xl font-black tracking-tight mt-0.5">{user.name.split(" ")[0]}</h1>
+            <p className="text-white/80 mt-2 text-sm">
+              {clients.length === 0
+                ? "Inizia invitando il tuo primo cliente."
+                : `Stai seguendo ${clients.length} client${clients.length === 1 ? "e" : "i"}.`}
+            </p>
+          </div>
+          <Link
+            href="/trainer/clients/new"
+            className="hidden sm:inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors hover:bg-white/25"
+          >
+            <UserPlus className="h-4 w-4" /> Aggiungi cliente
+          </Link>
+        </div>
+        <Link
+          href="/trainer/clients/new"
+          className="sm:hidden mt-4 flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur"
+        >
+          <UserPlus className="h-4 w-4" /> Aggiungi cliente
+        </Link>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Clienti attivi", value: clients.length, icon: Users },
-          { label: "Messaggi non letti", value: recentMessages.length, icon: Activity },
-          { label: "Raccomandazioni in attesa", value: pendingRecs.length, icon: ShoppingBag },
-          { label: "Guadagni totali", value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp },
-        ].map(({ label, value, icon: Icon }) => (
-          <Card key={label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">{label}</CardTitle>
-              <Icon className="h-4 w-4 text-slate-400" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{value}</p>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {stats.map(({ label, value, icon: Icon, tint }) => (
+          <div key={label} className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tint} mb-3`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{value}</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{label}</p>
+          </div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Client list */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">I tuoi clienti</CardTitle>
-            <Link href="/trainer/clients" className="text-sm text-blue-600 hover:underline">
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-900">I tuoi clienti</h2>
+            <Link href="/trainer/clients" className="text-sm font-medium text-[#D42B27] hover:underline">
               Vedi tutti
             </Link>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {clients.length === 0 && (
-              <p className="text-sm text-slate-400 text-center py-4">
-                Nessun cliente ancora.{" "}
-                <Link href="/trainer/clients" className="text-blue-600 hover:underline">
-                  Aggiungine uno
-                </Link>
-              </p>
-            )}
-            {clients.slice(0, 6).map((client) => {
-              const lastSession = client.sessions[0];
-              return (
+          </div>
+          <div className="space-y-1">
+            {clients.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-slate-400 mb-3">Nessun cliente ancora.</p>
                 <Link
-                  key={client.id}
-                  href={`/trainer/clients/${client.id}`}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  href="/trainer/clients/new"
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
                 >
-                  <Avatar>
-                    <AvatarImage src={client.user.avatarUrl ?? undefined} />
-                    <AvatarFallback>{client.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{client.user.name}</p>
-                    <p className="text-xs text-slate-400">
-                      {lastSession
-                        ? `Ultima sessione ${formatDistanceToNow(lastSession.completedAt, { locale: it, addSuffix: true })}`
-                        : "Nessuna sessione ancora"}
-                    </p>
-                  </div>
-                  <Badge variant="secondary" className="shrink-0">
-                    {client.goals[0] ?? "—"}
-                  </Badge>
-                </Link>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Pending AI recommendations */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Raccomandazioni da validare</CardTitle>
-            <Link href="/trainer/products" className="text-sm text-blue-600 hover:underline">
-              Vedi tutte
-            </Link>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {pendingRecs.length === 0 && (
-              <p className="text-sm text-slate-400 text-center py-4">
-                Nessuna raccomandazione in attesa.
-              </p>
-            )}
-            {pendingRecs.map((rec) => (
-              <div key={rec.id} className="flex items-center gap-3 p-2 rounded-lg bg-amber-50 border border-amber-100">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{rec.product.name}</p>
-                  <p className="text-xs text-slate-500">per {rec.client.user.name}</p>
-                </div>
-                <Link
-                  href={`/trainer/products/recommendations/${rec.id}`}
-                  className="text-xs text-amber-700 font-medium hover:underline shrink-0"
-                >
-                  Valida →
+                  <UserPlus className="h-4 w-4" /> Aggiungi il primo
                 </Link>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            ) : (
+              clients.slice(0, 6).map((client) => {
+                const lastSession = client.sessions[0];
+                return (
+                  <Link
+                    key={client.id}
+                    href={`/trainer/clients/${client.id}`}
+                    className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-colors"
+                  >
+                    <Avatar>
+                      <AvatarImage src={client.user.avatarUrl ?? undefined} />
+                      <AvatarFallback>{client.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{client.user.name}</p>
+                      <p className="text-xs text-slate-400">
+                        {lastSession
+                          ? `Attivo ${formatDistanceToNow(lastSession.completedAt, { locale: it, addSuffix: true })}`
+                          : "Nessuna sessione ancora"}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Pending recommendations */}
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-900">Raccomandazioni da validare</h2>
+            <Link href="/trainer/products" className="text-sm font-medium text-[#D42B27] hover:underline">
+              Vedi tutte
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {pendingRecs.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-8">
+                Nessuna raccomandazione in attesa.
+              </p>
+            ) : (
+              pendingRecs.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 border border-amber-100"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{rec.product.name}</p>
+                    <p className="text-xs text-slate-500">per {rec.client.user.name}</p>
+                  </div>
+                  <Link
+                    href={`/trainer/products/recommendations/${rec.id}`}
+                    className="text-xs font-semibold text-amber-700 hover:underline shrink-0"
+                  >
+                    Valida →
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
