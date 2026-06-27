@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -11,13 +11,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
 
+  // Leggi i dati reali da Clerk così l'utente è completo senza dipendere dal webhook
+  const clerkUser = await currentUser();
+  const email = clerkUser?.emailAddresses[0]?.emailAddress ?? "";
+  const name = `${clerkUser?.firstName ?? ""} ${clerkUser?.lastName ?? ""}`.trim();
+  const avatarUrl = clerkUser?.imageUrl ?? null;
+
   const user = await prisma.user.upsert({
     where: { clerkId: userId },
-    update: { role },
+    update: { role, email, name, avatarUrl },
     create: {
       clerkId: userId,
-      email: "",
-      name: "",
+      email,
+      name,
+      avatarUrl,
       role,
     },
   });
