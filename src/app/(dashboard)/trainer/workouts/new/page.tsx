@@ -1,8 +1,14 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { WorkoutBuilder } from "./workout-builder";
+import { WorkoutCreator, type ClientOption } from "./workout-creator";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+function ageFromBirth(birth?: Date | null): number | undefined {
+  if (!birth) return undefined;
+  const diff = Date.now() - new Date(birth).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+}
 
 export default async function NewWorkoutPage() {
   const user = await requireRole("TRAINER");
@@ -14,9 +20,13 @@ export default async function NewWorkoutPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const clients = clientProfiles.map((c) => ({
+  const clients: ClientOption[] = clientProfiles.map((c) => ({
     id: c.id,
     name: c.user.name || c.user.email,
+    age: ageFromBirth(c.birthDate),
+    weight: c.startWeight,
+    height: c.height,
+    goals: c.goals.join(", ") || null,
   }));
 
   return (
@@ -30,11 +40,11 @@ export default async function NewWorkoutPage() {
         </Link>
         <h1 className="text-2xl font-bold text-slate-900">Nuova scheda</h1>
         <p className="text-slate-500 mt-1">
-          Crea un programma di allenamento per il tuo cliente, giorno per giorno.
+          Imposta i parametri e lascia che l&apos;AI crei la scheda, oppure costruiscila a mano.
         </p>
       </div>
 
-      <WorkoutBuilder clients={clients} />
+      <WorkoutCreator clients={clients} />
     </div>
   );
 }

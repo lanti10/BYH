@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWorkoutPlan, type DayInput } from "../actions";
-import { Plus, Trash2, Dumbbell, GripVertical, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Dumbbell, GripVertical, AlertCircle, ArrowLeft } from "lucide-react";
 
 type ClientOption = { id: string; name: string };
 
@@ -22,12 +22,38 @@ function emptyDay(index: number): DayCard {
   return { id: newId(), name: "", dayOfWeek: index % 7, exercises: [emptyExercise()] };
 }
 
-export function WorkoutBuilder({ clients }: { clients: ClientOption[] }) {
+// Converte i giorni "semplici" (es. generati dall'AI) in DayCard con id
+function toDayCards(days?: DayInput[]): DayCard[] {
+  if (!days || days.length === 0) return [emptyDay(0)];
+  return days.map((d) => ({
+    id: newId(),
+    name: d.name,
+    dayOfWeek: d.dayOfWeek,
+    exercises:
+      d.exercises.length > 0
+        ? d.exercises.map((e) => ({ id: newId(), ...e }))
+        : [emptyExercise()],
+  }));
+}
+
+export function WorkoutBuilder({
+  clients,
+  initialClientId,
+  initialName = "",
+  initialDays,
+  onBack,
+}: {
+  clients: ClientOption[];
+  initialClientId?: string;
+  initialName?: string;
+  initialDays?: DayInput[];
+  onBack?: () => void;
+}) {
   const router = useRouter();
-  const [clientId, setClientId] = useState(clients[0]?.id ?? "");
-  const [name, setName] = useState("");
+  const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
+  const [name, setName] = useState(initialName);
   const [description, setDescription] = useState("");
-  const [days, setDays] = useState<DayCard[]>([emptyDay(0)]);
+  const [days, setDays] = useState<DayCard[]>(toDayCards(initialDays));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,7 +90,7 @@ export function WorkoutBuilder({ clients }: { clients: ClientOption[] }) {
 
   async function save() {
     setError(null);
-    if (!clientId) return setError("Seleziona un cliente.");
+    if (!clientId) return setError("Seleziona un cliente per salvare la scheda.");
     if (!name.trim()) return setError("Dai un nome alla scheda.");
 
     setSaving(true);
@@ -92,37 +118,42 @@ export function WorkoutBuilder({ clients }: { clients: ClientOption[] }) {
     }
   }
 
-  if (clients.length === 0) {
-    return (
-      <div className="rounded-3xl border border-slate-100 bg-white p-10 text-center">
-        <p className="text-slate-500">Devi avere almeno un cliente per creare una scheda.</p>
-        <a
-          href="/trainer/clients/new"
-          className="mt-4 inline-block rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
-        >
-          Aggiungi un cliente
-        </a>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 pb-28">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600"
+        >
+          <ArrowLeft className="h-4 w-4" /> Modifica impostazioni
+        </button>
+      )}
+
       {/* Dati scheda */}
       <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
         <div>
           <label className="text-sm font-semibold text-slate-700">Cliente</label>
-          <select
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
-          >
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          {clients.length === 0 ? (
+            <div className="mt-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-700">
+              Non hai ancora clienti. Puoi comunque preparare la scheda, ma per salvarla devi prima{" "}
+              <a href="/trainer/clients/new" className="font-semibold underline">
+                aggiungere un cliente
+              </a>
+              .
+            </div>
+          ) : (
+            <select
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+            >
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">Nome scheda</label>

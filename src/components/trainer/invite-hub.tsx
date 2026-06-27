@@ -62,14 +62,14 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
             tab === "trainer" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
           }`}
         >
-          <Dumbbell className="h-4 w-4" /> Trainer (MLM)
+          <Dumbbell className="h-4 w-4" /> Trainer
         </button>
       </div>
 
       <p className="text-sm text-slate-500 text-center mb-5">
         {tab === "client"
           ? "Chi scansiona questo QR e crea l'account diventa tuo cliente."
-          : "Chi scansiona questo QR e si registra come trainer entra nella tua rete MLM."}
+          : "Chi scansiona questo QR e si registra come trainer entra nella tua rete."}
       </p>
 
       {/* QR code */}
