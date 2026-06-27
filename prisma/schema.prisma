@@ -137,11 +137,12 @@ model WorkoutPlan {
   client      ClientProfile?  @relation(fields: [clientId], references: [id])
   isTemplate  Boolean @default(false)
 
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  startDate   DateTime @default(now())
-  endDate     DateTime?
+  name          String
+  description   String?
+  durationWeeks Int?
+  isActive      Boolean  @default(true)
+  startDate     DateTime @default(now())
+  endDate       DateTime?
 
   workouts WorkoutDay[]
 

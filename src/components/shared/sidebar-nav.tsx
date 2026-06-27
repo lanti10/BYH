@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
-  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X,
+  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog,
 } from "lucide-react";
 
 const navConfig = {
@@ -19,6 +20,7 @@ const navConfig = {
     { href: "/trainer/products", label: "Prodotti", icon: ShoppingBag },
     { href: "/trainer/earnings", label: "Guadagni", icon: TrendingUp },
     { href: "/trainer/referral", label: "Rete / Inviti", icon: Gift },
+    { href: "/trainer/profile", label: "Profilo", icon: UserCog },
   ],
   client: [
     { href: "/client", label: "Dashboard", icon: LayoutDashboard },
@@ -26,6 +28,7 @@ const navConfig = {
     { href: "/client/progress", label: "Progressi", icon: TrendingUp },
     { href: "/client/messages", label: "Messaggi", icon: MessageSquare },
     { href: "/client/shop", label: "Shop", icon: ShoppingBag },
+    { href: "/client/profile", label: "Profilo", icon: UserCog },
   ],
   admin: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -54,6 +57,46 @@ export function SidebarNav({
 }) {
   const pathname = usePathname();
   const items = navConfig[role];
+  const [unread, setUnread] = useState(0);
+  const prev = useRef(0);
+  const initialized = useRef(false);
+
+  // Richiedi il permesso notifiche una volta
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Polling messaggi non letti
+  useEffect(() => {
+    let activeFlag = true;
+    async function poll() {
+      try {
+        const res = await fetch("/api/messages/unread", { cache: "no-store" });
+        if (!res.ok || !activeFlag) return;
+        const { count } = await res.json();
+        if (initialized.current && count > prev.current) {
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("BYH · Nuovo messaggio", {
+              body: "Hai ricevuto un nuovo messaggio.",
+            });
+          }
+        }
+        prev.current = count;
+        initialized.current = true;
+        setUnread(count);
+      } catch {
+        /* offline */
+      }
+    }
+    poll();
+    const t = setInterval(poll, 8000);
+    return () => {
+      activeFlag = false;
+      clearInterval(t);
+    };
+  }, [pathname]);
 
   return (
     <aside
@@ -84,6 +127,7 @@ export function SidebarNav({
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const showBadge = item.href.endsWith("/messages") && unread > 0;
           return (
             <Link
               key={item.href}
@@ -97,7 +141,12 @@ export function SidebarNav({
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D42B27] px-1.5 text-xs font-bold text-white ring-2 ring-slate-950">
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              )}
             </Link>
           );
         })}

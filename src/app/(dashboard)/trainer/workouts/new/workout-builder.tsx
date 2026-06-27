@@ -45,6 +45,7 @@ export function WorkoutBuilder({
   initialClientId,
   initialName = "",
   initialDescription = "",
+  initialDurationWeeks,
   initialDays,
   onBack,
 }: {
@@ -53,6 +54,7 @@ export function WorkoutBuilder({
   initialClientId?: string;
   initialName?: string;
   initialDescription?: string;
+  initialDurationWeeks?: number | null;
   initialDays?: DayInput[];
   onBack?: () => void;
 }) {
@@ -61,6 +63,9 @@ export function WorkoutBuilder({
   const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
+  const [durationWeeks, setDurationWeeks] = useState(
+    initialDurationWeeks ? String(initialDurationWeeks) : ""
+  );
   const [days, setDays] = useState<DayCard[]>(toDayCards(initialDays));
   const [active, setActive] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -116,6 +121,7 @@ export function WorkoutBuilder({
       clientId: clientId || null,
       name,
       description,
+      durationWeeks: durationWeeks.trim() === "" ? null : Number(durationWeeks),
       days: days.map((d) => ({
         name: d.name,
         exercises: d.exercises.map((e) => ({
@@ -176,6 +182,18 @@ export function WorkoutBuilder({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Es. Massa - Fase 1"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-semibold text-slate-700">Durata (settimane)</label>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={durationWeeks}
+            onChange={(e) => setDurationWeeks(e.target.value)}
+            placeholder="Es. 6"
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
           />
         </div>

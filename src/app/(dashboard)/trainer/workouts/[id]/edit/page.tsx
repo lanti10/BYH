@@ -65,6 +65,7 @@ export default async function EditWorkoutPage({
         initialClientId={plan.clientId ?? ""}
         initialName={plan.name}
         initialDescription={plan.description ?? ""}
+        initialDurationWeeks={plan.durationWeeks}
         initialDays={initialDays}
       />
     </div>

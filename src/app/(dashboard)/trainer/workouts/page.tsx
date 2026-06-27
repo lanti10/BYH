@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Plus, Dumbbell, CalendarDays, ChevronRight, FileText } from "lucide-react";
+import { Plus, Dumbbell, CalendarDays, CalendarRange, ChevronRight, FileText } from "lucide-react";
 import Link from "next/link";
 
 export default async function WorkoutsPage() {
@@ -86,6 +86,11 @@ export default async function WorkoutsPage() {
                   <span className="flex items-center gap-1.5">
                     <Dumbbell className="h-4 w-4" /> {totalExercises} esercizi
                   </span>
+                  {plan.durationWeeks && (
+                    <span className="flex items-center gap-1.5">
+                      <CalendarRange className="h-4 w-4" /> {plan.durationWeeks} sett.
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-1.5">

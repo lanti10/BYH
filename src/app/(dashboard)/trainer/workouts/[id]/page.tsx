@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
 import { PlanActions } from "@/components/trainer/plan-actions";
 import { AssignTemplate } from "@/components/trainer/assign-template";
-import { ArrowLeft, FileText, User } from "lucide-react";
+import { ArrowLeft, FileText, User, CalendarRange } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -72,6 +72,12 @@ export default async function WorkoutDetailPage({
         ) : (
           <>
             <FileText className="h-4 w-4" /> Modello (nessun cliente)
+          </>
+        )}
+        {plan.durationWeeks && (
+          <>
+            <span className="text-slate-300">·</span>
+            <CalendarRange className="h-4 w-4" /> {plan.durationWeeks} settimane
           </>
         )}
       </p>

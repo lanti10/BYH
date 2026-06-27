@@ -54,6 +54,7 @@ export default async function ClientWorkoutPage() {
     <div className="p-4 sm:p-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-slate-900">{plan.name}</h1>
       <p className="text-slate-500 mt-1 mb-6 text-sm">
+        {plan.durationWeeks ? `Programma di ${plan.durationWeeks} settimane · ` : ""}
         Seleziona il giorno per vedere gli esercizi da svolgere.
       </p>
       {plan.description && (

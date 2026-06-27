@@ -21,6 +21,7 @@ export type CreatePlanInput = {
   clientId?: string | null; // null/vuoto = modello (nessun cliente)
   name: string;
   description?: string;
+  durationWeeks?: number | null;
   days: DayInput[];
 };
 
@@ -102,6 +103,7 @@ export async function createWorkoutPlan(input: CreatePlanInput): Promise<CreateP
       isActive: !isTemplate,
       name: input.name.trim(),
       description: input.description?.trim() || null,
+      durationWeeks: input.durationWeeks ?? null,
       workouts: { create: workoutsCreate },
     },
   });
@@ -160,6 +162,7 @@ export async function updateWorkoutPlan(
       isActive: !isTemplate,
       name: input.name.trim(),
       description: input.description?.trim() || null,
+      durationWeeks: input.durationWeeks ?? null,
       workouts: { create: workoutsCreate },
     },
   });
@@ -231,6 +234,7 @@ export async function assignTemplateToClient(
       isActive: true,
       name: source.name,
       description: source.description,
+      durationWeeks: source.durationWeeks,
       workouts: {
         create: source.workouts.map((w) => ({
           name: w.name,
