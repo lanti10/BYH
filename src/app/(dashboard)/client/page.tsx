@@ -62,7 +62,7 @@ export default async function ClientDashboard() {
 
   const activePlan = profile.workoutPlans[0];
   const todayIndex = (new Date().getDay() + 6) % 7; // 0=Mon
-  const todayWorkout = activePlan?.workouts.find((w) => w.dayOfWeek === todayIndex);
+  const todayWorkout = activePlan?.workouts.find((w: { dayOfWeek: number }) => w.dayOfWeek === todayIndex);
 
   const dayNames = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
