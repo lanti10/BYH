@@ -2,25 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createWorkoutPlan, type DayInput } from "../actions";
-import { Plus, Trash2, Dumbbell, GripVertical, AlertCircle, ArrowLeft } from "lucide-react";
+import { createWorkoutPlan, updateWorkoutPlan, type DayInput } from "../actions";
+import { Plus, Trash2, GripVertical, AlertCircle, ArrowLeft } from "lucide-react";
 
 type ClientOption = { id: string; name: string };
 
 let uid = 0;
 const newId = () => `tmp-${uid++}`;
 
-type ExRow = { id: string; name: string; sets: number; reps: string; weight: string; restSeconds: number };
+type ExRow = { id: string; name: string; sets: string; reps: string; weight: string; restSeconds: string };
 type DayCard = { id: string; name: string; exercises: ExRow[] };
 
 function emptyExercise(): ExRow {
-  return { id: newId(), name: "", sets: 3, reps: "10", weight: "", restSeconds: 60 };
+  return { id: newId(), name: "", sets: "3", reps: "10", weight: "", restSeconds: "60" };
 }
 function emptyDay(): DayCard {
   return { id: newId(), name: "", exercises: [emptyExercise()] };
 }
 
-// Converte i giorni "semplici" (es. generati dall'AI) in DayCard con id
 function toDayCards(days?: DayInput[]): DayCard[] {
   if (!days || days.length === 0) return [emptyDay()];
   return days.map((d) => ({
@@ -31,10 +30,10 @@ function toDayCards(days?: DayInput[]): DayCard[] {
         ? d.exercises.map((e) => ({
             id: newId(),
             name: e.name,
-            sets: e.sets,
+            sets: String(e.sets),
             reps: e.reps,
             weight: e.weight != null ? String(e.weight) : "",
-            restSeconds: e.restSeconds,
+            restSeconds: String(e.restSeconds),
           }))
         : [emptyExercise()],
   }));
@@ -42,24 +41,32 @@ function toDayCards(days?: DayInput[]): DayCard[] {
 
 export function WorkoutBuilder({
   clients,
+  planId,
   initialClientId,
   initialName = "",
+  initialDescription = "",
   initialDays,
   onBack,
 }: {
   clients: ClientOption[];
+  planId?: string;
   initialClientId?: string;
   initialName?: string;
+  initialDescription?: string;
   initialDays?: DayInput[];
   onBack?: () => void;
 }) {
   const router = useRouter();
+  const isEdit = !!planId;
   const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
   const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(initialDescription);
   const [days, setDays] = useState<DayCard[]>(toDayCards(initialDays));
+  const [active, setActive] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const activeDay = days[Math.min(active, days.length - 1)];
 
   function updateDay(id: string, patch: Partial<DayCard>) {
     setDays((ds) => ds.map((d) => (d.id === id ? { ...d, ...patch } : d)));
@@ -86,10 +93,18 @@ export function WorkoutBuilder({
     );
   }
   function addDay() {
-    setDays((ds) => [...ds, emptyDay()]);
+    setDays((ds) => {
+      const next = [...ds, emptyDay()];
+      setActive(next.length - 1);
+      return next;
+    });
   }
   function removeDay(id: string) {
-    setDays((ds) => ds.filter((d) => d.id !== id));
+    setDays((ds) => {
+      const next = ds.filter((d) => d.id !== id);
+      setActive((a) => Math.max(0, Math.min(a, next.length - 1)));
+      return next.length ? next : [emptyDay()];
+    });
   }
 
   async function save() {
@@ -105,17 +120,20 @@ export function WorkoutBuilder({
         name: d.name,
         exercises: d.exercises.map((e) => ({
           name: e.name,
-          sets: e.sets,
+          sets: e.sets.trim() === "" ? 0 : Number(e.sets),
           reps: e.reps,
           weight: e.weight.trim() === "" ? null : Number(e.weight),
-          restSeconds: e.restSeconds,
+          restSeconds: e.restSeconds.trim() === "" ? 0 : Number(e.restSeconds),
         })),
       })),
     };
-    const res = await createWorkoutPlan(payload);
+    const res = isEdit
+      ? await updateWorkoutPlan(planId!, payload)
+      : await createWorkoutPlan(payload);
     setSaving(false);
     if (res.ok) {
       router.push("/trainer/workouts");
+      router.refresh();
     } else {
       setError(res.error ?? "Errore nel salvataggio.");
     }
@@ -173,47 +191,70 @@ export function WorkoutBuilder({
         </div>
       </div>
 
-      {/* Giorni */}
-      {days.map((day, di) => (
-        <div key={day.id} className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+      {/* Tab giorni (orizzontali) */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+        {days.map((d, i) => (
+          <button
+            key={d.id}
+            onClick={() => setActive(i)}
+            className={`shrink-0 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors ${
+              i === active
+                ? "bg-[#D42B27] text-white shadow-sm"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            Giorno {i + 1}
+          </button>
+        ))}
+        <button
+          onClick={addDay}
+          className="shrink-0 flex items-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-500 hover:border-slate-400 hover:text-slate-700"
+        >
+          <Plus className="h-4 w-4" /> Giorno
+        </button>
+      </div>
+
+      {/* Editor del giorno attivo */}
+      {activeDay && (
+        <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex h-9 min-w-9 px-2 items-center justify-center rounded-xl bg-[#D42B27] text-sm font-black text-white shrink-0">
-              {di + 1}
+              {active + 1}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-400">Giorno {di + 1}</p>
+              <p className="text-xs font-semibold text-slate-400">Giorno {active + 1}</p>
               <input
-                value={day.name}
-                onChange={(e) => updateDay(day.id, { name: e.target.value })}
+                value={activeDay.name}
+                onChange={(e) => updateDay(activeDay.id, { name: e.target.value })}
                 placeholder="Nome (es. Petto e tricipiti)"
                 className="w-full bg-transparent text-base font-semibold text-slate-900 outline-none placeholder:text-slate-300"
               />
             </div>
             {days.length > 1 && (
               <button
-                onClick={() => removeDay(day.id)}
-                className="shrink-0 rounded-lg p-1.5 text-slate-300 hover:bg-red-50 hover:text-red-500"
+                onClick={() => removeDay(activeDay.id)}
+                className="shrink-0 flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 hover:bg-red-50 hover:text-red-500"
                 aria-label="Rimuovi giorno"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" /> Elimina giorno
               </button>
             )}
           </div>
 
           {/* Esercizi */}
           <div className="space-y-2">
-            {day.exercises.map((ex) => (
+            {activeDay.exercises.map((ex) => (
               <div key={ex.id} className="rounded-2xl bg-slate-50 p-3">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-4 w-4 text-slate-300 shrink-0" />
                   <input
                     value={ex.name}
-                    onChange={(e) => updateExercise(day.id, ex.id, { name: e.target.value })}
+                    onChange={(e) => updateExercise(activeDay.id, ex.id, { name: e.target.value })}
                     placeholder="Nome esercizio (es. Panca piana)"
                     className="flex-1 min-w-0 bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
                   />
                   <button
-                    onClick={() => removeExercise(day.id, ex.id)}
+                    onClick={() => removeExercise(activeDay.id, ex.id)}
                     className="shrink-0 rounded-lg p-1.5 text-slate-300 hover:text-red-500"
                     aria-label="Rimuovi esercizio"
                   >
@@ -225,9 +266,10 @@ export function WorkoutBuilder({
                     <span className="text-[11px] text-slate-400 mb-1">Serie</span>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={1}
                       value={ex.sets}
-                      onChange={(e) => updateExercise(day.id, ex.id, { sets: +e.target.value })}
+                      onChange={(e) => updateExercise(activeDay.id, ex.id, { sets: e.target.value })}
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#D42B27]"
                     />
                   </label>
@@ -235,7 +277,7 @@ export function WorkoutBuilder({
                     <span className="text-[11px] text-slate-400 mb-1">Ripetizioni</span>
                     <input
                       value={ex.reps}
-                      onChange={(e) => updateExercise(day.id, ex.id, { reps: e.target.value })}
+                      onChange={(e) => updateExercise(activeDay.id, ex.id, { reps: e.target.value })}
                       placeholder="8-12"
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#D42B27]"
                     />
@@ -244,10 +286,11 @@ export function WorkoutBuilder({
                     <span className="text-[11px] text-slate-400 mb-1">Peso (kg)</span>
                     <input
                       type="number"
+                      inputMode="decimal"
                       min={0}
                       step={0.5}
                       value={ex.weight}
-                      onChange={(e) => updateExercise(day.id, ex.id, { weight: e.target.value })}
+                      onChange={(e) => updateExercise(activeDay.id, ex.id, { weight: e.target.value })}
                       placeholder="—"
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#D42B27]"
                     />
@@ -256,10 +299,11 @@ export function WorkoutBuilder({
                     <span className="text-[11px] text-slate-400 mb-1">Rec. (s)</span>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={0}
                       step={15}
                       value={ex.restSeconds}
-                      onChange={(e) => updateExercise(day.id, ex.id, { restSeconds: +e.target.value })}
+                      onChange={(e) => updateExercise(activeDay.id, ex.id, { restSeconds: e.target.value })}
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#D42B27]"
                     />
                   </label>
@@ -269,20 +313,13 @@ export function WorkoutBuilder({
           </div>
 
           <button
-            onClick={() => addExercise(day.id)}
+            onClick={() => addExercise(activeDay.id)}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-2.5 text-sm font-medium text-slate-400 hover:border-[#D42B27]/40 hover:text-[#D42B27]"
           >
             <Plus className="h-4 w-4" /> Aggiungi esercizio
           </button>
         </div>
-      ))}
-
-      <button
-        onClick={addDay}
-        className="flex w-full items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 py-4 font-semibold text-slate-500 hover:border-slate-400 hover:text-slate-700"
-      >
-        <Plus className="h-5 w-5" /> Aggiungi giorno
-      </button>
+      )}
 
       {/* Barra salvataggio fissa */}
       <div className="fixed bottom-0 left-0 right-0 lg:left-64 border-t border-slate-100 bg-white/90 backdrop-blur p-4 z-30">
@@ -297,7 +334,7 @@ export function WorkoutBuilder({
             disabled={saving}
             className="ml-auto rounded-2xl bg-emerald-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
           >
-            {saving ? "Salvataggio..." : "Salva scheda"}
+            {saving ? "Salvataggio..." : isEdit ? "Salva modifiche" : "Salva scheda"}
           </button>
         </div>
       </div>

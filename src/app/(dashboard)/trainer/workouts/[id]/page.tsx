@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
+import { PlanActions } from "@/components/trainer/plan-actions";
 import { ArrowLeft, FileText, User } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -49,8 +50,9 @@ export default async function WorkoutDetailPage({
         <ArrowLeft className="h-4 w-4" /> Schede
       </Link>
 
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-start justify-between gap-3 mb-1">
         <h1 className="text-2xl font-bold text-slate-900">{plan.name}</h1>
+        <PlanActions planId={plan.id} />
       </div>
       <p className="flex items-center gap-1.5 text-slate-500 mb-6 text-sm">
         {plan.client ? (
