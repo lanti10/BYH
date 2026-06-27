@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  TRAINER
+  CLIENT
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum MessageType {
+  TEXT
+  PRODUCT_RECOMMENDATION
+}
+
+enum ExerciseCategory {
+  STRENGTH
+  CARDIO
+  FLEXIBILITY
+  BALANCE
+  HIIT
+}
+
+// ─── USERS ────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Trainer-specific
+  trainerProfile TrainerProfile?
+
+  // Client-specific
+  clientProfile ClientProfile?
+
+  // Messages
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model TrainerProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bio          String?
+  specialities String[]
+  isActive     Boolean  @default(true)
+
+  // Referral / MLM network
+  referralCode   String  @unique @default(cuid())
+  referredById   String? // trainer who invited this trainer
+  referredBy     TrainerProfile?  @relation("TrainerNetwork", fields: [referredById], references: [id])
+  referrals      TrainerProfile[] @relation("TrainerNetwork")
+  referralLevel  Int              @default(0)
+
+  // Relations
+  clients         ClientProfile[]
+  workoutPlans    WorkoutPlan[]
+  recommendations ProductRecommendation[]
+  earnings        TrainerEarning[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClientProfile {
+  id       String @id @default(cuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id])
+
+  birthDate   DateTime?
+  height      Float? // cm
+  startWeight Float? // kg
+  goals       String[]
+  notes       String?
+
+  // Relations
+  workoutPlans    WorkoutPlan[]
+  sessions        WorkoutSession[]
+  progressLogs    ProgressLog[]
+  orders          Order[]
+  recommendations ProductRecommendation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── WORKOUTS ─────────────────────────────────────────────────────────────────
+
+model Exercise {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  videoUrl    String?
+  category    ExerciseCategory
+  muscles     String[]
+  isCustom    Boolean          @default(false)
+  createdBy   String? // trainerId if custom
+
+  workoutExercises WorkoutExercise[]
+
+  createdAt DateTime @default(now())
+}
+
+model WorkoutPlan {
+  id          String @id @default(cuid())
+  trainerId   String
+  trainer     TrainerProfile @relation(fields: [trainerId], references: [id])
+  clientId    String
+  client      ClientProfile  @relation(fields: [clientId], references: [id])
+
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+
+  workouts WorkoutDay[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkoutDay {
+  id          String      @id @default(cuid())
+  planId      String
+  plan        WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  dayOfWeek   Int // 0=Mon ... 6=Sun
+  name        String
+  notes       String?
+
+  exercises WorkoutExercise[]
+  sessions  WorkoutSession[]
+}
+
+model WorkoutExercise {
+  id           String     @id @default(cuid())
+  workoutDayId String
+  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  exerciseId   String
+  exercise     Exercise   @relation(fields: [exerciseId], references: [id])
+
+  sets        Int
+  reps        String // e.g. "8-12" or "AMRAP"
+  restSeconds Int    @default(60)
+  notes       String?
+  order       Int    @default(0)
+}
+
+model WorkoutSession {
+  id           String     @id @default(cuid())
+  clientId     String
+  client       ClientProfile @relation(fields: [clientId], references: [id])
+  workoutDayId String
+  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id])
+
+  completedAt DateTime @default(now())
+  durationMin Int?
+  notes       String?
+  rating      Int? // 1-5
+
+  setLogs SetLog[]
+}
+
+model SetLog {
+  id        String         @id @default(cuid())
+  sessionId String
+  session   WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  exerciseName String
+  setNumber    Int
+  reps         Int?
+  weight       Float? // kg
+  notes        String?
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────────────────────────
+
+model ProgressLog {
+  id       String        @id @default(cuid())
+  clientId String
+  client   ClientProfile @relation(fields: [clientId], references: [id])
+
+  date      DateTime @default(now())
+  weight    Float? // kg
+  bodyFat   Float? // %
+  notes     String?
+  photoUrl  String?
+
+  measurements Json? // freeform: { chest, waist, hips, arms, ... }
+}
+
+// ─── MESSAGING ────────────────────────────────────────────────────────────────
+
+model Message {
+  id         String      @id @default(cuid())
+  senderId   String
+  sender     User        @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User        @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  type       MessageType @default(TEXT)
+  content    String
+  readAt     DateTime?
+  createdAt  DateTime    @default(now())
+
+  // If type is PRODUCT_RECOMMENDATION, link to it
+  recommendationId String?
+  recommendation   ProductRecommendation? @relation(fields: [recommendationId], references: [id])
+}
+
+// ─── PRODUCTS ─────────────────────────────────────────────────────────────────
+
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  category    String
+  ingredients String?
+
+  // Pricing
+  costPrice  Float // from white-label supplier
+  salePrice  Float // shown to client
+
+  isActive    Boolean @default(true)
+  stock       Int?    // optional, managed by supplier
+  supplierSku String? // supplier's SKU for order forwarding
+
+  recommendations ProductRecommendation[]
+  orderItems      OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductRecommendation {
+  id        String        @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id])
+  clientId  String
+  client    ClientProfile  @relation(fields: [clientId], references: [id])
+  productId String
+  product   Product        @relation(fields: [productId], references: [id])
+
+  aiSuggestion    String? // raw AI reasoning
+  trainerNote     String? // trainer's personal message
+  approvedAt      DateTime? // null = pending trainer approval
+  dismissedAt     DateTime?
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+}
+
+// ─── ORDERS ───────────────────────────────────────────────────────────────────
+
+model Order {
+  id       String        @id @default(cuid())
+  clientId String
+  client   ClientProfile @relation(fields: [clientId], references: [id])
+
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  supplierOrderId String? // ID returned by white-label supplier
+  trackingCode    String?
+
+  shippingName    String
+  shippingAddress String
+  shippingCity    String
+  shippingZip     String
+  shippingCountry String @default("IT")
+
+  items     OrderItem[]
+  earnings  TrainerEarning[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Int
+  unitPrice Float
+  costPrice Float
+  margin    Float // unitPrice - costPrice
+}
+
+// ─── COMMISSIONS ──────────────────────────────────────────────────────────────
+
+model CommissionRule {
+  id          String @id @default(cuid())
+  level       Int    // 0 = direct seller, 1 = who invited them, 2 = level above, ...
+  percentage  Float  // e.g. 15.0 for 15%
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrainerEarning {
+  id        String         @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id])
+  orderId   String
+  order     Order          @relation(fields: [orderId], references: [id])
+
+  level      Int   // which MLM level this earning comes from
+  percentage Float
+  amount     Float
+  isPaid     Boolean  @default(false)
+  paidAt     DateTime?
+
+  createdAt DateTime @default(now())
+}
