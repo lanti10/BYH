@@ -190,3 +190,67 @@ export async function deleteWorkoutPlan(planId: string): Promise<{ ok: boolean; 
   if (plan.clientId) revalidatePath(`/trainer/clients/${plan.clientId}`);
   return { ok: true };
 }
+
+// Assegna una scheda esistente (es. un modello) a un cliente, creando una COPIA
+// così il modello originale resta intatto e riutilizzabile.
+export async function assignTemplateToClient(
+  planId: string,
+  clientId: string
+): Promise<CreatePlanResult> {
+  const trainer = await getTrainer();
+  if (!trainer) return { ok: false, error: "Non autorizzato." };
+  if (!clientId) return { ok: false, error: "Seleziona un cliente." };
+
+  const client = await prisma.clientProfile.findFirst({
+    where: { id: clientId, trainerId: trainer.id },
+  });
+  if (!client) return { ok: false, error: "Cliente non valido." };
+
+  const source = await prisma.workoutPlan.findFirst({
+    where: { id: planId, trainerId: trainer.id },
+    include: {
+      workouts: {
+        orderBy: { dayOfWeek: "asc" },
+        include: { exercises: { orderBy: { order: "asc" } } },
+      },
+    },
+  });
+  if (!source) return { ok: false, error: "Scheda non trovata." };
+
+  // Disattiva le altre schede attive del cliente
+  await prisma.workoutPlan.updateMany({
+    where: { clientId, isActive: true },
+    data: { isActive: false },
+  });
+
+  const newPlan = await prisma.workoutPlan.create({
+    data: {
+      trainerId: trainer.id,
+      clientId,
+      isTemplate: false,
+      isActive: true,
+      name: source.name,
+      description: source.description,
+      workouts: {
+        create: source.workouts.map((w) => ({
+          name: w.name,
+          dayOfWeek: w.dayOfWeek,
+          exercises: {
+            create: w.exercises.map((e) => ({
+              exerciseId: e.exerciseId,
+              sets: e.sets,
+              reps: e.reps,
+              weight: e.weight,
+              restSeconds: e.restSeconds,
+              order: e.order,
+            })),
+          },
+        })),
+      },
+    },
+  });
+
+  revalidatePath("/trainer/workouts");
+  revalidatePath(`/trainer/clients/${clientId}`);
+  return { ok: true, planId: newPlan.id };
+}

@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
 import { PlanActions } from "@/components/trainer/plan-actions";
+import { AssignTemplate } from "@/components/trainer/assign-template";
 import { ArrowLeft, FileText, User } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -15,18 +16,27 @@ export default async function WorkoutDetailPage({
   const trainer = user.trainerProfile!;
   const { id } = await params;
 
-  const plan = await prisma.workoutPlan.findFirst({
-    where: { id, trainerId: trainer.id },
-    include: {
-      client: { include: { user: true } },
-      workouts: {
-        orderBy: { dayOfWeek: "asc" },
-        include: { exercises: { orderBy: { order: "asc" }, include: { exercise: true } } },
+  const [plan, clientProfiles] = await Promise.all([
+    prisma.workoutPlan.findFirst({
+      where: { id, trainerId: trainer.id },
+      include: {
+        client: { include: { user: true } },
+        workouts: {
+          orderBy: { dayOfWeek: "asc" },
+          include: { exercises: { orderBy: { order: "asc" }, include: { exercise: true } } },
+        },
       },
-    },
-  });
+    }),
+    prisma.clientProfile.findMany({
+      where: { trainerId: trainer.id },
+      include: { user: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   if (!plan) notFound();
+
+  const clients = clientProfiles.map((c) => ({ id: c.id, name: c.user.name || c.user.email }));
 
   const days: PlanDay[] = plan.workouts.map((w) => ({
     id: w.id,
@@ -70,6 +80,12 @@ export default async function WorkoutDetailPage({
         <p className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-sm text-slate-600 mb-6">
           {plan.description}
         </p>
+      )}
+
+      {!plan.clientId && (
+        <div className="mb-6">
+          <AssignTemplate planId={plan.id} clients={clients} />
+        </div>
       )}
 
       <PlanDayTabs days={days} />
