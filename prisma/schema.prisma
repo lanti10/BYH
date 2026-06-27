@@ -93,10 +93,13 @@ model ClientProfile {
   trainer   TrainerProfile @relation(fields: [trainerId], references: [id])
 
   birthDate   DateTime?
+  sex         String? // "Uomo" | "Donna"
   height      Float? // cm
   startWeight Float? // kg
   goals       String[]
+  trainingDaysPerWeek Int?
   notes       String?
+  profileCompleted Boolean @default(false)
 
   // Relations
   workoutPlans    WorkoutPlan[]

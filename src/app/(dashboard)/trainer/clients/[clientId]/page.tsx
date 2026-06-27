@@ -113,6 +113,56 @@ export default async function ClientDetailPage({
         </Card>
       </div>
 
+      {/* Scheda profilo del cliente */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Profilo cliente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {client.profileCompleted ? (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {client.sex && (
+                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    {client.sex}
+                  </span>
+                )}
+                {client.birthDate && (
+                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    {Math.floor((Date.now() - new Date(client.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))} anni
+                  </span>
+                )}
+                {client.height && (
+                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    {client.height} cm
+                  </span>
+                )}
+                {client.trainingDaysPerWeek && (
+                  <span className="rounded-lg bg-[#D42B27]/10 px-2.5 py-1 text-xs font-medium text-[#D42B27]">
+                    {client.trainingDaysPerWeek} allenamenti/sett
+                  </span>
+                )}
+                {client.goals.map((g) => (
+                  <span key={g} className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    {g}
+                  </span>
+                ))}
+              </div>
+              {client.notes && (
+                <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+                  <span className="font-medium text-slate-500">Note: </span>
+                  {client.notes}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">
+              Il cliente non ha ancora completato il suo profilo.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Tabs */}
       <Tabs defaultValue="progress">
         <TabsList>
