@@ -66,6 +66,7 @@ export default async function EditWorkoutPage({
         initialName={plan.name}
         initialDescription={plan.description ?? ""}
         initialDurationWeeks={plan.durationWeeks}
+        initialStartDate={plan.startDate ? plan.startDate.toISOString().slice(0, 10) : undefined}
         initialDays={initialDays}
       />
     </div>

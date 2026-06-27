@@ -13,7 +13,7 @@ export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
   const client = user.clientProfile!;
 
-  const [profile, recommendations] = await Promise.all([
+  const [profile, recommendations, unreadCount] = await Promise.all([
     prisma.clientProfile.findUnique({
       where: { id: client.id },
       include: {
@@ -42,6 +42,7 @@ export default async function ClientDashboard() {
       orderBy: { approvedAt: "desc" },
       take: 3,
     }),
+    prisma.message.count({ where: { receiverId: user.id, readAt: null } }),
   ]);
 
   if (!profile || !profile.trainer) {
@@ -108,7 +109,7 @@ export default async function ClientDashboard() {
             </CardHeader>
             <CardContent>
               {planDays.length > 0 ? (
-                <PlanDayTabs days={planDays} />
+                <PlanDayTabs days={planDays} startHrefBase="/workout-session" />
               ) : (
                 <div className="text-center py-8">
                   <p className="text-slate-400 text-sm">Nessuna scheda assegnata ancora.</p>
@@ -161,27 +162,60 @@ export default async function ClientDashboard() {
             </CardContent>
           </Card>
 
-          {/* Quick stats */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Dumbbell className="h-4 w-4" />
-                  Sessioni completate
-                </div>
-                <span className="font-bold">{profile.sessions.length}</span>
+          {/* Widget cliccabili */}
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/client/messages"
+              className="relative rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 mb-2">
+                <MessageSquare className="h-4 w-4 text-blue-600" />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <TrendingUp className="h-4 w-4" />
-                  Peso attuale
-                </div>
-                <span className="font-bold">
-                  {profile.progressLogs[profile.progressLogs.length - 1]?.weight ?? "—"} kg
+              <p className="text-2xl font-black text-slate-900 leading-none">{unreadCount}</p>
+              <p className="text-xs text-slate-500 mt-1">Messaggi non letti</p>
+              {unreadCount > 0 && (
+                <span className="absolute top-3 right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D42B27] px-1.5 text-xs font-bold text-white">
+                  {unreadCount}
                 </span>
+              )}
+            </Link>
+
+            <Link
+              href="/client/progress"
+              className="rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 mb-2">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-2xl font-black text-slate-900 leading-none">
+                {profile.progressLogs[profile.progressLogs.length - 1]?.weight ?? "—"}
+                <span className="text-sm font-bold text-slate-400"> kg</span>
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Peso attuale</p>
+            </Link>
+
+            <Link
+              href="/client/progress"
+              className="rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D42B27]/10 mb-2">
+                <Dumbbell className="h-4 w-4 text-[#D42B27]" />
+              </div>
+              <p className="text-2xl font-black text-slate-900 leading-none">{profile.sessions.length}</p>
+              <p className="text-xs text-slate-500 mt-1">Allenamenti</p>
+            </Link>
+
+            <Link
+              href="/client/workout"
+              className="rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
+                <Dumbbell className="h-4 w-4 text-amber-600" />
+              </div>
+              <p className="text-sm font-bold text-slate-900 leading-tight mt-1">La mia scheda</p>
+              <p className="text-xs text-slate-500 mt-1">Vai agli allenamenti</p>
+            </Link>
+          </div>
 
           {recommendations.length > 0 && (
             <Card>

@@ -185,10 +185,14 @@ model WorkoutSession {
   workoutDayId String
   workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id])
 
-  completedAt DateTime @default(now())
-  durationMin Int?
-  notes       String?
-  rating      Int? // 1-5
+  completedAt  DateTime @default(now())
+  durationMin  Int?
+  durationSec  Int?
+  calories     Int?
+  avgHeartRate Int?
+  maxHeartRate Int?
+  notes        String?
+  rating       Int? // 1-5
 
   setLogs SetLog[]
 }

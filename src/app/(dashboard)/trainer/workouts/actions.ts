@@ -22,8 +22,19 @@ export type CreatePlanInput = {
   name: string;
   description?: string;
   durationWeeks?: number | null;
+  startDate?: string | null; // ISO "yyyy-mm-dd"
   days: DayInput[];
 };
+
+// Calcola inizio e fine dalla data di partenza + durata in settimane
+function computeDates(startDate?: string | null, durationWeeks?: number | null) {
+  const start = startDate ? new Date(startDate) : new Date();
+  const end =
+    durationWeeks && durationWeeks > 0
+      ? new Date(start.getTime() + durationWeeks * 7 * 24 * 60 * 60 * 1000)
+      : null;
+  return { start, end };
+}
 
 export type CreatePlanResult = { ok: boolean; error?: string; planId?: string };
 
@@ -95,6 +106,8 @@ export async function createWorkoutPlan(input: CreatePlanInput): Promise<CreateP
     });
   }
 
+  const { start, end } = computeDates(input.startDate, input.durationWeeks);
+
   const plan = await prisma.workoutPlan.create({
     data: {
       trainerId: trainer.id,
@@ -104,6 +117,8 @@ export async function createWorkoutPlan(input: CreatePlanInput): Promise<CreateP
       name: input.name.trim(),
       description: input.description?.trim() || null,
       durationWeeks: input.durationWeeks ?? null,
+      startDate: start,
+      endDate: end,
       workouts: { create: workoutsCreate },
     },
   });
@@ -163,6 +178,8 @@ export async function updateWorkoutPlan(
       name: input.name.trim(),
       description: input.description?.trim() || null,
       durationWeeks: input.durationWeeks ?? null,
+      startDate: computeDates(input.startDate, input.durationWeeks).start,
+      endDate: computeDates(input.startDate, input.durationWeeks).end,
       workouts: { create: workoutsCreate },
     },
   });
@@ -235,6 +252,8 @@ export async function assignTemplateToClient(
       name: source.name,
       description: source.description,
       durationWeeks: source.durationWeeks,
+      startDate: computeDates(null, source.durationWeeks).start,
+      endDate: computeDates(null, source.durationWeeks).end,
       workouts: {
         create: source.workouts.map((w) => ({
           name: w.name,

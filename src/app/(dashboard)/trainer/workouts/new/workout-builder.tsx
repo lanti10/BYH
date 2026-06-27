@@ -46,6 +46,7 @@ export function WorkoutBuilder({
   initialName = "",
   initialDescription = "",
   initialDurationWeeks,
+  initialStartDate,
   initialDays,
   onBack,
 }: {
@@ -55,6 +56,7 @@ export function WorkoutBuilder({
   initialName?: string;
   initialDescription?: string;
   initialDurationWeeks?: number | null;
+  initialStartDate?: string;
   initialDays?: DayInput[];
   onBack?: () => void;
 }) {
@@ -66,6 +68,17 @@ export function WorkoutBuilder({
   const [durationWeeks, setDurationWeeks] = useState(
     initialDurationWeeks ? String(initialDurationWeeks) : ""
   );
+  const [startDate, setStartDate] = useState(
+    initialStartDate ?? new Date().toISOString().slice(0, 10)
+  );
+
+  // Anteprima data di fine
+  const endPreview =
+    durationWeeks && Number(durationWeeks) > 0
+      ? new Date(
+          new Date(startDate).getTime() + Number(durationWeeks) * 7 * 24 * 60 * 60 * 1000
+        ).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })
+      : null;
   const [days, setDays] = useState<DayCard[]>(toDayCards(initialDays));
   const [active, setActive] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -122,6 +135,7 @@ export function WorkoutBuilder({
       name,
       description,
       durationWeeks: durationWeeks.trim() === "" ? null : Number(durationWeeks),
+      startDate,
       days: days.map((d) => ({
         name: d.name,
         exercises: d.exercises.map((e) => ({
@@ -185,18 +199,32 @@ export function WorkoutBuilder({
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
           />
         </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-700">Durata (settimane)</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            value={durationWeeks}
-            onChange={(e) => setDurationWeeks(e.target.value)}
-            placeholder="Es. 6"
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Data inizio</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Durata (settimane)</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={durationWeeks}
+              onChange={(e) => setDurationWeeks(e.target.value)}
+              placeholder="Es. 6"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+            />
+          </div>
         </div>
+        {endPreview && (
+          <p className="text-xs text-slate-400 -mt-1">Fine prevista: {endPreview}</p>
+        )}
         <div>
           <label className="text-sm font-semibold text-slate-700">Descrizione (facoltativa)</label>
           <textarea

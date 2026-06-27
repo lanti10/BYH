@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Dumbbell } from "lucide-react";
+import Link from "next/link";
+import { Dumbbell, Play } from "lucide-react";
 
 export type PlanExercise = {
   id: string;
@@ -17,7 +18,13 @@ export type PlanDay = {
   exercises: PlanExercise[];
 };
 
-export function PlanDayTabs({ days }: { days: PlanDay[] }) {
+export function PlanDayTabs({
+  days,
+  startHrefBase,
+}: {
+  days: PlanDay[];
+  startHrefBase?: string;
+}) {
   const [active, setActive] = useState(0);
 
   if (days.length === 0) {
@@ -48,6 +55,16 @@ export function PlanDayTabs({ days }: { days: PlanDay[] }) {
       {/* Nome giorno */}
       {day.name && (
         <p className="mt-4 text-lg font-bold text-slate-900">{day.name}</p>
+      )}
+
+      {/* Inizia allenamento */}
+      {startHrefBase && day.exercises.length > 0 && (
+        <Link
+          href={`${startHrefBase}/${day.id}`}
+          className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+        >
+          <Play className="h-5 w-5" /> Inizia allenamento
+        </Link>
       )}
 
       {/* Esercizi del giorno selezionato */}

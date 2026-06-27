@@ -62,7 +62,7 @@ export default async function ClientWorkoutPage() {
           {plan.description}
         </p>
       )}
-      <PlanDayTabs days={days} />
+      <PlanDayTabs days={days} startHrefBase="/workout-session" />
     </div>
   );
 }

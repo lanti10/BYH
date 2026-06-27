@@ -82,6 +82,25 @@ export default async function WorkoutDetailPage({
         )}
       </p>
 
+      {plan.startDate && (
+        <div className="mb-6 flex flex-wrap gap-3">
+          <div className="rounded-2xl border border-slate-100 bg-white px-4 py-2.5">
+            <p className="text-xs text-slate-400">Inizio</p>
+            <p className="font-semibold text-slate-800">
+              {plan.startDate.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
+            </p>
+          </div>
+          {plan.endDate && (
+            <div className="rounded-2xl border border-slate-100 bg-white px-4 py-2.5">
+              <p className="text-xs text-slate-400">Fine</p>
+              <p className="font-semibold text-slate-800">
+                {plan.endDate.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {plan.description && (
         <p className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-sm text-slate-600 mb-6">
           {plan.description}
