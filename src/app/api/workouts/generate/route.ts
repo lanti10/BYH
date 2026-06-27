@@ -15,8 +15,6 @@ type GenerateBody = {
   goals?: string;
 };
 
-const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,16 +47,15 @@ Parametri:
 - Livello: ${body.level || "intermedio"}
 - Obiettivi/note: ${body.goals || "nessuna nota particolare"}
 
-Crea esattamente ${frequency} giorni di allenamento. Distribuisci i giorni nella settimana in modo sensato (con recupero tra sessioni intense). Per ogni giorno indica un nome (es. "Petto e tricipiti"), il giorno della settimana (0=Lunedì ... 6=Domenica), e una lista di 4-7 esercizi con serie, ripetizioni e secondi di recupero adeguati al livello e all'obiettivo.
+Crea esattamente ${frequency} giorni di allenamento (Giorno 1, Giorno 2, ...). Per ogni giorno indica un nome descrittivo (es. "Petto e tricipiti") e una lista di 4-7 esercizi con serie, ripetizioni, un peso indicativo in kg (stima realistica in base a sesso/peso/livello; usa null se a corpo libero) e secondi di recupero adeguati al livello e all'obiettivo.
 
 Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo, in questo formato esatto:
 {
   "days": [
     {
       "name": "string",
-      "dayOfWeek": 0,
       "exercises": [
-        { "name": "string", "sets": 4, "reps": "8-12", "restSeconds": 90 }
+        { "name": "string", "sets": 4, "reps": "8-12", "weight": 40, "restSeconds": 90 }
       ]
     }
   ]
@@ -87,15 +84,12 @@ Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo, in questo form
     // Normalizza
     const days = (parsed.days ?? []).slice(0, 7).map((d: Record<string, unknown>, i: number) => ({
       name: typeof d.name === "string" ? d.name : `Giorno ${i + 1}`,
-      dayOfWeek:
-        typeof d.dayOfWeek === "number" && d.dayOfWeek >= 0 && d.dayOfWeek <= 6
-          ? d.dayOfWeek
-          : i % 7,
       exercises: Array.isArray(d.exercises)
         ? d.exercises.slice(0, 12).map((e: Record<string, unknown>) => ({
             name: typeof e.name === "string" ? e.name : "Esercizio",
             sets: typeof e.sets === "number" ? e.sets : 3,
             reps: e.reps != null ? String(e.reps) : "10",
+            weight: typeof e.weight === "number" ? e.weight : null,
             restSeconds: typeof e.restSeconds === "number" ? e.restSeconds : 60,
           }))
         : [],
@@ -105,7 +99,7 @@ Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo, in questo form
       return NextResponse.json({ error: "L'AI non ha generato giorni. Riprova." }, { status: 502 });
     }
 
-    return NextResponse.json({ days, weekdays: WEEKDAYS });
+    return NextResponse.json({ days });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Errore sconosciuto";
     return NextResponse.json(

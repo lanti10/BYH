@@ -1,9 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Plus, Dumbbell, CalendarDays, ChevronRight } from "lucide-react";
+import { Plus, Dumbbell, CalendarDays, ChevronRight, FileText } from "lucide-react";
 import Link from "next/link";
-
-const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
 export default async function WorkoutsPage() {
   const user = await requireRole("TRAINER");
@@ -41,7 +39,7 @@ export default async function WorkoutsPage() {
             <Dumbbell className="h-7 w-7 text-[#D42B27]" />
           </div>
           <p className="text-lg font-semibold text-slate-700">Nessuna scheda ancora</p>
-          <p className="mt-1 text-sm text-slate-400">Crea la prima scheda per un tuo cliente.</p>
+          <p className="mt-1 text-sm text-slate-400">Crea la prima scheda o un modello da riutilizzare.</p>
           <Link
             href="/trainer/workouts/new"
             className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
@@ -53,30 +51,37 @@ export default async function WorkoutsPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           {plans.map((plan) => {
             const totalExercises = plan.workouts.reduce((s, w) => s + w._count.exercises, 0);
-            const days = [...plan.workouts].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+            const dayCount = plan.workouts.length;
+            const href = plan.clientId ? `/trainer/clients/${plan.clientId}` : `/trainer/workouts/${plan.id}`;
             return (
               <Link
                 key={plan.id}
-                href={`/trainer/clients/${plan.clientId}`}
+                href={href}
                 className="group rounded-3xl border border-slate-100 bg-white p-5 transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900 truncate">{plan.name}</p>
                     <p className="text-sm text-slate-500 truncate">
-                      {plan.client.user.name || plan.client.user.email}
+                      {plan.client ? plan.client.user.name || plan.client.user.email : "Modello (nessun cliente)"}
                     </p>
                   </div>
-                  {plan.isActive && (
-                    <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                      Attiva
+                  {plan.isTemplate ? (
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                      <FileText className="h-3 w-3" /> Modello
                     </span>
+                  ) : (
+                    plan.isActive && (
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+                        Attiva
+                      </span>
+                    )
                   )}
                 </div>
 
                 <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
                   <span className="flex items-center gap-1.5">
-                    <CalendarDays className="h-4 w-4" /> {plan.workouts.length} giorni
+                    <CalendarDays className="h-4 w-4" /> {dayCount} {dayCount === 1 ? "giorno" : "giorni"}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Dumbbell className="h-4 w-4" /> {totalExercises} esercizi
@@ -84,18 +89,18 @@ export default async function WorkoutsPage() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {days.map((w) => (
+                  {Array.from({ length: dayCount }).map((_, i) => (
                     <span
-                      key={w.id}
+                      key={i}
                       className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
                     >
-                      {WEEKDAYS[w.dayOfWeek]}
+                      Giorno {i + 1}
                     </span>
                   ))}
                 </div>
 
                 <div className="mt-4 flex items-center justify-end text-sm font-medium text-[#D42B27] opacity-0 transition-opacity group-hover:opacity-100">
-                  Apri cliente <ChevronRight className="h-4 w-4" />
+                  Apri <ChevronRight className="h-4 w-4" />
                 </div>
               </Link>
             );

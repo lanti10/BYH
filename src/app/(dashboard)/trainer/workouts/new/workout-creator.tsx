@@ -25,10 +25,20 @@ const TRAINING_TYPES = [
 const LEVELS = ["Principiante", "Intermedio", "Avanzato"];
 const SEXES = ["Uomo", "Donna"];
 
-export function WorkoutCreator({ clients }: { clients: ClientOption[] }) {
+export function WorkoutCreator({
+  clients,
+  initialClientId,
+}: {
+  clients: ClientOption[];
+  initialClientId?: string;
+}) {
   const [phase, setPhase] = useState<"config" | "edit">("config");
 
-  const [clientId, setClientId] = useState(clients[0]?.id ?? "");
+  const [clientId, setClientId] = useState(
+    initialClientId && clients.some((c) => c.id === initialClientId)
+      ? initialClientId
+      : clients[0]?.id ?? ""
+  );
   const [trainingType, setTrainingType] = useState(TRAINING_TYPES[0]);
   const [frequency, setFrequency] = useState(3);
   const [sex, setSex] = useState("");

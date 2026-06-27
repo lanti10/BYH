@@ -10,9 +10,14 @@ function ageFromBirth(birth?: Date | null): number | undefined {
   return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
 }
 
-export default async function NewWorkoutPage() {
+export default async function NewWorkoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>;
+}) {
   const user = await requireRole("TRAINER");
   const trainer = user.trainerProfile!;
+  const { client: preselectedClient } = await searchParams;
 
   const clientProfiles = await prisma.clientProfile.findMany({
     where: { trainerId: trainer.id },
@@ -44,7 +49,7 @@ export default async function NewWorkoutPage() {
         </p>
       </div>
 
-      <WorkoutCreator clients={clients} />
+      <WorkoutCreator clients={clients} initialClientId={preselectedClient} />
     </div>
   );
 }

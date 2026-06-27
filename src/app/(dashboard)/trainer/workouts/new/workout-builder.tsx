@@ -7,31 +7,35 @@ import { Plus, Trash2, Dumbbell, GripVertical, AlertCircle, ArrowLeft } from "lu
 
 type ClientOption = { id: string; name: string };
 
-const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-
 let uid = 0;
 const newId = () => `tmp-${uid++}`;
 
-type ExRow = { id: string; name: string; sets: number; reps: string; restSeconds: number };
-type DayCard = { id: string; name: string; dayOfWeek: number; exercises: ExRow[] };
+type ExRow = { id: string; name: string; sets: number; reps: string; weight: string; restSeconds: number };
+type DayCard = { id: string; name: string; exercises: ExRow[] };
 
 function emptyExercise(): ExRow {
-  return { id: newId(), name: "", sets: 3, reps: "10", restSeconds: 60 };
+  return { id: newId(), name: "", sets: 3, reps: "10", weight: "", restSeconds: 60 };
 }
-function emptyDay(index: number): DayCard {
-  return { id: newId(), name: "", dayOfWeek: index % 7, exercises: [emptyExercise()] };
+function emptyDay(): DayCard {
+  return { id: newId(), name: "", exercises: [emptyExercise()] };
 }
 
 // Converte i giorni "semplici" (es. generati dall'AI) in DayCard con id
 function toDayCards(days?: DayInput[]): DayCard[] {
-  if (!days || days.length === 0) return [emptyDay(0)];
+  if (!days || days.length === 0) return [emptyDay()];
   return days.map((d) => ({
     id: newId(),
     name: d.name,
-    dayOfWeek: d.dayOfWeek,
     exercises:
       d.exercises.length > 0
-        ? d.exercises.map((e) => ({ id: newId(), ...e }))
+        ? d.exercises.map((e) => ({
+            id: newId(),
+            name: e.name,
+            sets: e.sets,
+            reps: e.reps,
+            weight: e.weight != null ? String(e.weight) : "",
+            restSeconds: e.restSeconds,
+          }))
         : [emptyExercise()],
   }));
 }
@@ -82,7 +86,7 @@ export function WorkoutBuilder({
     );
   }
   function addDay() {
-    setDays((ds) => [...ds, emptyDay(ds.length)]);
+    setDays((ds) => [...ds, emptyDay()]);
   }
   function removeDay(id: string) {
     setDays((ds) => ds.filter((d) => d.id !== id));
@@ -90,21 +94,20 @@ export function WorkoutBuilder({
 
   async function save() {
     setError(null);
-    if (!clientId) return setError("Seleziona un cliente per salvare la scheda.");
     if (!name.trim()) return setError("Dai un nome alla scheda.");
 
     setSaving(true);
-    const payload: { clientId: string; name: string; description?: string; days: DayInput[] } = {
-      clientId,
+    const payload = {
+      clientId: clientId || null,
       name,
       description,
       days: days.map((d) => ({
         name: d.name,
-        dayOfWeek: d.dayOfWeek,
         exercises: d.exercises.map((e) => ({
           name: e.name,
           sets: e.sets,
           reps: e.reps,
+          weight: e.weight.trim() === "" ? null : Number(e.weight),
           restSeconds: e.restSeconds,
         })),
       })),
@@ -132,28 +135,22 @@ export function WorkoutBuilder({
       {/* Dati scheda */}
       <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
         <div>
-          <label className="text-sm font-semibold text-slate-700">Cliente</label>
-          {clients.length === 0 ? (
-            <div className="mt-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-700">
-              Non hai ancora clienti. Puoi comunque preparare la scheda, ma per salvarla devi prima{" "}
-              <a href="/trainer/clients/new" className="font-semibold underline">
-                aggiungere un cliente
-              </a>
-              .
-            </div>
-          ) : (
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
-            >
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          )}
+          <label className="text-sm font-semibold text-slate-700">Assegna a</label>
+          <select
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+          >
+            <option value="">Nessun cliente — salva come modello</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-400">
+            Salva senza cliente per tenere la scheda come modello da riutilizzare.
+          </p>
         </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">Nome scheda</label>
@@ -180,15 +177,18 @@ export function WorkoutBuilder({
       {days.map((day, di) => (
         <div key={day.id} className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D42B27]/10 shrink-0">
-              <Dumbbell className="h-5 w-5 text-[#D42B27]" />
+            <div className="flex h-9 min-w-9 px-2 items-center justify-center rounded-xl bg-[#D42B27] text-sm font-black text-white shrink-0">
+              {di + 1}
             </div>
-            <input
-              value={day.name}
-              onChange={(e) => updateDay(day.id, { name: e.target.value })}
-              placeholder={`Giorno ${di + 1} (es. Petto e tricipiti)`}
-              className="flex-1 min-w-0 bg-transparent text-base font-semibold text-slate-900 outline-none placeholder:text-slate-300"
-            />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-slate-400">Giorno {di + 1}</p>
+              <input
+                value={day.name}
+                onChange={(e) => updateDay(day.id, { name: e.target.value })}
+                placeholder="Nome (es. Petto e tricipiti)"
+                className="w-full bg-transparent text-base font-semibold text-slate-900 outline-none placeholder:text-slate-300"
+              />
+            </div>
             {days.length > 1 && (
               <button
                 onClick={() => removeDay(day.id)}
@@ -198,23 +198,6 @@ export function WorkoutBuilder({
                 <Trash2 className="h-4 w-4" />
               </button>
             )}
-          </div>
-
-          {/* Weekday selector */}
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {WEEKDAYS.map((wd, i) => (
-              <button
-                key={i}
-                onClick={() => updateDay(day.id, { dayOfWeek: i })}
-                className={`h-9 w-11 rounded-xl text-xs font-semibold transition-colors ${
-                  day.dayOfWeek === i
-                    ? "bg-[#D42B27] text-white"
-                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                }`}
-              >
-                {wd}
-              </button>
-            ))}
           </div>
 
           {/* Esercizi */}
@@ -237,7 +220,7 @@ export function WorkoutBuilder({
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="mt-2 grid grid-cols-3 gap-2 pl-6">
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 pl-6">
                   <label className="flex flex-col">
                     <span className="text-[11px] text-slate-400 mb-1">Serie</span>
                     <input
@@ -254,6 +237,18 @@ export function WorkoutBuilder({
                       value={ex.reps}
                       onChange={(e) => updateExercise(day.id, ex.id, { reps: e.target.value })}
                       placeholder="8-12"
+                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#D42B27]"
+                    />
+                  </label>
+                  <label className="flex flex-col">
+                    <span className="text-[11px] text-slate-400 mb-1">Peso (kg)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      value={ex.weight}
+                      onChange={(e) => updateExercise(day.id, ex.id, { weight: e.target.value })}
+                      placeholder="—"
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#D42B27]"
                     />
                   </label>

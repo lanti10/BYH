@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, Dumbbell, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { ProgressChart } from "@/components/trainer/progress-chart";
+import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
 
 export default async function ClientDetailPage({
   params,
@@ -24,8 +25,10 @@ export default async function ClientDetailPage({
     include: {
       user: true,
       workoutPlans: {
+        orderBy: { createdAt: "desc" },
         include: {
           workouts: {
+            orderBy: { dayOfWeek: "asc" },
             include: {
               exercises: {
                 include: { exercise: true },
@@ -164,31 +167,27 @@ export default async function ClientDetailPage({
                     <Button
                       variant="outline"
                       size="sm"
-                      render={<Link href={`/trainer/workouts/${plan.id}/edit`} />}
+                      render={<Link href={`/trainer/workouts/${plan.id}`} />}
                     >
-                      Modifica
+                      Apri
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {plan.workouts.map((day) => (
-                      <div key={day.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                        <span className="text-xs font-semibold text-slate-500 w-8 pt-0.5">
-                          {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"][day.dayOfWeek]}
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{day.name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {day.exercises.map((ex) => ex.exercise.name).join(" · ")}
-                          </p>
-                        </div>
-                        <span className="text-xs text-slate-400">
-                          {day.exercises.length} esercizi
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <PlanDayTabs
+                    days={plan.workouts.map((day) => ({
+                      id: day.id,
+                      name: day.name,
+                      exercises: day.exercises.map((ex) => ({
+                        id: ex.id,
+                        name: ex.exercise.name,
+                        sets: ex.sets,
+                        reps: ex.reps,
+                        weight: ex.weight,
+                        restSeconds: ex.restSeconds,
+                      })),
+                    }))}
+                  />
                 </CardContent>
               </Card>
             ))

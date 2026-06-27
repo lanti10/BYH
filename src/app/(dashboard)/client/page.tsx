@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dumbbell, MessageSquare, TrendingUp, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { ProgressChart } from "@/components/trainer/progress-chart";
+import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
@@ -61,10 +62,22 @@ export default async function ClientDashboard() {
   }));
 
   const activePlan = profile.workoutPlans[0];
-  const todayIndex = (new Date().getDay() + 6) % 7; // 0=Mon
-  const todayWorkout = activePlan?.workouts.find((w: { dayOfWeek: number }) => w.dayOfWeek === todayIndex);
-
-  const dayNames = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+  const planDays: PlanDay[] = activePlan
+    ? [...activePlan.workouts]
+        .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+        .map((w) => ({
+          id: w.id,
+          name: w.name,
+          exercises: w.exercises.map((e) => ({
+            id: e.id,
+            name: e.exercise.name,
+            sets: e.sets,
+            reps: e.reps,
+            weight: e.weight,
+            restSeconds: e.restSeconds,
+          })),
+        }))
+    : [];
 
   return (
     <div className="p-4 sm:p-8 space-y-8">
@@ -73,58 +86,32 @@ export default async function ClientDashboard() {
           Ciao, {user.name.split(" ")[0]}
         </h1>
         <p className="text-slate-500 mt-1">
-          {dayNames[todayIndex]} — {new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long" })}
+          {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Today's workout */}
+        {/* La tua scheda */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Allenamento di oggi</CardTitle>
+              <CardTitle className="text-base">
+                {activePlan ? activePlan.name : "La tua scheda"}
+              </CardTitle>
               <Button
                 variant="outline"
                 size="sm"
                 render={<Link href="/client/workout" />}
               >
-                Vedi scheda completa
+                Apri scheda
               </Button>
             </CardHeader>
             <CardContent>
-              {todayWorkout ? (
-                <div className="space-y-2">
-                  <p className="font-semibold text-slate-700">{todayWorkout.name}</p>
-                  <div className="space-y-2 mt-3">
-                    {todayWorkout.exercises.map((ex) => (
-                      <div key={ex.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                        <Dumbbell className="h-4 w-4 text-slate-400 shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{ex.exercise.name}</p>
-                          <p className="text-xs text-slate-400">
-                            {ex.sets} serie × {ex.reps} rep
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {ex.restSeconds}s rest
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                  <Button
-                    className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
-                    render={<Link href="/client/workout/session" />}
-                  >
-                    Avvia sessione
-                  </Button>
-                </div>
+              {planDays.length > 0 ? (
+                <PlanDayTabs days={planDays} />
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-slate-400 text-sm">
-                    {activePlan
-                      ? "Nessun allenamento previsto per oggi. Riposati!"
-                      : "Nessuna scheda assegnata ancora."}
-                  </p>
+                  <p className="text-slate-400 text-sm">Nessuna scheda assegnata ancora.</p>
                 </div>
               )}
             </CardContent>

@@ -130,8 +130,9 @@ model WorkoutPlan {
   id          String @id @default(cuid())
   trainerId   String
   trainer     TrainerProfile @relation(fields: [trainerId], references: [id])
-  clientId    String
-  client      ClientProfile  @relation(fields: [clientId], references: [id])
+  clientId    String?
+  client      ClientProfile?  @relation(fields: [clientId], references: [id])
+  isTemplate  Boolean @default(false)
 
   name        String
   description String?
@@ -167,6 +168,7 @@ model WorkoutExercise {
 
   sets        Int
   reps        String // e.g. "8-12" or "AMRAP"
+  weight      Float? // kg consigliati per l'esercizio
   restSeconds Int    @default(60)
   notes       String?
   order       Int    @default(0)
