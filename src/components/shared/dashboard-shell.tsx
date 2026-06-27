@@ -21,7 +21,10 @@ export function DashboardShell({
   }, []);
 
   return (
-    <div className="h-screen flex flex-col">
+    <div
+      className="flex flex-col"
+      style={{ height: "var(--app-height, 100dvh)" }}
+    >
       {/* Top bar mobile con hamburger */}
       <header className="flex items-center gap-3 px-4 h-14 bg-[#D42B27] text-white shrink-0 lg:hidden">
         <button
