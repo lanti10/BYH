@@ -54,7 +54,7 @@ export default async function ClientDashboard() {
     );
   }
 
-  const progressData = profile.progressLogs.map((log) => ({
+  const progressData = profile.progressLogs.map((log: { date: Date; weight: number | null; bodyFat: number | null }) => ({
     date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
     peso: log.weight,
     grasso: log.bodyFat,
