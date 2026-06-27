@@ -54,21 +54,23 @@ export default async function ClientDetailPage({
   return (
     <div className="p-4 sm:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <Avatar size="lg">
-          <AvatarImage src={client.user.avatarUrl ?? undefined} />
-          <AvatarFallback>{client.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">{client.user.name}</h1>
-          <p className="text-slate-500 text-sm">{client.user.email}</p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {client.goals.map((goal) => (
-              <Badge key={goal} variant="secondary">{goal}</Badge>
-            ))}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <Avatar size="lg">
+            <AvatarImage src={client.user.avatarUrl ?? undefined} />
+            <AvatarFallback>{client.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold text-slate-900 truncate">{client.user.name}</h1>
+            <p className="text-slate-500 text-sm truncate">{client.user.email}</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {client.goals.map((goal) => (
+                <Badge key={goal} variant="secondary">{goal}</Badge>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <Button
             variant="outline"
             size="sm"
