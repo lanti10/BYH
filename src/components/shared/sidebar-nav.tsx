@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
-  ShoppingBag, TrendingUp, Gift, Package, Network, Settings,
+  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X,
 } from "lucide-react";
 
 const navConfig = {
@@ -43,24 +43,44 @@ const roleLabel = {
   admin: "Admin",
 };
 
-export function SidebarNav({ role }: { role: "trainer" | "client" | "admin" }) {
+export function SidebarNav({
+  role,
+  open,
+  onClose,
+}: {
+  role: "trainer" | "client" | "admin";
+  open: boolean;
+  onClose: () => void;
+}) {
   const pathname = usePathname();
   const items = navConfig[role];
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-slate-950 text-white fixed left-0 top-0 z-40">
+    <aside
+      className={cn(
+        "fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-slate-950 text-white transition-transform duration-300",
+        open ? "translate-x-0" : "-translate-x-full"
+      )}
+    >
       {/* Logo header */}
       <div className="flex items-center gap-3 px-5 py-4 bg-[#D42B27]">
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
           <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="font-black text-base tracking-wide leading-tight">Build Your Health</p>
           <p className="text-xs text-white/70">{roleLabel[role]}</p>
         </div>
+        <button
+          onClick={onClose}
+          aria-label="Chiudi menu"
+          className="p-1 rounded-md hover:bg-white/10 shrink-0"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -68,6 +88,7 @@ export function SidebarNav({ role }: { role: "trainer" | "client" | "admin" }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive

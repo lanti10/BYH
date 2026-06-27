@@ -49,7 +49,7 @@ export default async function ClientDetailPage({
   }));
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-start gap-4">
         <Avatar size="lg">

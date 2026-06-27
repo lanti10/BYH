@@ -45,7 +45,7 @@ export default async function ClientDashboard() {
 
   if (!profile || !profile.trainer) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
+      <div className="p-4 sm:p-8 flex items-center justify-center min-h-screen">
         <div className="text-center space-y-3">
           <p className="text-xl font-semibold text-slate-700">In attesa del tuo trainer</p>
           <p className="text-slate-400 text-sm">Il tuo profilo verrà attivato quando un trainer ti aggiungerà alla sua lista clienti.</p>
@@ -67,7 +67,7 @@ export default async function ClientDashboard() {
   const dayNames = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">
           Ciao, {user.name.split(" ")[0]}
