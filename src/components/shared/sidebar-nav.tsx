@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
-  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog,
+  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy,
 } from "lucide-react";
 
 const navConfig = {
@@ -26,6 +26,7 @@ const navConfig = {
     { href: "/client", label: "Dashboard", icon: LayoutDashboard },
     { href: "/client/workout", label: "La mia scheda", icon: Dumbbell },
     { href: "/client/progress", label: "Progressi", icon: TrendingUp },
+    { href: "/client/medals", label: "Medagliere", icon: Trophy },
     { href: "/client/messages", label: "Messaggi", icon: MessageSquare },
     { href: "/client/shop", label: "Shop", icon: ShoppingBag },
     { href: "/client/profile", label: "Profilo", icon: UserCog },
