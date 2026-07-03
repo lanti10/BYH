@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ActivityRing } from "@/components/client/activity-ring";
 import { WeekStrip } from "@/components/client/week-strip";
 import { getNextDayIndex, estimateDuration, getStreak } from "@/lib/workout";
+import { getT } from "@/lib/i18n/server";
+import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
   Dumbbell, MessageSquare, TrendingUp, ShoppingBag,
   Play, Flame, Timer, Check, ChevronRight,
@@ -13,6 +15,7 @@ import Link from "next/link";
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
   const client = user.clientProfile!;
+  const { t, locale } = await getT();
 
   const [profile, recommendations, unreadCount] = await Promise.all([
     prisma.clientProfile.findUnique({
@@ -48,8 +51,8 @@ export default async function ClientDashboard() {
     return (
       <div className="p-4 sm:p-8 flex items-center justify-center min-h-screen">
         <div className="text-center space-y-3">
-          <p className="text-xl font-semibold text-slate-700">In attesa del tuo trainer</p>
-          <p className="text-slate-400 text-sm">Il tuo profilo verrà attivato quando un trainer ti aggiungerà alla sua lista clienti.</p>
+          <p className="text-xl font-semibold text-slate-700">{t("dash.waiting")}</p>
+          <p className="text-slate-400 text-sm">{t("dash.waitingSub")}</p>
         </div>
       </div>
     );
@@ -100,10 +103,10 @@ export default async function ClientDashboard() {
       {/* Saluto */}
       <div>
         <p className="text-[13px] text-slate-500 capitalize">
-          {now.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+          {now.toLocaleDateString(DATE_LOCALE[locale], { weekday: "long", day: "numeric", month: "long" })}
         </p>
         <h1 className="text-[28px] leading-tight font-bold text-slate-900 tracking-tight">
-          Ciao, {user.name.split(" ")[0]}
+          {t("dash.hi", { name: user.name.split(" ")[0] })}
         </h1>
       </div>
 
@@ -116,11 +119,11 @@ export default async function ClientDashboard() {
             <div className="rounded-3xl bg-depth-dark p-6 text-white shadow-lg">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/50">
-                  Oggi · Giorno {nextIndex + 1} di {days.length}
+                  {t("dash.dayOf", { n: nextIndex + 1, total: days.length })}
                 </p>
                 {doneToday && (
                   <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
-                    <Check className="h-3 w-3" strokeWidth={3} /> Fatto oggi
+                    <Check className="h-3 w-3" strokeWidth={3} /> {t("dash.doneToday")}
                   </span>
                 )}
               </div>
@@ -128,7 +131,7 @@ export default async function ClientDashboard() {
                 {todayWorkout.name || `Giorno ${nextIndex + 1}`}
               </h2>
               <p className="mt-1 text-sm text-white/60 tnum">
-                {todayWorkout.exercises.length} esercizi · ~{estMin} min
+                {t("dash.meta", { n: todayWorkout.exercises.length, min: estMin })}
               </p>
 
               {/* Pallini progressione ciclo */}
@@ -162,7 +165,7 @@ export default async function ClientDashboard() {
                 ))}
                 {todayWorkout.exercises.length > 3 && (
                   <p className="pl-1 text-xs text-white/40 tnum">
-                    + altri {todayWorkout.exercises.length - 3} esercizi
+                    {t("dash.moreExercises", { n: todayWorkout.exercises.length - 3 })}
                   </p>
                 )}
               </div>
@@ -172,23 +175,23 @@ export default async function ClientDashboard() {
                 className="mt-5 flex h-[50px] items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
               >
                 <Play className="h-5 w-5 fill-white" />
-                {doneToday ? "Allenati di nuovo" : "Inizia allenamento"}
+                {doneToday ? t("dash.startAgain") : t("dash.start")}
               </Link>
             </div>
           ) : (
             <div className="rounded-3xl glass p-8 text-center">
               <Dumbbell className="mx-auto h-8 w-8 text-slate-300 mb-3" />
-              <p className="font-semibold text-slate-700">Nessuna scheda attiva</p>
-              <p className="mt-1 text-sm text-slate-400">Il tuo trainer ti assegnerà presto un programma.</p>
+              <p className="font-semibold text-slate-700">{t("dash.noPlan")}</p>
+              <p className="mt-1 text-sm text-slate-400">{t("dash.noPlanSub")}</p>
             </div>
           )}
 
           {/* Attività settimanale: anello + metriche + striscia giorni */}
           <div className="rounded-3xl glass p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-slate-900">Questa settimana</h2>
+              <h2 className="font-semibold text-slate-900">{t("dash.thisWeek")}</h2>
               <Link href="/client/progress" className="text-sm font-semibold text-brand">
-                Progressi <ChevronRight className="inline h-3.5 w-3.5 -mt-0.5" />
+                {t("dash.progress")} <ChevronRight className="inline h-3.5 w-3.5 -mt-0.5" />
               </Link>
             </div>
             <div className="flex items-center gap-5 sm:gap-8">
@@ -198,7 +201,7 @@ export default async function ClientDashboard() {
                   <span className="text-sm font-medium text-slate-400">/{weekGoal}</span>
                 </span>
                 <span className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
-                  Allenamenti
+                  {t("dash.workoutsLabel")}
                 </span>
               </ActivityRing>
               <div className="flex-1 space-y-3">
@@ -208,7 +211,7 @@ export default async function ClientDashboard() {
                   </span>
                   <div className="flex-1">
                     <p className="text-lg font-bold text-slate-900 leading-none tnum">{weekCal}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">kcal bruciate</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{t("dash.kcalBurned")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -217,9 +220,9 @@ export default async function ClientDashboard() {
                   </span>
                   <div className="flex-1">
                     <p className="text-lg font-bold text-slate-900 leading-none tnum">
-                      {weekMin}<span className="text-xs font-medium text-slate-400"> min</span>
+                      {weekMin}<span className="text-xs font-medium text-slate-400"> {t("dash.min")}</span>
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5">tempo attivo</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{t("dash.activeTime")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -228,9 +231,9 @@ export default async function ClientDashboard() {
                   </span>
                   <div className="flex-1">
                     <p className="text-lg font-bold text-slate-900 leading-none tnum">
-                      {streak}<span className="text-xs font-medium text-slate-400"> giorni</span>
+                      {streak}<span className="text-xs font-medium text-slate-400"> {t("dash.days")}</span>
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5">streak consecutiva</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{t("dash.streak")}</p>
                   </div>
                 </div>
               </div>
@@ -250,7 +253,7 @@ export default async function ClientDashboard() {
                 <MessageSquare className="h-4 w-4 text-blue-500" />
               </div>
               <p className="text-2xl font-bold text-slate-900 leading-none tnum">{unreadCount}</p>
-              <p className="text-xs text-slate-500 mt-1">Non letti</p>
+              <p className="text-xs text-slate-500 mt-1">{t("dash.unread")}</p>
               {unreadCount > 0 && (
                 <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-brand" />
               )}
@@ -262,28 +265,28 @@ export default async function ClientDashboard() {
               <p className="text-2xl font-bold text-slate-900 leading-none tnum">
                 {lastWeight ?? "—"}<span className="text-sm font-medium text-slate-400"> kg</span>
               </p>
-              <p className="text-xs text-slate-500 mt-1">Peso attuale</p>
+              <p className="text-xs text-slate-500 mt-1">{t("dash.currentWeight")}</p>
             </Link>
             <Link href="/client/workout" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 mb-2">
                 <Dumbbell className="h-4 w-4 text-brand" />
               </div>
-              <p className="text-sm font-semibold text-slate-900 leading-tight">La mia scheda</p>
+              <p className="text-sm font-semibold text-slate-900 leading-tight">{t("nav.myPlan")}</p>
               <p className="text-xs text-slate-500 mt-1 truncate">{activePlan?.name ?? "—"}</p>
             </Link>
             <Link href="/client/shop" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
                 <ShoppingBag className="h-4 w-4 text-amber-600" />
               </div>
-              <p className="text-sm font-semibold text-slate-900 leading-tight">Shop</p>
-              <p className="text-xs text-slate-500 mt-1">Consigli BYH</p>
+              <p className="text-sm font-semibold text-slate-900 leading-tight">{t("nav.shop")}</p>
+              <p className="text-xs text-slate-500 mt-1">{t("dash.shopSub")}</p>
             </Link>
           </div>
 
           {/* Trainer */}
           <div className="rounded-3xl glass p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-3">
-              Il tuo trainer
+              {t("dash.yourTrainer")}
             </p>
             <div className="flex items-center gap-3">
               <Avatar>
@@ -299,7 +302,7 @@ export default async function ClientDashboard() {
               href="/client/messages"
               className="mt-4 flex h-11 items-center justify-center gap-2 rounded-full bg-white/80 text-sm font-semibold text-slate-900 hover:bg-white"
             >
-              <MessageSquare className="h-4 w-4" /> Scrivi al trainer
+              <MessageSquare className="h-4 w-4" /> {t("dash.writeTrainer")}
             </Link>
           </div>
 
@@ -307,7 +310,7 @@ export default async function ClientDashboard() {
           {recommendations.length > 0 && (
             <div className="rounded-3xl glass p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-3">
-                Consigliati dal trainer
+                {t("dash.recommended")}
               </p>
               <div className="space-y-2">
                 {recommendations.map((rec) => (

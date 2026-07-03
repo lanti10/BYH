@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "./sidebar-nav";
+import { HeaderActions } from "./header-actions";
 
 export function DashboardShell({
   role,
@@ -38,9 +39,17 @@ export function DashboardShell({
           <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
         </div>
         <span className="font-semibold tracking-tight truncate">Build Your Health</span>
+        <div className="ml-auto">
+          <HeaderActions role={role} dark />
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden relative">
+        {/* Notifiche + lingua su desktop (in alto a destra) */}
+        <div className="hidden lg:block fixed top-4 right-4 z-30">
+          <HeaderActions role={role} />
+        </div>
+
         {/* Backdrop scuro su mobile quando il menu è aperto */}
         {open && (
           <div

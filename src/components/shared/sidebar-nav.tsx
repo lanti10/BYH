@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
+import { useT } from "@/lib/i18n/client";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
   ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy,
@@ -13,38 +14,38 @@ import {
 
 const navConfig = {
   trainer: [
-    { href: "/trainer", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/trainer/clients", label: "Clienti", icon: Users },
-    { href: "/trainer/workouts", label: "Schede", icon: Dumbbell },
-    { href: "/trainer/messages", label: "Messaggi", icon: MessageSquare },
-    { href: "/trainer/products", label: "Prodotti", icon: ShoppingBag },
-    { href: "/trainer/earnings", label: "Guadagni", icon: TrendingUp },
-    { href: "/trainer/referral", label: "Rete / Inviti", icon: Gift },
-    { href: "/trainer/profile", label: "Profilo", icon: UserCog },
+    { href: "/trainer", label: "nav.dashboard", icon: LayoutDashboard },
+    { href: "/trainer/clients", label: "nav.clients", icon: Users },
+    { href: "/trainer/workouts", label: "nav.workouts", icon: Dumbbell },
+    { href: "/trainer/messages", label: "nav.messages", icon: MessageSquare },
+    { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
+    { href: "/trainer/earnings", label: "nav.earnings", icon: TrendingUp },
+    { href: "/trainer/referral", label: "nav.network", icon: Gift },
+    { href: "/trainer/profile", label: "nav.profile", icon: UserCog },
   ],
   client: [
-    { href: "/client", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/client/workout", label: "La mia scheda", icon: Dumbbell },
-    { href: "/client/progress", label: "Progressi", icon: TrendingUp },
-    { href: "/client/medals", label: "Medagliere", icon: Trophy },
-    { href: "/client/messages", label: "Messaggi", icon: MessageSquare },
-    { href: "/client/shop", label: "Shop", icon: ShoppingBag },
-    { href: "/client/profile", label: "Profilo", icon: UserCog },
+    { href: "/client", label: "nav.dashboard", icon: LayoutDashboard },
+    { href: "/client/workout", label: "nav.myPlan", icon: Dumbbell },
+    { href: "/client/progress", label: "nav.progress", icon: TrendingUp },
+    { href: "/client/medals", label: "nav.medals", icon: Trophy },
+    { href: "/client/messages", label: "nav.messages", icon: MessageSquare },
+    { href: "/client/shop", label: "nav.shop", icon: ShoppingBag },
+    { href: "/client/profile", label: "nav.profile", icon: UserCog },
   ],
   admin: [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/products", label: "Catalogo Prodotti", icon: Package },
-    { href: "/admin/users", label: "Utenti", icon: Users },
-    { href: "/admin/network", label: "Rete Trainer", icon: Network },
-    { href: "/admin/sales", label: "Vendite", icon: TrendingUp },
-    { href: "/admin/settings", label: "Impostazioni", icon: Settings },
+    { href: "/admin", label: "nav.dashboard", icon: LayoutDashboard },
+    { href: "/admin/products", label: "nav.catalog", icon: Package },
+    { href: "/admin/users", label: "nav.users", icon: Users },
+    { href: "/admin/network", label: "nav.trainerNetwork", icon: Network },
+    { href: "/admin/sales", label: "nav.sales", icon: TrendingUp },
+    { href: "/admin/settings", label: "nav.settings", icon: Settings },
   ],
 };
 
 const roleLabel = {
-  trainer: "Personal Trainer",
-  client: "Cliente",
-  admin: "Admin",
+  trainer: "role.trainer",
+  client: "role.client",
+  admin: "role.admin",
 };
 
 export function SidebarNav({
@@ -57,6 +58,7 @@ export function SidebarNav({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const { t } = useT();
   const items = navConfig[role];
   const [unread, setUnread] = useState(0);
   const prev = useRef(0);
@@ -113,7 +115,7 @@ export function SidebarNav({
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-base tracking-tight leading-tight">Build Your Health</p>
-          <p className="text-[11px] font-medium uppercase tracking-[1.2px] text-white/50">{roleLabel[role]}</p>
+          <p className="text-[11px] font-medium uppercase tracking-[1.2px] text-white/50">{t(roleLabel[role])}</p>
         </div>
         <button
           onClick={onClose}
@@ -142,7 +144,7 @@ export function SidebarNav({
               )}
             >
               <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-brand")} />
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1">{t(item.label)}</span>
               {showBadge && (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white tnum">
                   {unread > 99 ? "99+" : unread}
@@ -156,7 +158,7 @@ export function SidebarNav({
       <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-3">
           <UserButton />
-          <p className="text-xs text-white/50">Account</p>
+          <p className="text-xs text-white/50">{t("nav.account")}</p>
         </div>
       </div>
     </aside>

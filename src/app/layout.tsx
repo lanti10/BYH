@@ -16,14 +16,16 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { getLocale } = await import("@/lib/i18n/server");
+  const locale = await getLocale();
   return (
     <ClerkProvider>
-      <html lang="it" className="h-full antialiased">
+      <html lang={locale} className="h-full antialiased">
         <body className="min-h-full bg-background text-foreground">
           <ViewportHeight />
           {children}
