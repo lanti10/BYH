@@ -42,7 +42,7 @@ export default async function NewClientPage() {
             Inserisci l&apos;email con cui si è registrato su BYH.
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-100 bg-white p-5">
+        <div className="rounded-2xl glass p-5">
           <AddClientForm />
         </div>
       </section>

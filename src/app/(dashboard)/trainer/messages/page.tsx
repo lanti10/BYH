@@ -67,7 +67,7 @@ export default async function TrainerMessagesPage({
                   key={cp.id}
                   href={`/trainer/messages?c=${cp.userId}`}
                   className={`flex items-center gap-3 px-4 py-3 border-b border-slate-50 transition-colors ${
-                    isActive ? "bg-[#D42B27]/5" : "hover:bg-slate-50"
+                    isActive ? "bg-brand/5" : "hover:bg-slate-50"
                   }`}
                 >
                   <Avatar>
@@ -81,7 +81,7 @@ export default async function TrainerMessagesPage({
                     <p className="text-xs text-slate-400 truncate">{cp.goals[0] ?? "Cliente"}</p>
                   </div>
                   {unread > 0 && (
-                    <span className="shrink-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D42B27] px-1.5 text-xs font-bold text-white">
+                    <span className="shrink-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white">
                       {unread}
                     </span>
                   )}

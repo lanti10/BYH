@@ -28,13 +28,13 @@ export default async function JoinTrainerPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-depth-dark p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/10">
             <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-wide">BUILD YOUR HEALTH</h1>
+          <h1 className="text-2xl font-bold text-white tracking-wide">BUILD YOUR HEALTH</h1>
         </div>
 
         <div className="rounded-3xl bg-white p-7 shadow-2xl text-center space-y-5">

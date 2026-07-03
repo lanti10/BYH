@@ -25,19 +25,19 @@ export function DashboardShell({
       className="flex flex-col"
       style={{ height: "var(--app-height, 100dvh)" }}
     >
-      {/* Top bar mobile con hamburger */}
-      <header className="flex items-center gap-3 px-4 h-14 bg-[#D42B27] text-white shrink-0 lg:hidden">
+      {/* Top bar mobile con hamburger — nero pieno, il rosso resta solo per accenti */}
+      <header className="flex items-center gap-3 px-4 h-14 bg-ink text-white shrink-0 lg:hidden">
         <button
           onClick={() => setOpen(true)}
           aria-label="Apri menu"
-          className="p-1 -ml-1 rounded-md hover:bg-white/10"
+          className="flex h-11 w-11 -ml-2 items-center justify-center rounded-full hover:bg-white/10"
         >
           <Menu className="h-6 w-6" />
         </button>
-        <div className="relative h-8 w-8 overflow-hidden rounded-md shrink-0">
+        <div className="relative h-8 w-8 overflow-hidden rounded-lg shrink-0">
           <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
         </div>
-        <span className="font-black tracking-wide truncate">Build Your Health</span>
+        <span className="font-semibold tracking-tight truncate">Build Your Health</span>
       </header>
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -54,7 +54,7 @@ export function DashboardShell({
           <button
             onClick={() => setOpen(true)}
             aria-label="Apri menu"
-            className="hidden lg:flex fixed top-4 left-4 z-30 h-10 w-10 items-center justify-center rounded-lg bg-[#D42B27] text-white shadow-lg hover:bg-[#b8231f]"
+            className="hidden lg:flex fixed top-4 left-4 z-30 h-11 w-11 items-center justify-center rounded-full bg-ink text-white shadow-lg hover:bg-slate-800"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -64,7 +64,7 @@ export function DashboardShell({
 
         <main
           className={cn(
-            "flex-1 overflow-y-auto bg-slate-50 transition-all duration-300",
+            "flex-1 overflow-y-auto bg-depth-light transition-all duration-300",
             open ? "lg:ml-64" : "ml-0"
           )}
         >

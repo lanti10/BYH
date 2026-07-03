@@ -28,13 +28,13 @@ export default async function JoinPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#D42B27] to-[#a81f1c] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-depth-dark p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/20">
             <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-wide">BUILD YOUR HEALTH</h1>
+          <h1 className="text-2xl font-bold text-white tracking-wide">BUILD YOUR HEALTH</h1>
         </div>
 
         <div className="rounded-3xl bg-white p-7 shadow-2xl text-center space-y-5">
@@ -42,12 +42,12 @@ export default async function JoinPage({
             <>
               <div className="flex flex-col items-center gap-3">
                 {trainer.user.avatarUrl ? (
-                  <div className="relative h-20 w-20 rounded-full overflow-hidden ring-4 ring-[#D42B27]/10">
+                  <div className="relative h-20 w-20 rounded-full overflow-hidden ring-4 ring-brand/10">
                     <Image src={trainer.user.avatarUrl} alt={trainer.user.name} fill className="object-cover" />
                   </div>
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#D42B27]/10">
-                    <Dumbbell className="h-9 w-9 text-[#D42B27]" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand/10">
+                    <Dumbbell className="h-9 w-9 text-brand" />
                   </div>
                 )}
                 <div>
@@ -63,7 +63,7 @@ export default async function JoinPage({
               <form action={accept}>
                 <button
                   type="submit"
-                  className="w-full rounded-2xl bg-emerald-600 py-3.5 font-semibold text-white transition-colors hover:bg-emerald-700"
+                  className="w-full rounded-full bg-brand py-3.5 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
                 >
                   Crea il mio account
                 </button>

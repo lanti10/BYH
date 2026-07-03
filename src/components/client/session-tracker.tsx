@@ -120,7 +120,7 @@ export function SessionTracker({
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-depth-dark text-white flex flex-col">
       {/* Header */}
       <div className="px-5 pt-6 pb-4 text-center">
         <p className="text-sm text-white/50">{dayName || "Allenamento"}</p>
@@ -134,27 +134,27 @@ export function SessionTracker({
         <div className="flex items-center gap-2 text-white/40 text-sm mb-1">
           <Timer className="h-4 w-4" /> Durata
         </div>
-        <p className="text-6xl font-black tabular-nums tracking-tight">{fmt(elapsed)}</p>
+        <p className="text-6xl font-bold tnum tracking-tight">{fmt(elapsed)}</p>
       </div>
 
       {/* Metriche stile anelli */}
       <div className="grid grid-cols-2 gap-3 px-5 mt-2">
-        <div className="rounded-3xl bg-white/5 p-5">
+        <div className="rounded-3xl glass-dark p-5">
           <div className="flex items-center gap-2 text-orange-400 mb-2">
             <Flame className="h-5 w-5" />
             <span className="text-sm font-medium">Calorie</span>
           </div>
-          <p className="text-3xl font-black tabular-nums">{calories}</p>
+          <p className="text-3xl font-bold tnum">{calories}</p>
           <p className="text-xs text-white/40">kcal stimate</p>
         </div>
-        <div className="rounded-3xl bg-white/5 p-5">
+        <div className="rounded-3xl glass-dark p-5">
           <div className="flex items-center gap-2 text-red-400 mb-2">
             <Heart className="h-5 w-5" />
             <span className="text-sm font-medium">Battito</span>
           </div>
           {hrConnected ? (
             <>
-              <p className="text-3xl font-black tabular-nums">{bpm ?? "--"}</p>
+              <p className="text-3xl font-bold tnum">{bpm ?? "--"}</p>
               <p className="text-xs text-white/40">bpm</p>
             </>
           ) : hrSupported ? (
@@ -166,7 +166,7 @@ export function SessionTracker({
             </button>
           ) : (
             <>
-              <p className="text-3xl font-black tabular-nums">--</p>
+              <p className="text-3xl font-bold tnum">--</p>
               <p className="text-xs text-white/40">non disponibile</p>
             </>
           )}
@@ -212,7 +212,7 @@ export function SessionTracker({
       </div>
 
       {/* Barra azioni */}
-      <div className="sticky bottom-0 border-t border-white/10 bg-slate-950/95 backdrop-blur p-4">
+      <div className="sticky bottom-0 border-t border-white/10 bg-[#0a0a0c]/90 backdrop-blur-xl p-4">
         {confirmEnd ? (
           <div className="flex items-center gap-3">
             <p className="flex-1 text-sm text-white/70">Terminare l&apos;allenamento?</p>
@@ -225,7 +225,7 @@ export function SessionTracker({
             <button
               onClick={end}
               disabled={saving}
-              className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold disabled:opacity-60"
+              className="rounded-full bg-brand shadow-cta px-5 py-2.5 text-sm font-bold disabled:opacity-60"
             >
               {saving ? "Salvataggio..." : "Sì, termina"}
             </button>
@@ -248,7 +248,7 @@ export function SessionTracker({
             </button>
             <button
               onClick={() => setConfirmEnd(true)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#D42B27] py-3.5 font-semibold hover:bg-[#b8231f]"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand py-3.5 font-semibold hover:bg-brand-hover"
             >
               <Square className="h-5 w-5" /> Fine
             </button>

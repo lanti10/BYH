@@ -50,7 +50,7 @@ export default async function ClientProgressPage() {
   }));
 
   const stats = [
-    { label: "Allenamenti", value: totalSessions, icon: Dumbbell, tint: "bg-[#D42B27]/10 text-[#D42B27]" },
+    { label: "Allenamenti", value: totalSessions, icon: Dumbbell, tint: "bg-brand/10 text-brand" },
     { label: "Questa settimana", value: thisWeek, icon: Activity, tint: "bg-emerald-500/10 text-emerald-600" },
     { label: "Tempo totale", value: fmtDuration(totalMin), icon: Timer, tint: "bg-blue-500/10 text-blue-600" },
     { label: "Calorie totali", value: totalCal, icon: Flame, tint: "bg-orange-500/10 text-orange-600" },
@@ -66,11 +66,11 @@ export default async function ClientProgressPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map(({ label, value, icon: Icon, tint }) => (
-          <div key={label} className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5">
+          <div key={label} className="rounded-2xl glass p-4 sm:p-5">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tint} mb-3`}>
               <Icon className="h-5 w-5" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-none">{value}</p>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{label}</p>
           </div>
         ))}
@@ -78,14 +78,14 @@ export default async function ClientProgressPage() {
 
       {/* Weight chart */}
       {progressData.length > 0 && (
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+        <div className="rounded-3xl glass p-5 sm:p-6">
           <h2 className="font-bold text-slate-900 mb-4">Andamento peso</h2>
           <ProgressChart data={progressData} />
         </div>
       )}
 
       {/* Storico sessioni */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+      <div className="rounded-3xl glass p-5 sm:p-6">
         <h2 className="font-bold text-slate-900 mb-4">Allenamenti recenti</h2>
         {sessions.length === 0 ? (
           <div className="text-center py-10">
@@ -98,8 +98,8 @@ export default async function ClientProgressPage() {
           <div className="space-y-2">
             {sessions.map((s) => (
               <div key={s.id} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D42B27]/10">
-                  <Dumbbell className="h-5 w-5 text-[#D42B27]" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10">
+                  <Dumbbell className="h-5 w-5 text-brand" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 truncate">

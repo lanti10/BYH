@@ -101,29 +101,29 @@ export function SidebarNav({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-slate-950 text-white transition-transform duration-300",
+        "fixed left-0 top-0 z-50 flex h-screen w-64 flex-col bg-depth-dark text-white transition-transform duration-300",
         open ? "translate-x-0" : "-translate-x-full"
       )}
     >
       {/* Logo header */}
-      <div className="flex items-center gap-3 px-5 py-4 bg-[#D42B27]">
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+      <div className="flex items-center gap-3 px-5 pt-5 pb-4">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl shadow-cta">
           <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-black text-base tracking-wide leading-tight">Build Your Health</p>
-          <p className="text-xs text-white/70">{roleLabel[role]}</p>
+          <p className="font-bold text-base tracking-tight leading-tight">Build Your Health</p>
+          <p className="text-[11px] font-medium uppercase tracking-[1.2px] text-white/50">{roleLabel[role]}</p>
         </div>
         <button
           onClick={onClose}
           aria-label="Chiudi menu"
-          className="p-1 rounded-md hover:bg-white/10 shrink-0"
+          className="flex h-9 w-9 items-center justify-center rounded-full glass-dark hover:bg-white/15 shrink-0"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -134,16 +134,16 @@ export function SidebarNav({
               href={item.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex min-h-11 items-center gap-3 rounded-full px-4 py-2.5 text-sm transition-colors",
                 isActive
-                  ? "bg-[#D42B27] text-white"
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  ? "glass-dark-prominent font-semibold text-white"
+                  : "font-medium text-white/50 hover:bg-white/5 hover:text-white"
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-brand")} />
               <span className="flex-1">{item.label}</span>
               {showBadge && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D42B27] px-1.5 text-xs font-bold text-white ring-2 ring-slate-950">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white tnum">
                   {unread > 99 ? "99+" : unread}
                 </span>
               )}
@@ -155,7 +155,7 @@ export function SidebarNav({
       <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-3">
           <UserButton />
-          <p className="text-xs text-slate-400">Account</p>
+          <p className="text-xs text-white/50">Account</p>
         </div>
       </div>
     </aside>

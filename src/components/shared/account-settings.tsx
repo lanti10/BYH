@@ -60,7 +60,7 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm space-y-5">
+    <div className="rounded-3xl glass p-5 sm:p-6 shadow-sm space-y-5">
       {/* Foto */}
       <div className="flex items-center gap-4">
         <div className="relative">
@@ -73,7 +73,7 @@ export function AccountSettings() {
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#D42B27] text-white shadow-md hover:bg-[#b8231f] disabled:opacity-60"
+            className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand text-white shadow-md hover:bg-brand-hover disabled:opacity-60"
             aria-label="Cambia foto"
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
@@ -85,7 +85,7 @@ export function AccountSettings() {
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="text-sm font-medium text-[#D42B27] hover:underline disabled:opacity-60"
+            className="text-sm font-medium text-brand hover:underline disabled:opacity-60"
           >
             {uploading ? "Caricamento..." : "Cambia foto"}
           </button>
@@ -99,7 +99,7 @@ export function AccountSettings() {
           <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-[#D42B27]"
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand"
           />
         </label>
         <label className="flex flex-col">
@@ -107,7 +107,7 @@ export function AccountSettings() {
           <input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-[#D42B27]"
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand"
           />
         </label>
       </div>
@@ -115,7 +115,7 @@ export function AccountSettings() {
       {msg && (
         <p
           className={`flex items-center gap-2 text-sm ${
-            msg.type === "ok" ? "text-emerald-600" : "text-[#D42B27]"
+            msg.type === "ok" ? "text-emerald-600" : "text-brand"
           }`}
         >
           {msg.type === "ok" ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}

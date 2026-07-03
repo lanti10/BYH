@@ -16,7 +16,7 @@ export function AddClientForm() {
         type="email"
         required
         placeholder="email@cliente.com"
-        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
       />
       <button
         disabled={pending}
@@ -26,7 +26,7 @@ export function AddClientForm() {
       </button>
 
       {state.error && (
-        <p className="flex items-start gap-2 text-sm text-[#D42B27]">
+        <p className="flex items-start gap-2 text-sm text-brand">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           {state.error}
         </p>

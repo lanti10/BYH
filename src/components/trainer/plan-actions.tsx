@@ -30,7 +30,7 @@ export function PlanActions({ planId }: { planId: string }) {
         <button
           onClick={remove}
           disabled={deleting}
-          className="inline-flex items-center gap-1.5 rounded-full bg-[#D42B27] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#b8231f] disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
         >
           {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           Sì, elimina

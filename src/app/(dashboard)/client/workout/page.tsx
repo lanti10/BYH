@@ -25,8 +25,8 @@ export default async function ClientWorkoutPage() {
       <div className="p-4 sm:p-8 max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold text-slate-900 mb-6">La mia scheda</h1>
         <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white py-16 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#D42B27]/10">
-            <Dumbbell className="h-7 w-7 text-[#D42B27]" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand/10">
+            <Dumbbell className="h-7 w-7 text-brand" />
           </div>
           <p className="text-lg font-semibold text-slate-700">Nessuna scheda attiva</p>
           <p className="mt-1 text-sm text-slate-400">

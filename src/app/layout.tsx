@@ -1,14 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { ViewportHeight } from "@/components/shared/viewport-height";
 import "./globals.css";
-
-const geist = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "BYH — Build Your Health",
@@ -29,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="it" className={`${geist.variable} h-full antialiased`}>
+      <html lang="it" className="h-full antialiased">
         <body className="min-h-full bg-background text-foreground">
           <ViewportHeight />
           {children}

@@ -33,9 +33,9 @@ export function AssignTemplate({ planId, clients }: { planId: string; clients: C
   }
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5">
+    <div className="rounded-2xl glass p-5">
       <div className="flex items-center gap-2 mb-1">
-        <UserPlus className="h-4 w-4 text-[#D42B27]" />
+        <UserPlus className="h-4 w-4 text-brand" />
         <h2 className="font-semibold text-slate-800">Assegna a un cliente</h2>
       </div>
       <p className="text-sm text-slate-500 mb-4">
@@ -45,7 +45,7 @@ export function AssignTemplate({ planId, clients }: { planId: string; clients: C
       {clients.length === 0 ? (
         <p className="text-sm text-slate-400">
           Non hai ancora clienti.{" "}
-          <Link href="/trainer/clients/new" className="font-semibold text-[#D42B27] underline">
+          <Link href="/trainer/clients/new" className="font-semibold text-brand underline">
             Aggiungine uno
           </Link>{" "}
           per poter assegnare questa scheda.
@@ -60,7 +60,7 @@ export function AssignTemplate({ planId, clients }: { planId: string; clients: C
             <select
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+              className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             >
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -71,14 +71,14 @@ export function AssignTemplate({ planId, clients }: { planId: string; clients: C
             <button
               onClick={assign}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-3 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-60"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
               Assegna
             </button>
           </div>
           {error && (
-            <p className="mt-3 flex items-center gap-1.5 text-sm text-[#D42B27]">
+            <p className="mt-3 flex items-center gap-1.5 text-sm text-brand">
               <AlertCircle className="h-4 w-4 shrink-0" /> {error}
             </p>
           )}

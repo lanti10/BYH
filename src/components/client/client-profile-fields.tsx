@@ -77,7 +77,7 @@ export function ClientProfileFields({
   return (
     <div className="space-y-4">
       {/* Sesso */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl glass p-5">
         <p className="font-semibold text-slate-800 mb-3">Sesso</p>
         <div className="flex gap-2">
           {SEXES.map((s) => (
@@ -95,7 +95,7 @@ export function ClientProfileFields({
       </div>
 
       {/* Dati fisici */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl glass p-5">
         <p className="font-semibold text-slate-800 mb-3">I tuoi dati</p>
         <div className="grid grid-cols-3 gap-3">
           <label className="flex flex-col">
@@ -106,7 +106,7 @@ export function ClientProfileFields({
               value={age}
               onChange={(e) => setAge(e.target.value)}
               placeholder="30"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-[#D42B27]"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-brand"
             />
           </label>
           <label className="flex flex-col">
@@ -117,7 +117,7 @@ export function ClientProfileFields({
               value={height}
               onChange={(e) => setHeight(e.target.value)}
               placeholder="178"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-[#D42B27]"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-brand"
             />
           </label>
           <label className="flex flex-col">
@@ -128,14 +128,14 @@ export function ClientProfileFields({
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder="75"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-[#D42B27]"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-brand"
             />
           </label>
         </div>
       </div>
 
       {/* Giorni */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl glass p-5">
         <p className="font-semibold text-slate-800 mb-1">Quanti giorni a settimana puoi allenarti?</p>
         <p className="text-xs text-slate-400 mb-3">Aiuta il trainer a impostare la frequenza giusta.</p>
         <div className="flex flex-wrap gap-2">
@@ -144,7 +144,7 @@ export function ClientProfileFields({
               key={n}
               onClick={() => setDays(n)}
               className={`h-12 w-12 rounded-2xl text-base font-bold transition-colors ${
-                days === n ? "bg-[#D42B27] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                days === n ? "bg-brand text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
               {n}
@@ -154,7 +154,7 @@ export function ClientProfileFields({
       </div>
 
       {/* Obiettivi */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl glass p-5">
         <p className="font-semibold text-slate-800 mb-1">Obiettivi</p>
         <p className="text-xs text-slate-400 mb-3">Puoi sceglierne più di uno.</p>
         <div className="flex flex-wrap gap-2">
@@ -164,7 +164,7 @@ export function ClientProfileFields({
               onClick={() => toggleGoal(g)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 goals.includes(g)
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-brand text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -176,19 +176,19 @@ export function ClientProfileFields({
       </div>
 
       {/* Note */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className="rounded-3xl glass p-5">
         <p className="font-semibold text-slate-800 mb-1">Note per il trainer (facoltativo)</p>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
           placeholder="Es. infortuni, preferenze, esperienza pregressa, attrezzatura disponibile..."
-          className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-[#D42B27] resize-none"
+          className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand resize-none"
         />
       </div>
 
       {error && (
-        <p className="flex items-center gap-2 rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-[#D42B27]">
+        <p className="flex items-center gap-2 rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-brand">
           <AlertCircle className="h-4 w-4 shrink-0" /> {error}
         </p>
       )}
@@ -201,7 +201,7 @@ export function ClientProfileFields({
       <button
         onClick={submit}
         disabled={saving}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 font-semibold text-white shadow-lg transition-colors hover:bg-emerald-700 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-60"
       >
         {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
         {saving ? "Salvataggio..." : submitLabel}

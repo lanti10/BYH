@@ -42,14 +42,14 @@ function OnboardingInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#D42B27] to-[#a81f1c] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-depth-dark p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-20 w-20 rounded-3xl overflow-hidden shadow-2xl ring-4 ring-white/20">
             <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
           </div>
           <div className="text-center">
-            <h1 className="text-3xl font-black text-white tracking-wide">BUILD YOUR HEALTH</h1>
+            <h1 className="text-3xl font-bold text-white tracking-wide">BUILD YOUR HEALTH</h1>
             <p className="text-white/80 mt-1">
               Ciao {user?.firstName}! {step === "role" ? "Come vuoi usare la piattaforma?" : "Inserisci il codice del tuo trainer"}
             </p>
@@ -64,8 +64,8 @@ function OnboardingInner() {
               className="w-full text-left rounded-3xl bg-white p-5 shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.99] disabled:opacity-60"
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D42B27]/10">
-                  <Dumbbell className="h-6 w-6 text-[#D42B27]" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10">
+                  <Dumbbell className="h-6 w-6 text-brand" />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-slate-900">Sono un Personal Trainer</p>
@@ -107,19 +107,19 @@ function OnboardingInner() {
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="ES. K7M2P9"
                 maxLength={8}
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-lg font-bold tracking-widest text-slate-900 uppercase outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-lg font-bold tracking-widest text-slate-900 uppercase outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
               <p className="mt-2 text-xs text-slate-400">
                 Te l&apos;ha dato il tuo personal trainer. Non ce l&apos;hai? Puoi aggiungerlo più tardi.
               </p>
             </div>
 
-            {error && <p className="text-sm text-[#D42B27] font-medium">{error}</p>}
+            {error && <p className="text-sm text-brand font-medium">{error}</p>}
 
             <button
               disabled={loading || code.trim().length < 5}
               onClick={() => submit("CLIENT", code.trim())}
-              className="w-full rounded-2xl bg-emerald-600 py-3 font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+              className="w-full rounded-full bg-brand py-3 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-50"
             >
               {loading ? "Collegamento..." : "Collega al trainer"}
             </button>

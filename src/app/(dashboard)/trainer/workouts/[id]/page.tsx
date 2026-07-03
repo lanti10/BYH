@@ -84,14 +84,14 @@ export default async function WorkoutDetailPage({
 
       {plan.startDate && (
         <div className="mb-6 flex flex-wrap gap-3">
-          <div className="rounded-2xl border border-slate-100 bg-white px-4 py-2.5">
+          <div className="rounded-2xl glass px-4 py-2.5">
             <p className="text-xs text-slate-400">Inizio</p>
             <p className="font-semibold text-slate-800">
               {plan.startDate.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
             </p>
           </div>
           {plan.endDate && (
-            <div className="rounded-2xl border border-slate-100 bg-white px-4 py-2.5">
+            <div className="rounded-2xl glass px-4 py-2.5">
               <p className="text-xs text-slate-400">Fine</p>
               <p className="font-semibold text-slate-800">
                 {plan.endDate.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}

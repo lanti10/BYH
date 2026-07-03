@@ -19,7 +19,7 @@ export default async function ClientMessagesPage() {
     return (
       <div className="p-4 sm:p-8 max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-slate-900 mb-6">Messaggi</h1>
-        <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white py-16 text-center">
+        <div className="rounded-3xl border-2 border-dashed border-slate-300 bg-white/50 py-16 text-center">
           <MessageSquare className="mx-auto h-8 w-8 text-slate-300 mb-3" />
           <p className="text-slate-500">Non sei ancora collegato a un trainer.</p>
         </div>

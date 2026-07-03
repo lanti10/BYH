@@ -45,7 +45,7 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
   }
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6 shadow-sm">
+    <div className="rounded-3xl glass p-5 sm:p-6 shadow-sm">
       {/* Tabs */}
       <div className="flex gap-2 rounded-full bg-slate-100 p-1 mb-6">
         <button
@@ -80,7 +80,7 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
               value={link}
               size={200}
               marginSize={1}
-              fgColor={tab === "client" ? "#059669" : "#D42B27"}
+              fgColor={tab === "client" ? "#059669" : "#FF3B30"}
               bgColor="#ffffff"
               level="M"
             />

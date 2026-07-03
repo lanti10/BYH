@@ -4,11 +4,60 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* ── BYH Pulse: colori brand (vedi design/DESIGN.md) ── */
+  --color-brand: #ff3b30; /* Rosso BYH: solo CTA, dati live, zona 5 */
+  --color-brand-hover: #e0342b;
+  --color-ink: #0b0b0d; /* Nero */
+  --color-success: #30d158;
+  --color-warning: #ff9f0a;
+  --color-danger: #ff453a; /* errore: solo testo/icone */
+  --color-zone1: #30d158;
+  --color-zone3: #ffd60a;
+  --color-zone4: #ff9f0a;
+  --color-zone5: #ff3b30;
+  --color-chart-secondary: #5ac8fa;
+  --color-chart-tertiary: #bf5af2;
+
+  /* Verdi/arancioni allineati alla palette iOS del design */
+  --color-emerald-50: #e8fbee;
+  --color-emerald-100: #d1f7dd;
+  --color-emerald-500: #30d158;
+  --color-emerald-600: #30d158;
+  --color-emerald-700: #26ad49;
+  --color-amber-500: #ffd60a;
+  --color-amber-600: #ff9f0a;
+  --color-orange-500: #ff9f0a;
+  --color-orange-600: #ff9f0a;
+  --color-red-500: #ff453a;
+  --color-red-600: #ff453a;
+
+  /* Scala neutri iOS al posto di slate */
+  --color-slate-50: #f2f2f7;
+  --color-slate-100: #e5e5ea;
+  --color-slate-200: #e5e5ea;
+  --color-slate-300: #c7c7cc;
+  --color-slate-400: #8e8e93;
+  --color-slate-500: #8e8e93;
+  --color-slate-600: #48484a;
+  --color-slate-700: #2c2c2e;
+  --color-slate-800: #1c1c1e;
+  --color-slate-900: #0b0b0d;
+  --color-slate-950: #0a0a0c;
+
+  /* Raggi Pulse: 10 chip · 16 controlli · 22 card */
+  --radius-xl: 10px;
+  --radius-2xl: 16px;
+  --radius-3xl: 22px;
+
+  /* SF Pro / system-ui, un solo font */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: ui-monospace, Menlo, monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -42,10 +91,7 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-4xl: 28px;
 }
 
 :root {
@@ -127,4 +173,44 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── BYH Pulse: liquid glass + sfondi con profondità (design/DESIGN.md §03) ── */
+@utility glass {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+@utility glass-prominent {
+  backdrop-filter: blur(24px) saturate(1.4);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+@utility glass-dark {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+@utility glass-dark-prominent {
+  backdrop-filter: blur(24px) saturate(1.4);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+@utility bg-depth-dark {
+  background:
+    radial-gradient(90% 50% at 80% -5%, rgba(255, 59, 48, 0.3), transparent 60%)
+    #0a0a0c;
+}
+@utility bg-depth-light {
+  background:
+    radial-gradient(90% 50% at 20% -5%, rgba(255, 59, 48, 0.13), transparent 60%)
+    #f2f2f7;
+}
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+@utility shadow-cta {
+  box-shadow: 0 6px 18px rgba(255, 59, 48, 0.35);
 }

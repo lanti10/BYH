@@ -43,7 +43,7 @@ export function PlanDayTabs({
             onClick={() => setActive(i)}
             className={`shrink-0 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors ${
               i === active
-                ? "bg-[#D42B27] text-white shadow-sm"
+                ? "bg-brand text-white shadow-sm"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
@@ -61,7 +61,7 @@ export function PlanDayTabs({
       {startHrefBase && day.exercises.length > 0 && (
         <Link
           href={`${startHrefBase}/${day.id}`}
-          className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+          className="mt-3 flex items-center justify-center gap-2 rounded-full bg-brand py-3.5 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
         >
           <Play className="h-5 w-5" /> Inizia allenamento
         </Link>
@@ -70,8 +70,8 @@ export function PlanDayTabs({
       {/* Esercizi del giorno selezionato */}
       <div className="mt-3 space-y-2">
         {day.exercises.map((ex, i) => (
-          <div key={ex.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D42B27]/10 text-sm font-bold text-[#D42B27]">
+          <div key={ex.id} className="flex items-center gap-3 rounded-2xl glass p-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-sm font-bold text-brand">
               {i + 1}
             </div>
             <div className="flex-1 min-w-0">

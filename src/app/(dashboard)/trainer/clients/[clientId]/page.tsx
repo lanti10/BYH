@@ -138,7 +138,7 @@ export default async function ClientDetailPage({
                   </span>
                 )}
                 {client.trainingDaysPerWeek && (
-                  <span className="rounded-lg bg-[#D42B27]/10 px-2.5 py-1 text-xs font-medium text-[#D42B27]">
+                  <span className="rounded-lg bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
                     {client.trainingDaysPerWeek} allenamenti/sett
                   </span>
                 )}

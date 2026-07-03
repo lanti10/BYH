@@ -27,18 +27,18 @@ export default async function ReferralPage() {
       <InviteHub code={code} />
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-slate-100 bg-white p-5">
+        <div className="rounded-2xl glass p-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 mb-3">
             <Users className="h-5 w-5 text-emerald-600" />
           </div>
-          <p className="text-3xl font-black text-slate-900">{clientCount}</p>
+          <p className="text-3xl font-bold text-slate-900">{clientCount}</p>
           <p className="text-sm text-slate-500">Clienti collegati</p>
         </div>
-        <div className="rounded-2xl border border-slate-100 bg-white p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D42B27]/10 mb-3">
-            <UserPlus className="h-5 w-5 text-[#D42B27]" />
+        <div className="rounded-2xl glass p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 mb-3">
+            <UserPlus className="h-5 w-5 text-brand" />
           </div>
-          <p className="text-3xl font-black text-slate-900">{trainerReferrals}</p>
+          <p className="text-3xl font-bold text-slate-900">{trainerReferrals}</p>
           <p className="text-sm text-slate-500">Trainer invitati</p>
         </div>
       </div>

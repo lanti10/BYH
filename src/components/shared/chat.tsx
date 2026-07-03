@@ -73,7 +73,7 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
               <div
                 className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${
                   mine
-                    ? "bg-[#D42B27] text-white rounded-br-md"
+                    ? "bg-brand text-white rounded-br-md"
                     : "bg-white border border-slate-100 text-slate-800 rounded-bl-md"
                 }`}
               >
@@ -92,7 +92,7 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-slate-100 bg-white p-3">
+      <div className="border-t border-white/60 glass-prominent p-3">
         <div className="flex items-center gap-2">
           <input
             value={text}
@@ -115,12 +115,12 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
             data-form-type="other"
             data-1p-ignore
             data-lpignore="true"
-            className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+            className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
           <button
             onClick={send}
             disabled={sending || !text.trim()}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D42B27] text-white transition-colors hover:bg-[#b8231f] disabled:opacity-40"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-hover disabled:opacity-40"
             aria-label="Invia"
           >
             <Send className="h-5 w-5" />

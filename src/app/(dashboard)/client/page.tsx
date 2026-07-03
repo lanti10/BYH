@@ -166,15 +166,15 @@ export default async function ClientDashboard() {
           <div className="grid grid-cols-2 gap-3">
             <Link
               href="/client/messages"
-              className="relative rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+              className="relative rounded-2xl glass p-4 transition-shadow hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 mb-2">
                 <MessageSquare className="h-4 w-4 text-blue-600" />
               </div>
-              <p className="text-2xl font-black text-slate-900 leading-none">{unreadCount}</p>
+              <p className="text-2xl font-bold text-slate-900 leading-none">{unreadCount}</p>
               <p className="text-xs text-slate-500 mt-1">Messaggi non letti</p>
               {unreadCount > 0 && (
-                <span className="absolute top-3 right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D42B27] px-1.5 text-xs font-bold text-white">
+                <span className="absolute top-3 right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white">
                   {unreadCount}
                 </span>
               )}
@@ -182,12 +182,12 @@ export default async function ClientDashboard() {
 
             <Link
               href="/client/progress"
-              className="rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+              className="rounded-2xl glass p-4 transition-shadow hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 mb-2">
                 <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
-              <p className="text-2xl font-black text-slate-900 leading-none">
+              <p className="text-2xl font-bold text-slate-900 leading-none">
                 {profile.progressLogs[profile.progressLogs.length - 1]?.weight ?? "—"}
                 <span className="text-sm font-bold text-slate-400"> kg</span>
               </p>
@@ -196,18 +196,18 @@ export default async function ClientDashboard() {
 
             <Link
               href="/client/progress"
-              className="rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+              className="rounded-2xl glass p-4 transition-shadow hover:shadow-md"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D42B27]/10 mb-2">
-                <Dumbbell className="h-4 w-4 text-[#D42B27]" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 mb-2">
+                <Dumbbell className="h-4 w-4 text-brand" />
               </div>
-              <p className="text-2xl font-black text-slate-900 leading-none">{profile.sessions.length}</p>
+              <p className="text-2xl font-bold text-slate-900 leading-none">{profile.sessions.length}</p>
               <p className="text-xs text-slate-500 mt-1">Allenamenti</p>
             </Link>
 
             <Link
               href="/client/workout"
-              className="rounded-2xl border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
+              className="rounded-2xl glass p-4 transition-shadow hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
                 <Dumbbell className="h-4 w-4 text-amber-600" />
@@ -232,7 +232,7 @@ export default async function ClientDashboard() {
                     <p className="text-xs text-slate-500 mt-0.5">€{rec.product.salePrice.toFixed(2)}</p>
                     <Button
                       size="sm"
-                      className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 h-7 text-xs"
+                      className="w-full mt-2 bg-ink hover:bg-slate-800 h-7 text-xs"
                       render={<Link href={`/client/shop/${rec.product.id}`} />}
                     >
                       Acquista

@@ -117,7 +117,7 @@ export function WorkoutCreator({
   return (
     <div className="space-y-6">
       {/* Tipo di allenamento */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+      <div className="rounded-3xl glass p-5 sm:p-6">
         <h2 className="font-semibold text-slate-800 mb-3">Tipo di allenamento</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {TRAINING_TYPES.map((t) => (
@@ -126,7 +126,7 @@ export function WorkoutCreator({
               onClick={() => setTrainingType(t)}
               className={`rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${
                 trainingType === t
-                  ? "bg-[#D42B27] text-white"
+                  ? "bg-brand text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -137,7 +137,7 @@ export function WorkoutCreator({
       </div>
 
       {/* Frequenza */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+      <div className="rounded-3xl glass p-5 sm:p-6">
         <h2 className="font-semibold text-slate-800 mb-3">Quante volte a settimana</h2>
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3, 4, 5, 6, 7].map((n) => (
@@ -146,7 +146,7 @@ export function WorkoutCreator({
               onClick={() => setFrequency(n)}
               className={`h-12 w-12 rounded-2xl text-base font-bold transition-colors ${
                 frequency === n
-                  ? "bg-[#D42B27] text-white"
+                  ? "bg-brand text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -157,7 +157,7 @@ export function WorkoutCreator({
       </div>
 
       {/* Dati fisici */}
-      <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
+      <div className="rounded-3xl glass p-5 sm:p-6 space-y-4">
         <h2 className="font-semibold text-slate-800">Dati fisici del cliente</h2>
 
         {clients.length > 0 && (
@@ -166,7 +166,7 @@ export function WorkoutCreator({
             <select
               value={clientId}
               onChange={(e) => selectClient(e.target.value)}
-              className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#D42B27] focus:ring-2 focus:ring-[#D42B27]/20"
+              className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             >
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -205,7 +205,7 @@ export function WorkoutCreator({
               value={age}
               onChange={(e) => setAge(e.target.value)}
               placeholder="30"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-[#D42B27]"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-brand"
             />
           </label>
           <label className="flex flex-col">
@@ -215,7 +215,7 @@ export function WorkoutCreator({
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder="75"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-[#D42B27]"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-brand"
             />
           </label>
           <label className="flex flex-col">
@@ -225,7 +225,7 @@ export function WorkoutCreator({
               value={height}
               onChange={(e) => setHeight(e.target.value)}
               placeholder="178"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-[#D42B27]"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 outline-none focus:border-brand"
             />
           </label>
         </div>
@@ -254,13 +254,13 @@ export function WorkoutCreator({
             onChange={(e) => setGoals(e.target.value)}
             rows={2}
             placeholder="Es. vuole aumentare la massa sulle gambe, ha problemi alla spalla destra..."
-            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-[#D42B27] resize-none"
+            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand resize-none"
           />
         </div>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-[#D42B27]">
+        <p className="flex items-start gap-2 rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-brand">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" /> {error}
         </p>
       )}
@@ -270,7 +270,7 @@ export function WorkoutCreator({
         <button
           onClick={generate}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D42B27] to-[#a81f1c] py-4 font-semibold text-white shadow-lg transition-opacity hover:opacity-95 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 font-semibold text-white shadow-cta transition-opacity hover:opacity-95 disabled:opacity-60"
         >
           {loading ? (
             <>

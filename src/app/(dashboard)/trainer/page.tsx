@@ -42,17 +42,17 @@ export default async function TrainerDashboard() {
     { label: "Clienti attivi", value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
     { label: "Messaggi non letti", value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
     { label: "Da validare", value: pendingRecs.length, icon: ShoppingBag, tint: "bg-amber-500/10 text-amber-600" },
-    { label: "Guadagni totali", value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-[#D42B27]/10 text-[#D42B27]" },
+    { label: "Guadagni totali", value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand" },
   ];
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       {/* Hero */}
-      <div className="rounded-3xl bg-gradient-to-br from-[#D42B27] to-[#a81f1c] p-6 sm:p-8 text-white shadow-lg">
+      <div className="rounded-3xl bg-depth-dark p-6 sm:p-8 text-white shadow-lg">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-white/70 text-sm">Bentornato</p>
-            <h1 className="text-3xl font-black tracking-tight mt-0.5">{user.name.split(" ")[0]}</h1>
+            <h1 className="text-3xl font-bold tracking-tight mt-0.5">{user.name.split(" ")[0]}</h1>
             <p className="text-white/80 mt-2 text-sm">
               {clients.length === 0
                 ? "Inizia invitando il tuo primo cliente."
@@ -77,11 +77,11 @@ export default async function TrainerDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map(({ label, value, icon: Icon, tint }) => (
-          <div key={label} className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5">
+          <div key={label} className="rounded-2xl glass p-4 sm:p-5">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tint} mb-3`}>
               <Icon className="h-5 w-5" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-none">{value}</p>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{label}</p>
           </div>
         ))}
@@ -89,10 +89,10 @@ export default async function TrainerDashboard() {
 
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Client list */}
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+        <div className="rounded-3xl glass p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-900">I tuoi clienti</h2>
-            <Link href="/trainer/clients" className="text-sm font-medium text-[#D42B27] hover:underline">
+            <Link href="/trainer/clients" className="text-sm font-medium text-brand hover:underline">
               Vedi tutti
             </Link>
           </div>
@@ -137,10 +137,10 @@ export default async function TrainerDashboard() {
         </div>
 
         {/* Pending recommendations */}
-        <div className="rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+        <div className="rounded-3xl glass p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-900">Raccomandazioni da validare</h2>
-            <Link href="/trainer/products" className="text-sm font-medium text-[#D42B27] hover:underline">
+            <Link href="/trainer/products" className="text-sm font-medium text-brand hover:underline">
               Vedi tutte
             </Link>
           </div>
