@@ -21,11 +21,15 @@ export type PlanDay = {
 export function PlanDayTabs({
   days,
   startHrefBase,
+  todayIndex,
 }: {
   days: PlanDay[];
   startHrefBase?: string;
+  todayIndex?: number; // giorno che tocca oggi (progressione): tab pre-selezionata + badge "Oggi"
 }) {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(
+    todayIndex != null ? Math.min(todayIndex, Math.max(days.length - 1, 0)) : 0
+  );
 
   if (days.length === 0) {
     return <p className="text-sm text-slate-400 text-center py-8">Nessun giorno in questa scheda.</p>;
@@ -41,13 +45,22 @@ export function PlanDayTabs({
           <button
             key={d.id}
             onClick={() => setActive(i)}
-            className={`shrink-0 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors ${
+            className={`relative shrink-0 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors ${
               i === active
                 ? "bg-brand text-white shadow-sm"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Giorno {i + 1}
+            {todayIndex === i && (
+              <span
+                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                  i === active ? "bg-white/20 text-white" : "bg-brand/10 text-brand"
+                }`}
+              >
+                Oggi
+              </span>
+            )}
           </button>
         ))}
       </div>

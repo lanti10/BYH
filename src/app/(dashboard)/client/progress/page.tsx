@@ -1,6 +1,8 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ProgressChart } from "@/components/trainer/progress-chart";
+import { TrainingChart, type TrainingDatum } from "@/components/client/training-chart";
+import { getStreak } from "@/lib/workout";
 import { Dumbbell, Flame, Timer, Heart, Activity } from "lucide-react";
 
 function fmtDuration(min: number) {
@@ -40,8 +42,7 @@ export default async function ClientProgressPage() {
   const totalSessions = sessions.length;
   const totalMin = sessions.reduce((s, x) => s + (x.durationMin ?? 0), 0);
   const totalCal = sessions.reduce((s, x) => s + (x.calories ?? 0), 0);
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const thisWeek = sessions.filter((s) => new Date(s.completedAt).getTime() >= weekAgo).length;
+  const streak = getStreak(sessions);
 
   const progressData = progressLogs.map((log) => ({
     date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
@@ -49,9 +50,27 @@ export default async function ClientProgressPage() {
     grasso: log.bodyFat,
   }));
 
+  // Attività degli ultimi 14 giorni (minuti + kcal per giorno)
+  const chartData: TrainingDatum[] = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (13 - i));
+    const next = new Date(d);
+    next.setDate(d.getDate() + 1);
+    const daySessions = sessions.filter((s) => {
+      const t = new Date(s.completedAt).getTime();
+      return t >= d.getTime() && t < next.getTime();
+    });
+    return {
+      label: d.toLocaleDateString("it-IT", { day: "numeric" }),
+      min: daySessions.reduce((s, x) => s + (x.durationMin ?? 0), 0),
+      kcal: daySessions.reduce((s, x) => s + (x.calories ?? 0), 0),
+    };
+  });
+
   const stats = [
     { label: "Allenamenti", value: totalSessions, icon: Dumbbell, tint: "bg-brand/10 text-brand" },
-    { label: "Questa settimana", value: thisWeek, icon: Activity, tint: "bg-emerald-500/10 text-emerald-600" },
+    { label: "Streak", value: `${streak} gg`, icon: Activity, tint: "bg-emerald-500/10 text-emerald-600" },
     { label: "Tempo totale", value: fmtDuration(totalMin), icon: Timer, tint: "bg-blue-500/10 text-blue-600" },
     { label: "Calorie totali", value: totalCal, icon: Flame, tint: "bg-orange-500/10 text-orange-600" },
   ];
@@ -74,6 +93,13 @@ export default async function ClientProgressPage() {
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Attività ultime 2 settimane */}
+      <div className="rounded-3xl glass p-5 sm:p-6">
+        <h2 className="font-semibold text-slate-900 mb-1">Attività</h2>
+        <p className="text-xs text-slate-400 mb-4">Minuti di allenamento · ultime 2 settimane</p>
+        <TrainingChart data={chartData} />
       </div>
 
       {/* Weight chart */}

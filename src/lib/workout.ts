@@ -1,0 +1,64 @@
+// Logica di progressione: quale giorno della scheda tocca oggi.
+// I giorni sono ordinati (dayOfWeek = indice 0..N-1). Dopo l'ultimo si ricomincia dal primo.
+
+type DayRef = { id: string };
+type SessionRef = { workoutDayId: string; completedAt: Date };
+
+export function getNextDayIndex(
+  days: DayRef[],
+  sessions: SessionRef[]
+): { nextIndex: number; doneToday: boolean } {
+  if (days.length === 0) return { nextIndex: 0, doneToday: false };
+
+  const dayIds = new Set(days.map((d) => d.id));
+  const planSessions = sessions
+    .filter((s) => dayIds.has(s.workoutDayId))
+    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+
+  const last = planSessions[0];
+  if (!last) return { nextIndex: 0, doneToday: false };
+
+  const lastIdx = days.findIndex((d) => d.id === last.workoutDayId);
+  const nextIndex = ((lastIdx === -1 ? -1 : lastIdx) + 1) % days.length;
+
+  const now = new Date();
+  const lastDate = new Date(last.completedAt);
+  const doneToday =
+    lastDate.getFullYear() === now.getFullYear() &&
+    lastDate.getMonth() === now.getMonth() &&
+    lastDate.getDate() === now.getDate();
+
+  return { nextIndex, doneToday };
+}
+
+// Durata stimata di un giorno di allenamento (minuti): ~45s per serie + recupero
+export function estimateDuration(
+  exercises: { sets: number; restSeconds: number }[]
+): number {
+  const sec = exercises.reduce((s, e) => s + e.sets * (45 + e.restSeconds), 0);
+  return Math.max(5, Math.round(sec / 60));
+}
+
+// Streak: giorni consecutivi con allenamento, contando da oggi (o ieri) all'indietro
+export function getStreak(sessions: { completedAt: Date }[]): number {
+  if (sessions.length === 0) return 0;
+  const daySet = new Set(
+    sessions.map((s) => {
+      const d = new Date(s.completedAt);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    })
+  );
+  const key = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
+  const cursor = new Date();
+  // La streak può partire da oggi oppure da ieri (oggi non ancora allenato)
+  if (!daySet.has(key(cursor))) cursor.setDate(cursor.getDate() - 1);
+  if (!daySet.has(key(cursor))) return 0;
+
+  let streak = 0;
+  while (daySet.has(key(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}

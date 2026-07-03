@@ -1,13 +1,14 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Dumbbell, MessageSquare, TrendingUp, ShoppingBag } from "lucide-react";
+import { ActivityRing } from "@/components/client/activity-ring";
+import { WeekStrip } from "@/components/client/week-strip";
+import { getNextDayIndex, estimateDuration, getStreak } from "@/lib/workout";
+import {
+  Dumbbell, MessageSquare, TrendingUp, ShoppingBag,
+  Play, Flame, Timer, Check, ChevronRight,
+} from "lucide-react";
 import Link from "next/link";
-import { ProgressChart } from "@/components/trainer/progress-chart";
-import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
@@ -22,17 +23,15 @@ export default async function ClientDashboard() {
           where: { isActive: true },
           include: {
             workouts: {
+              orderBy: { dayOfWeek: "asc" },
               include: {
-                exercises: {
-                  include: { exercise: true },
-                  orderBy: { order: "asc" },
-                },
+                exercises: { include: { exercise: true }, orderBy: { order: "asc" } },
               },
             },
           },
           take: 1,
         },
-        sessions: { orderBy: { completedAt: "desc" }, take: 10 },
+        sessions: { orderBy: { completedAt: "desc" }, take: 60 },
         progressLogs: { orderBy: { date: "asc" }, take: 30 },
       },
     }),
@@ -56,191 +55,276 @@ export default async function ClientDashboard() {
     );
   }
 
-  const progressData = profile.progressLogs.map((log: { date: Date; weight: number | null; bodyFat: number | null }) => ({
-    date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
-    peso: log.weight,
-    grasso: log.bodyFat,
-  }));
-
   const activePlan = profile.workoutPlans[0];
-  const planDays: PlanDay[] = activePlan
-    ? [...activePlan.workouts]
-        .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
-        .map((w) => ({
-          id: w.id,
-          name: w.name,
-          exercises: w.exercises.map((e) => ({
-            id: e.id,
-            name: e.exercise.name,
-            sets: e.sets,
-            reps: e.reps,
-            weight: e.weight,
-            restSeconds: e.restSeconds,
-          })),
-        }))
-    : [];
+  const sessions = profile.sessions;
+
+  // ── Progressione: quale giorno tocca oggi ──
+  const days = activePlan?.workouts ?? [];
+  const { nextIndex, doneToday } = getNextDayIndex(days, sessions);
+  const todayWorkout = days[nextIndex];
+  const estMin = todayWorkout ? estimateDuration(todayWorkout.exercises) : 0;
+
+  // ── Statistiche settimana corrente (lun–dom) ──
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  const weekSessions = sessions.filter((s) => new Date(s.completedAt) >= monday);
+  const weekGoal = profile.trainingDaysPerWeek ?? 3;
+  const weekMin = weekSessions.reduce((s, x) => s + (x.durationMin ?? 0), 0);
+  const weekCal = weekSessions.reduce((s, x) => s + (x.calories ?? 0), 0);
+  const streak = getStreak(sessions);
+
+  // ── Striscia dei 7 giorni della settimana ──
+  const dayInitials = ["L", "M", "M", "G", "V", "S", "D"];
+  const trainedKeys = new Set(
+    sessions.map((s) => {
+      const d = new Date(s.completedAt);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    })
+  );
+  const strip = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return {
+      label: dayInitials[i],
+      done: trainedKeys.has(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`),
+      isToday: d.toDateString() === now.toDateString(),
+    };
+  });
+
+  const lastWeight = profile.progressLogs[profile.progressLogs.length - 1]?.weight;
 
   return (
-    <div className="p-4 sm:p-8 space-y-8">
+    <div className="p-4 sm:p-8 space-y-5 max-w-5xl mx-auto pb-10">
+      {/* Saluto */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
+        <p className="text-[13px] text-slate-500 capitalize">
+          {now.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+        </p>
+        <h1 className="text-[28px] leading-tight font-bold text-slate-900 tracking-tight">
           Ciao, {user.name.split(" ")[0]}
         </h1>
-        <p className="text-slate-500 mt-1">
-          {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
-        </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* La tua scheda */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* ── Colonna principale ── */}
         <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">
-                {activePlan ? activePlan.name : "La tua scheda"}
-              </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link href="/client/workout" />}
-              >
-                Apri scheda
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {planDays.length > 0 ? (
-                <PlanDayTabs days={planDays} startHrefBase="/workout-session" />
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-slate-400 text-sm">Nessuna scheda assegnata ancora.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {progressData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">I tuoi progressi</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProgressChart data={progressData} />
-              </CardContent>
-            </Card>
+          {/* HERO: l'allenamento che tocca OGGI (progressione automatica) */}
+          {todayWorkout ? (
+            <div className="rounded-3xl bg-depth-dark p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/50">
+                  Oggi · Giorno {nextIndex + 1} di {days.length}
+                </p>
+                {doneToday && (
+                  <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
+                    <Check className="h-3 w-3" strokeWidth={3} /> Fatto oggi
+                  </span>
+                )}
+              </div>
+              <h2 className="text-[22px] font-semibold tracking-tight">
+                {todayWorkout.name || `Giorno ${nextIndex + 1}`}
+              </h2>
+              <p className="mt-1 text-sm text-white/60 tnum">
+                {todayWorkout.exercises.length} esercizi · ~{estMin} min
+              </p>
+
+              {/* Pallini progressione ciclo */}
+              <div className="mt-4 flex items-center gap-1.5">
+                {days.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i < nextIndex
+                        ? "w-6 bg-emerald-500"
+                        : i === nextIndex
+                          ? "w-9 bg-brand"
+                          : "w-6 bg-white/15"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Anteprima primi esercizi */}
+              <div className="mt-4 space-y-1.5">
+                {todayWorkout.exercises.slice(0, 3).map((ex, i) => (
+                  <div key={ex.id} className="flex items-center gap-3 rounded-2xl glass-dark px-3.5 py-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-brand/15 text-xs font-bold text-[#ff6b61] tnum">
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 truncate text-sm font-medium">{ex.exercise.name}</span>
+                    <span className="text-xs text-white/50 tnum">
+                      {ex.sets}×{ex.reps}{ex.weight != null ? ` · ${ex.weight}kg` : ""}
+                    </span>
+                  </div>
+                ))}
+                {todayWorkout.exercises.length > 3 && (
+                  <p className="pl-1 text-xs text-white/40 tnum">
+                    + altri {todayWorkout.exercises.length - 3} esercizi
+                  </p>
+                )}
+              </div>
+
+              <Link
+                href={`/workout-session/${todayWorkout.id}`}
+                className="mt-5 flex h-[50px] items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+              >
+                <Play className="h-5 w-5 fill-white" />
+                {doneToday ? "Allenati di nuovo" : "Inizia allenamento"}
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-3xl glass p-8 text-center">
+              <Dumbbell className="mx-auto h-8 w-8 text-slate-300 mb-3" />
+              <p className="font-semibold text-slate-700">Nessuna scheda attiva</p>
+              <p className="mt-1 text-sm text-slate-400">Il tuo trainer ti assegnerà presto un programma.</p>
+            </div>
           )}
+
+          {/* Attività settimanale: anello + metriche + striscia giorni */}
+          <div className="rounded-3xl glass p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-slate-900">Questa settimana</h2>
+              <Link href="/client/progress" className="text-sm font-semibold text-brand">
+                Progressi <ChevronRight className="inline h-3.5 w-3.5 -mt-0.5" />
+              </Link>
+            </div>
+            <div className="flex items-center gap-5 sm:gap-8">
+              <ActivityRing progress={weekGoal ? weekSessions.length / weekGoal : 0} size={124}>
+                <span className="text-[26px] font-bold text-slate-900 leading-none tnum">
+                  {weekSessions.length}
+                  <span className="text-sm font-medium text-slate-400">/{weekGoal}</span>
+                </span>
+                <span className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  Allenamenti
+                </span>
+              </ActivityRing>
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-lg font-bold text-slate-900 leading-none tnum">{weekCal}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">kcal bruciate</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10">
+                    <Timer className="h-4 w-4 text-blue-500" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-lg font-bold text-slate-900 leading-none tnum">
+                      {weekMin}<span className="text-xs font-medium text-slate-400"> min</span>
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">tempo attivo</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10">
+                    <Flame className="h-4 w-4 text-brand" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-lg font-bold text-slate-900 leading-none tnum">
+                      {streak}<span className="text-xs font-medium text-slate-400"> giorni</span>
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">streak consecutiva</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 border-t border-slate-100 pt-4">
+              <WeekStrip days={strip} />
+            </div>
+          </div>
         </div>
 
-        {/* Right column */}
+        {/* ── Colonna laterale ── */}
         <div className="space-y-4">
-          {/* Trainer card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-500">Il tuo trainer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={profile.trainer.user.avatarUrl ?? undefined} />
-                  <AvatarFallback>
-                    {profile.trainer.user.name.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold text-sm">{profile.trainer.user.name}</p>
-                  <p className="text-xs text-slate-400">{profile.trainer.user.email}</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-3"
-                render={<Link href="/client/messages" />}
-              >
-                <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                Scrivi al trainer
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Widget cliccabili */}
+          {/* Widget rapidi */}
           <div className="grid grid-cols-2 gap-3">
-            <Link
-              href="/client/messages"
-              className="relative rounded-2xl glass p-4 transition-shadow hover:shadow-md"
-            >
+            <Link href="/client/messages" className="relative rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 mb-2">
-                <MessageSquare className="h-4 w-4 text-blue-600" />
+                <MessageSquare className="h-4 w-4 text-blue-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 leading-none">{unreadCount}</p>
-              <p className="text-xs text-slate-500 mt-1">Messaggi non letti</p>
+              <p className="text-2xl font-bold text-slate-900 leading-none tnum">{unreadCount}</p>
+              <p className="text-xs text-slate-500 mt-1">Non letti</p>
               {unreadCount > 0 && (
-                <span className="absolute top-3 right-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white">
-                  {unreadCount}
-                </span>
+                <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-brand" />
               )}
             </Link>
-
-            <Link
-              href="/client/progress"
-              className="rounded-2xl glass p-4 transition-shadow hover:shadow-md"
-            >
+            <Link href="/client/progress" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 mb-2">
                 <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 leading-none">
-                {profile.progressLogs[profile.progressLogs.length - 1]?.weight ?? "—"}
-                <span className="text-sm font-bold text-slate-400"> kg</span>
+              <p className="text-2xl font-bold text-slate-900 leading-none tnum">
+                {lastWeight ?? "—"}<span className="text-sm font-medium text-slate-400"> kg</span>
               </p>
               <p className="text-xs text-slate-500 mt-1">Peso attuale</p>
             </Link>
-
-            <Link
-              href="/client/progress"
-              className="rounded-2xl glass p-4 transition-shadow hover:shadow-md"
-            >
+            <Link href="/client/workout" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 mb-2">
                 <Dumbbell className="h-4 w-4 text-brand" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 leading-none">{profile.sessions.length}</p>
-              <p className="text-xs text-slate-500 mt-1">Allenamenti</p>
+              <p className="text-sm font-semibold text-slate-900 leading-tight">La mia scheda</p>
+              <p className="text-xs text-slate-500 mt-1 truncate">{activePlan?.name ?? "—"}</p>
             </Link>
-
-            <Link
-              href="/client/workout"
-              className="rounded-2xl glass p-4 transition-shadow hover:shadow-md"
-            >
+            <Link href="/client/shop" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
-                <Dumbbell className="h-4 w-4 text-amber-600" />
+                <ShoppingBag className="h-4 w-4 text-amber-600" />
               </div>
-              <p className="text-sm font-bold text-slate-900 leading-tight mt-1">La mia scheda</p>
-              <p className="text-xs text-slate-500 mt-1">Vai agli allenamenti</p>
+              <p className="text-sm font-semibold text-slate-900 leading-tight">Shop</p>
+              <p className="text-xs text-slate-500 mt-1">Consigli BYH</p>
             </Link>
           </div>
 
+          {/* Trainer */}
+          <div className="rounded-3xl glass p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-3">
+              Il tuo trainer
+            </p>
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage src={profile.trainer.user.avatarUrl ?? undefined} />
+                <AvatarFallback>{profile.trainer.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm text-slate-900 truncate">{profile.trainer.user.name}</p>
+                <p className="text-xs text-slate-400 truncate">{profile.trainer.user.email}</p>
+              </div>
+            </div>
+            <Link
+              href="/client/messages"
+              className="mt-4 flex h-11 items-center justify-center gap-2 rounded-full bg-white/80 text-sm font-semibold text-slate-900 hover:bg-white"
+            >
+              <MessageSquare className="h-4 w-4" /> Scrivi al trainer
+            </Link>
+          </div>
+
+          {/* Raccomandazioni */}
           {recommendations.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
-                  <ShoppingBag className="h-4 w-4" />
-                  Consigliati dal trainer
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="rounded-3xl glass p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-3">
+                Consigliati dal trainer
+              </p>
+              <div className="space-y-2">
                 {recommendations.map((rec) => (
-                  <div key={rec.id} className="p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                    <p className="text-sm font-medium">{rec.product.name}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">€{rec.product.salePrice.toFixed(2)}</p>
-                    <Button
-                      size="sm"
-                      className="w-full mt-2 bg-ink hover:bg-slate-800 h-7 text-xs"
-                      render={<Link href={`/client/shop/${rec.product.id}`} />}
-                    >
-                      Acquista
-                    </Button>
-                  </div>
+                  <Link
+                    key={rec.id}
+                    href={`/client/shop/${rec.product.id}`}
+                    className="flex items-center gap-3 rounded-2xl bg-white/70 p-3 hover:bg-white"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{rec.product.name}</p>
+                      <p className="text-xs text-slate-400 tnum">€{rec.product.salePrice.toFixed(2)}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-300" />
+                  </Link>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
       </div>
