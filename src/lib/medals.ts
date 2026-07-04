@@ -58,16 +58,16 @@ export function computeMedals(sessions: Sess[], weeklyGoal: number): Medal[] {
   const weeks = completeWeeks(sessions, Math.max(1, weeklyGoal));
 
   const defs: Omit<Medal, "unlocked" | "current">[] = [
-    { id: "first", title: "Primo passo", description: "Completa il tuo primo allenamento", icon: "flag", color: "#FF375F", target: 1 },
-    { id: "s10", title: "In moto", description: "10 allenamenti completati", icon: "flame", color: "#FF9F0A", target: 10 },
-    { id: "s25", title: "Costante", description: "25 allenamenti completati", icon: "medal", color: "#5AC8FA", target: 25 },
-    { id: "s50", title: "Inarrestabile", description: "50 allenamenti completati", icon: "award", color: "#BF5AF2", target: 50 },
-    { id: "s100", title: "Leggenda", description: "100 allenamenti completati", icon: "trophy", color: "#FFD60A", target: 100 },
-    { id: "week1", title: "Settimana perfetta", description: `Allenati ${weeklyGoal} volte in una settimana`, icon: "calendar-check", color: "#30D158", target: 1 },
-    { id: "week4", title: "Mese perfetto", description: "4 settimane perfette", icon: "star", color: "#FF375F", target: 4 },
-    { id: "week12", title: "Trimestre di ferro", description: "12 settimane perfette", icon: "crown", color: "#FFD60A", target: 12 },
-    { id: "streak7", title: "7 di fila", description: "7 giorni consecutivi", icon: "zap", color: "#FF9F0A", target: 7 },
-    { id: "streak30", title: "30 di fila", description: "30 giorni consecutivi", icon: "gem", color: "#5AC8FA", target: 30 },
+    { id: "first", title: "medal.first", description: "medal.first.d", icon: "flag", color: "#FF375F", target: 1 },
+    { id: "s10", title: "medal.s10", description: "medal.s10.d", icon: "flame", color: "#FF9F0A", target: 10 },
+    { id: "s25", title: "medal.s25", description: "medal.s25.d", icon: "medal", color: "#5AC8FA", target: 25 },
+    { id: "s50", title: "medal.s50", description: "medal.s50.d", icon: "award", color: "#BF5AF2", target: 50 },
+    { id: "s100", title: "medal.s100", description: "medal.s100.d", icon: "trophy", color: "#FFD60A", target: 100 },
+    { id: "week1", title: "medal.week1", description: "medal.week1.d", icon: "calendar-check", color: "#30D158", target: 1 },
+    { id: "week4", title: "medal.week4", description: "medal.week4.d", icon: "star", color: "#FF375F", target: 4 },
+    { id: "week12", title: "medal.week12", description: "medal.week12.d", icon: "crown", color: "#FFD60A", target: 12 },
+    { id: "streak7", title: "medal.streak7", description: "medal.streak7.d", icon: "zap", color: "#FF9F0A", target: 7 },
+    { id: "streak30", title: "medal.streak30", description: "medal.streak30.d", icon: "gem", color: "#5AC8FA", target: 30 },
   ];
 
   const valueFor = (id: string): number => {

@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { ProgressView, type Sess } from "@/components/client/progress-view";
 import { MedalBadge } from "@/components/client/medal-badge";
 import { computeMedals } from "@/lib/medals";
@@ -8,13 +9,14 @@ import Link from "next/link";
 
 export default async function ClientProgressPage() {
   const user = await requireRole("CLIENT");
+  const { t } = await getT();
   const client = user.clientProfile;
 
   if (!client) {
     return (
       <div className="p-4 sm:p-8">
-        <h1 className="text-2xl font-bold text-slate-900">Progressi</h1>
-        <p className="text-slate-400 mt-4 text-sm">In attesa del collegamento con un trainer.</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t("prog.title")}</h1>
+        <p className="text-slate-400 mt-4 text-sm">{t("msgs.notLinked")}</p>
       </div>
     );
   }
@@ -46,8 +48,8 @@ export default async function ClientProgressPage() {
   return (
     <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-4">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-[28px] font-bold text-slate-900 tracking-tight">Progressi</h1>
-        <span className="text-sm text-slate-400 tnum">{unlocked.length}/{medals.length} medaglie</span>
+        <h1 className="text-[28px] font-bold text-slate-900 tracking-tight">{t("prog.title")}</h1>
+        <span className="text-sm text-slate-400 tnum">{t("prog.medalsCount", { a: unlocked.length, b: medals.length })}</span>
       </div>
 
       <ProgressView sessions={sessions} weeklyGoal={weeklyGoal} />
@@ -58,9 +60,9 @@ export default async function ClientProgressPage() {
         className="block rounded-3xl glass p-5 sm:p-6 transition-shadow hover:shadow-md"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-slate-900">Medagliere</h2>
+          <h2 className="font-semibold text-slate-900">{t("medals.title")}</h2>
           <span className="text-sm font-semibold text-brand">
-            Tutte <ChevronRight className="inline h-3.5 w-3.5 -mt-0.5" />
+            {t("prog.all")} <ChevronRight className="inline h-3.5 w-3.5 -mt-0.5" />
           </span>
         </div>
         <div className="grid grid-cols-4 gap-2">

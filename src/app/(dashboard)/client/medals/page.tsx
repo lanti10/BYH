@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { computeMedals } from "@/lib/medals";
 import { MedalBadge } from "@/components/client/medal-badge";
 import { ArrowLeft, Trophy } from "lucide-react";
@@ -7,6 +8,7 @@ import Link from "next/link";
 
 export default async function MedalsPage() {
   const user = await requireRole("CLIENT");
+  const { t } = await getT();
   const client = user.clientProfile;
 
   const sessions = client
@@ -29,11 +31,11 @@ export default async function MedalsPage() {
           href="/client/progress"
           className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-3"
         >
-          <ArrowLeft className="h-4 w-4" /> Progressi
+          <ArrowLeft className="h-4 w-4" /> {t("prog.title")}
         </Link>
-        <h1 className="text-[28px] font-bold text-slate-900 tracking-tight">Medagliere</h1>
+        <h1 className="text-[28px] font-bold text-slate-900 tracking-tight">{t("medals.title")}</h1>
         <p className="text-slate-500 mt-1 text-sm tnum">
-          {unlocked.length} di {medals.length} medaglie sbloccate
+          {t("medals.unlockedOf", { a: unlocked.length, b: medals.length })}
         </p>
       </div>
 
@@ -41,13 +43,13 @@ export default async function MedalsPage() {
       <div className="rounded-3xl bg-depth-dark p-6 text-white text-center">
         <Trophy className="mx-auto h-8 w-8 text-[#FFD60A] mb-2" />
         <p className="text-4xl font-bold tnum">{unlocked.length}</p>
-        <p className="text-sm text-white/50 mt-1">traguardi raggiunti</p>
+        <p className="text-sm text-white/50 mt-1">{t("medals.trophies")}</p>
       </div>
 
       {unlocked.length > 0 && (
         <div>
           <h2 className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-4">
-            Sbloccate
+            {t("medals.unlocked")}
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
             {unlocked.map((m) => (
@@ -59,7 +61,7 @@ export default async function MedalsPage() {
 
       <div>
         <h2 className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-4">
-          Da conquistare
+          {t("medals.locked")}
         </h2>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
           {locked.map((m) => (
@@ -70,7 +72,7 @@ export default async function MedalsPage() {
 
       {/* Legenda traguardi */}
       <div className="rounded-3xl glass p-5">
-        <h2 className="font-semibold text-slate-900 mb-3">Come si sbloccano</h2>
+        <h2 className="font-semibold text-slate-900 mb-3">{t("medals.how")}</h2>
         <div className="space-y-2.5">
           {medals.map((m) => (
             <div key={m.id} className="flex items-center gap-3">
@@ -79,9 +81,9 @@ export default async function MedalsPage() {
                 style={{ background: m.unlocked ? m.color : "#C7C7CC" }}
               />
               <span className={`text-sm ${m.unlocked ? "font-semibold text-slate-900" : "text-slate-500"}`}>
-                {m.title}
+                {t(m.title)}
               </span>
-              <span className="ml-auto text-xs text-slate-400 text-right">{m.description}</span>
+              <span className="ml-auto text-xs text-slate-400 text-right">{t(m.description, { n: weeklyGoal })}</span>
             </div>
           ))}
         </div>

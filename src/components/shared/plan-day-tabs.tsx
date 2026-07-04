@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Dumbbell, Play } from "lucide-react";
+import { Dumbbell, Play, ChevronRight } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 export type PlanExercise = {
   id: string;
@@ -27,12 +28,13 @@ export function PlanDayTabs({
   startHrefBase?: string;
   todayIndex?: number; // giorno che tocca oggi (progressione): tab pre-selezionata + badge "Oggi"
 }) {
+  const { t } = useT();
   const [active, setActive] = useState(
     todayIndex != null ? Math.min(todayIndex, Math.max(days.length - 1, 0)) : 0
   );
 
   if (days.length === 0) {
-    return <p className="text-sm text-slate-400 text-center py-8">Nessun giorno in questa scheda.</p>;
+    return <p className="text-sm text-slate-400 text-center py-8">{t("plan.noDays")}</p>;
   }
 
   const day = days[Math.min(active, days.length - 1)];
@@ -51,14 +53,14 @@ export function PlanDayTabs({
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Giorno {i + 1}
+            {t("plan.dayN", { n: i + 1 })}
             {todayIndex === i && (
               <span
                 className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                   i === active ? "bg-white/20 text-white" : "bg-brand/10 text-brand"
                 }`}
               >
-                Oggi
+                {t("dash.today")}
               </span>
             )}
           </button>
@@ -74,41 +76,38 @@ export function PlanDayTabs({
       {startHrefBase && day.exercises.length > 0 && (
         <Link
           href={`${startHrefBase}/${day.id}`}
-          className="mt-3 flex items-center justify-center gap-2 rounded-full bg-brand py-3.5 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+          className="mt-3 flex h-[50px] items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
         >
-          <Play className="h-5 w-5" /> Inizia allenamento
+          <Play className="h-5 w-5 fill-white" /> {t("dash.start")}
         </Link>
       )}
 
-      {/* Esercizi del giorno selezionato */}
-      <div className="mt-3 space-y-2">
+      {/* Lista esercizi — list row dal design system (§04) */}
+      <div className="mt-3 overflow-hidden rounded-3xl glass">
         {day.exercises.map((ex, i) => (
-          <div key={ex.id} className="flex items-center gap-3 rounded-2xl glass p-3.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-sm font-bold text-brand">
+          <div
+            key={ex.id}
+            className={`flex items-center gap-3 px-4 py-3.5 ${
+              i < day.exercises.length - 1 ? "border-b border-black/5" : ""
+            }`}
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-[13px] font-bold text-brand tnum">
               {i + 1}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-slate-900 truncate">{ex.name}</p>
-              <div className="mt-1 flex flex-wrap gap-1.5">
-                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                  {ex.sets} × {ex.reps}
-                </span>
-                {ex.weight != null && (
-                  <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                    {ex.weight} kg
-                  </span>
-                )}
-                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                  {ex.restSeconds}s rec.
-                </span>
-              </div>
+              <p className="text-sm font-semibold text-slate-900 truncate">{ex.name}</p>
+              <p className="text-xs text-slate-500 tnum">
+                {ex.sets} × {ex.reps}
+                {ex.weight != null ? ` · ${ex.weight} kg` : ""} · {ex.restSeconds}s {t("plan.rest")}
+              </p>
             </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
           </div>
         ))}
         {day.exercises.length === 0 && (
           <div className="flex flex-col items-center py-8 text-center text-slate-400">
             <Dumbbell className="h-6 w-6 mb-2" />
-            <p className="text-sm">Nessun esercizio in questo giorno.</p>
+            <p className="text-sm">{t("plan.noExercises")}</p>
           </div>
         )}
       </div>

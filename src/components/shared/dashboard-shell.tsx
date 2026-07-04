@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "./sidebar-nav";
 import { HeaderActions } from "./header-actions";
+import { TabBar } from "./tab-bar";
 
 export function DashboardShell({
   role,
@@ -77,8 +78,11 @@ export function DashboardShell({
             open ? "lg:ml-64" : "ml-0"
           )}
         >
-          {children}
+          <div className="pb-28 lg:pb-0">{children}</div>
         </main>
+
+        {/* Tab bar mobile (design Pulse) */}
+        <TabBar role={role} />
       </div>
     </div>
   );

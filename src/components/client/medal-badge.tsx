@@ -1,7 +1,10 @@
+"use client";
+
 import {
   Flag, Flame, Medal, Award, Trophy, CalendarCheck, Star, Crown, Zap, Gem, Lock,
 } from "lucide-react";
 import type { Medal as MedalType } from "@/lib/medals";
+import { useT } from "@/lib/i18n/client";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   flag: Flag,
@@ -18,6 +21,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 
 // Esagono medaglia
 export function MedalBadge({ medal, size = 76 }: { medal: MedalType; size?: number }) {
+  const { t } = useT();
   const Icon = ICONS[medal.icon] ?? Medal;
   const { unlocked } = medal;
 
@@ -48,7 +52,7 @@ export function MedalBadge({ medal, size = 76 }: { medal: MedalType; size?: numb
       </div>
       <div>
         <p className={`text-xs font-semibold leading-tight ${unlocked ? "text-slate-900" : "text-slate-400"}`}>
-          {medal.title}
+          {t(medal.title)}
         </p>
         {!unlocked && medal.target > 1 && (
           <p className="text-[10px] text-slate-400 tnum">

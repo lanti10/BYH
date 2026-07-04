@@ -79,7 +79,7 @@ export default async function ClientDashboard() {
   const streak = getStreak(sessions);
 
   // ── Striscia dei 7 giorni della settimana ──
-  const dayInitials = ["L", "M", "M", "G", "V", "S", "D"];
+  const dayInitials = t("dash.weekInitials").split(",");
   const trainedKeys = new Set(
     sessions.map((s) => {
       const d = new Date(s.completedAt);
@@ -128,7 +128,7 @@ export default async function ClientDashboard() {
                 )}
               </div>
               <h2 className="text-[22px] font-semibold tracking-tight">
-                {todayWorkout.name || `Giorno ${nextIndex + 1}`}
+                {todayWorkout.name || t("plan.dayN", { n: nextIndex + 1 })}
               </h2>
               <p className="mt-1 text-sm text-white/60 tnum">
                 {t("dash.meta", { n: todayWorkout.exercises.length, min: estMin })}

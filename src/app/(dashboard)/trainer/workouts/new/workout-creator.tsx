@@ -4,6 +4,7 @@ import { useState } from "react";
 import { WorkoutBuilder } from "./workout-builder";
 import type { DayInput } from "../actions";
 import { Sparkles, PencilLine, AlertCircle, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 export type ClientOption = {
   id: string;
@@ -14,16 +15,24 @@ export type ClientOption = {
   goals?: string | null;
 };
 
+// value = canonico (inviato all'AI), key = etichetta tradotta
 const TRAINING_TYPES = [
-  "Ipertrofia / Massa",
-  "Forza",
-  "Dimagrimento",
-  "Resistenza",
-  "Tonificazione",
-  "Functional / Full body",
+  { value: "Ipertrofia / Massa", key: "tt.mass" },
+  { value: "Forza", key: "tt.strength" },
+  { value: "Dimagrimento", key: "tt.loss" },
+  { value: "Resistenza", key: "tt.endurance" },
+  { value: "Tonificazione", key: "tt.tone" },
+  { value: "Functional / Full body", key: "tt.functional" },
 ];
-const LEVELS = ["Principiante", "Intermedio", "Avanzato"];
-const SEXES = ["Uomo", "Donna"];
+const LEVELS = [
+  { value: "Principiante", key: "lvl.beginner" },
+  { value: "Intermedio", key: "lvl.intermediate" },
+  { value: "Avanzato", key: "lvl.advanced" },
+];
+const SEXES = [
+  { value: "Uomo", key: "pf.man" },
+  { value: "Donna", key: "pf.woman" },
+];
 
 export function WorkoutCreator({
   clients,
@@ -32,6 +41,7 @@ export function WorkoutCreator({
   clients: ClientOption[];
   initialClientId?: string;
 }) {
+  const { t } = useT();
   const [phase, setPhase] = useState<"config" | "edit">("config");
 
   const [clientId, setClientId] = useState(
@@ -39,13 +49,13 @@ export function WorkoutCreator({
       ? initialClientId
       : clients[0]?.id ?? ""
   );
-  const [trainingType, setTrainingType] = useState(TRAINING_TYPES[0]);
+  const [trainingType, setTrainingType] = useState(TRAINING_TYPES[0].value);
   const [frequency, setFrequency] = useState(3);
   const [sex, setSex] = useState("");
   const [age, setAge] = useState<string>("");
   const [weight, setWeight] = useState<string>("");
   const [height, setHeight] = useState<string>("");
-  const [level, setLevel] = useState(LEVELS[1]);
+  const [level, setLevel] = useState(LEVELS[1].value);
   const [goals, setGoals] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -118,19 +128,19 @@ export function WorkoutCreator({
     <div className="space-y-6">
       {/* Tipo di allenamento */}
       <div className="rounded-3xl glass p-5 sm:p-6">
-        <h2 className="font-semibold text-slate-800 mb-3">Tipo di allenamento</h2>
+        <h2 className="font-semibold text-slate-800 mb-3">{t("wk.type")}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {TRAINING_TYPES.map((t) => (
+          {TRAINING_TYPES.map((tt) => (
             <button
-              key={t}
-              onClick={() => setTrainingType(t)}
+              key={tt.value}
+              onClick={() => setTrainingType(tt.value)}
               className={`rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${
-                trainingType === t
+                trainingType === tt.value
                   ? "bg-brand text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {t}
+              {t(tt.key)}
             </button>
           ))}
         </div>
@@ -138,7 +148,7 @@ export function WorkoutCreator({
 
       {/* Frequenza */}
       <div className="rounded-3xl glass p-5 sm:p-6">
-        <h2 className="font-semibold text-slate-800 mb-3">Quante volte a settimana</h2>
+        <h2 className="font-semibold text-slate-800 mb-3">{t("wk.freq")}</h2>
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3, 4, 5, 6, 7].map((n) => (
             <button
@@ -158,11 +168,11 @@ export function WorkoutCreator({
 
       {/* Dati fisici */}
       <div className="rounded-3xl glass p-5 sm:p-6 space-y-4">
-        <h2 className="font-semibold text-slate-800">Dati fisici del cliente</h2>
+        <h2 className="font-semibold text-slate-800">{t("wk.clientData")}</h2>
 
         {clients.length > 0 && (
           <div>
-            <label className="text-sm text-slate-500">Cliente</label>
+            <label className="text-sm text-slate-500">{t("role.client")}</label>
             <select
               value={clientId}
               onChange={(e) => selectClient(e.target.value)}
@@ -181,17 +191,17 @@ export function WorkoutCreator({
         )}
 
         <div>
-          <label className="text-sm text-slate-500">Sesso</label>
+          <label className="text-sm text-slate-500">{t("pf.sex")}</label>
           <div className="mt-1.5 flex gap-2">
             {SEXES.map((s) => (
               <button
-                key={s}
-                onClick={() => setSex(s)}
+                key={s.value}
+                onClick={() => setSex(s.value)}
                 className={`flex-1 rounded-2xl py-2.5 text-sm font-medium transition-colors ${
-                  sex === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  sex === s.value ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                {s}
+                {t(s.key)}
               </button>
             ))}
           </div>
@@ -199,7 +209,7 @@ export function WorkoutCreator({
 
         <div className="grid grid-cols-3 gap-3">
           <label className="flex flex-col">
-            <span className="text-sm text-slate-500 mb-1.5">Età</span>
+            <span className="text-sm text-slate-500 mb-1.5">{t("pf.age")}</span>
             <input
               type="number"
               value={age}
@@ -209,7 +219,7 @@ export function WorkoutCreator({
             />
           </label>
           <label className="flex flex-col">
-            <span className="text-sm text-slate-500 mb-1.5">Peso (kg)</span>
+            <span className="text-sm text-slate-500 mb-1.5">{t("pf.weight")}</span>
             <input
               type="number"
               value={weight}
@@ -219,7 +229,7 @@ export function WorkoutCreator({
             />
           </label>
           <label className="flex flex-col">
-            <span className="text-sm text-slate-500 mb-1.5">Altezza (cm)</span>
+            <span className="text-sm text-slate-500 mb-1.5">{t("pf.height")}</span>
             <input
               type="number"
               value={height}
@@ -231,24 +241,24 @@ export function WorkoutCreator({
         </div>
 
         <div>
-          <label className="text-sm text-slate-500">Livello</label>
+          <label className="text-sm text-slate-500">{t("wk.level")}</label>
           <div className="mt-1.5 flex gap-2">
             {LEVELS.map((l) => (
               <button
-                key={l}
-                onClick={() => setLevel(l)}
+                key={l.value}
+                onClick={() => setLevel(l.value)}
                 className={`flex-1 rounded-2xl py-2.5 text-sm font-medium transition-colors ${
-                  level === l ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  level === l.value ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                {l}
+                {t(l.key)}
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <label className="text-sm text-slate-500">Obiettivi e note (facoltativo)</label>
+          <label className="text-sm text-slate-500">{t("wk.goalsNotes")}</label>
           <textarea
             value={goals}
             onChange={(e) => setGoals(e.target.value)}
@@ -274,11 +284,11 @@ export function WorkoutCreator({
         >
           {loading ? (
             <>
-              <Loader2 className="h-5 w-5 animate-spin" /> Generazione in corso...
+              <Loader2 className="h-5 w-5 animate-spin" /> {t("wk.generating")}
             </>
           ) : (
             <>
-              <Sparkles className="h-5 w-5" /> Genera scheda con l&apos;AI
+              <Sparkles className="h-5 w-5" /> {t("wk.genAI")}
             </>
           )}
         </button>
@@ -287,7 +297,7 @@ export function WorkoutCreator({
           disabled={loading}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3.5 font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
         >
-          <PencilLine className="h-5 w-5" /> Crea manualmente
+          <PencilLine className="h-5 w-5" /> {t("wk.manual")}
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWorkoutPlan, updateWorkoutPlan, type DayInput } from "../actions";
 import { Plus, Trash2, GripVertical, AlertCircle, ArrowLeft } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 type ClientOption = { id: string; name: string };
 
@@ -61,6 +62,7 @@ export function WorkoutBuilder({
   onBack?: () => void;
 }) {
   const router = useRouter();
+  const { t } = useT();
   const isEdit = !!planId;
   const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
   const [name, setName] = useState(initialName);
@@ -166,20 +168,20 @@ export function WorkoutBuilder({
           onClick={onBack}
           className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600"
         >
-          <ArrowLeft className="h-4 w-4" /> Modifica impostazioni
+          <ArrowLeft className="h-4 w-4" /> {t("wb.editSettings")}
         </button>
       )}
 
       {/* Dati scheda */}
       <div className="rounded-3xl glass p-5 sm:p-6 space-y-4">
         <div>
-          <label className="text-sm font-semibold text-slate-700">Assegna a</label>
+          <label className="text-sm font-semibold text-slate-700">{t("wb.assign")}</label>
           <select
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           >
-            <option value="">Nessun cliente — salva come modello</option>
+            <option value="">{t("wb.noClient")}</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -187,21 +189,21 @@ export function WorkoutBuilder({
             ))}
           </select>
           <p className="mt-1 text-xs text-slate-400">
-            Salva senza cliente per tenere la scheda come modello da riutilizzare.
+            {t("wb.templateHint")}
           </p>
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-700">Nome scheda</label>
+          <label className="text-sm font-semibold text-slate-700">{t("wb.name")}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Es. Massa - Fase 1"
+            placeholder={t("wb.namePh")}
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm font-semibold text-slate-700">Data inizio</label>
+            <label className="text-sm font-semibold text-slate-700">{t("wb.startDate")}</label>
             <input
               type="date"
               value={startDate}
@@ -210,7 +212,7 @@ export function WorkoutBuilder({
             />
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700">Durata (settimane)</label>
+            <label className="text-sm font-semibold text-slate-700">{t("wb.duration")}</label>
             <input
               type="number"
               inputMode="numeric"
@@ -223,15 +225,15 @@ export function WorkoutBuilder({
           </div>
         </div>
         {endPreview && (
-          <p className="text-xs text-slate-400 -mt-1">Fine prevista: {endPreview}</p>
+          <p className="text-xs text-slate-400 -mt-1">{t("wb.endPreview", { date: endPreview })}</p>
         )}
         <div>
-          <label className="text-sm font-semibold text-slate-700">Descrizione (facoltativa)</label>
+          <label className="text-sm font-semibold text-slate-700">{t("wb.desc")}</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            placeholder="Note generali sulla scheda..."
+            placeholder={t("wb.descPh")}
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 resize-none"
           />
         </div>
@@ -249,14 +251,14 @@ export function WorkoutBuilder({
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Giorno {i + 1}
+            {t("plan.dayN", { n: i + 1 })}
           </button>
         ))}
         <button
           onClick={addDay}
           className="shrink-0 flex items-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-500 hover:border-slate-400 hover:text-slate-700"
         >
-          <Plus className="h-4 w-4" /> Giorno
+          <Plus className="h-4 w-4" /> {t("wb.addDay")}
         </button>
       </div>
 
@@ -268,11 +270,11 @@ export function WorkoutBuilder({
               {active + 1}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-slate-400">Giorno {active + 1}</p>
+              <p className="text-xs font-semibold text-slate-400">{t("plan.dayN", { n: active + 1 })}</p>
               <input
                 value={activeDay.name}
                 onChange={(e) => updateDay(activeDay.id, { name: e.target.value })}
-                placeholder="Nome (es. Petto e tricipiti)"
+                placeholder={t("wb.dayNamePh")}
                 className="w-full bg-transparent text-base font-semibold text-slate-900 outline-none placeholder:text-slate-300"
               />
             </div>
@@ -282,7 +284,7 @@ export function WorkoutBuilder({
                 className="shrink-0 flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 hover:bg-red-50 hover:text-red-500"
                 aria-label="Rimuovi giorno"
               >
-                <Trash2 className="h-3.5 w-3.5" /> Elimina giorno
+                <Trash2 className="h-3.5 w-3.5" /> {t("wb.delDay")}
               </button>
             )}
           </div>
@@ -296,7 +298,7 @@ export function WorkoutBuilder({
                   <input
                     value={ex.name}
                     onChange={(e) => updateExercise(activeDay.id, ex.id, { name: e.target.value })}
-                    placeholder="Nome esercizio (es. Panca piana)"
+                    placeholder={t("wb.exPh")}
                     className="flex-1 min-w-0 bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
                   />
                   <button
@@ -309,7 +311,7 @@ export function WorkoutBuilder({
                 </div>
                 <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 pl-6">
                   <label className="flex flex-col">
-                    <span className="text-[11px] text-slate-400 mb-1">Serie</span>
+                    <span className="text-[11px] text-slate-400 mb-1">{t("wb.sets")}</span>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -320,7 +322,7 @@ export function WorkoutBuilder({
                     />
                   </label>
                   <label className="flex flex-col">
-                    <span className="text-[11px] text-slate-400 mb-1">Ripetizioni</span>
+                    <span className="text-[11px] text-slate-400 mb-1">{t("wb.reps")}</span>
                     <input
                       value={ex.reps}
                       onChange={(e) => updateExercise(activeDay.id, ex.id, { reps: e.target.value })}
@@ -329,7 +331,7 @@ export function WorkoutBuilder({
                     />
                   </label>
                   <label className="flex flex-col">
-                    <span className="text-[11px] text-slate-400 mb-1">Peso (kg)</span>
+                    <span className="text-[11px] text-slate-400 mb-1">{t("wb.weight")}</span>
                     <input
                       type="number"
                       inputMode="decimal"
@@ -342,7 +344,7 @@ export function WorkoutBuilder({
                     />
                   </label>
                   <label className="flex flex-col">
-                    <span className="text-[11px] text-slate-400 mb-1">Rec. (s)</span>
+                    <span className="text-[11px] text-slate-400 mb-1">{t("wb.rest")}</span>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -362,7 +364,7 @@ export function WorkoutBuilder({
             onClick={() => addExercise(activeDay.id)}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-2.5 text-sm font-medium text-slate-400 hover:border-brand/40 hover:text-brand"
           >
-            <Plus className="h-4 w-4" /> Aggiungi esercizio
+            <Plus className="h-4 w-4" /> {t("wb.addEx")}
           </button>
         </div>
       )}
@@ -380,7 +382,7 @@ export function WorkoutBuilder({
             disabled={saving}
             className="ml-auto rounded-full bg-brand px-8 py-3 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-50"
           >
-            {saving ? "Salvataggio..." : isEdit ? "Salva modifiche" : "Salva scheda"}
+            {saving ? t("session.saving") : isEdit ? t("wb.saveEdits") : t("wb.save")}
           </button>
         </div>
       </div>

@@ -8,6 +8,8 @@ import { ActivityRings } from "./activity-rings";
 import {
   Calendar, ChevronLeft, ChevronRight, Flame, Timer, Dumbbell, Heart,
 } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
+import { DATE_LOCALE } from "@/lib/i18n/dict";
 
 export type Sess = {
   id: string;
@@ -38,6 +40,8 @@ const toISODate = (d: Date) => {
 };
 
 export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weeklyGoal: number }) {
+  const { t, locale } = useT();
+  const dl = DATE_LOCALE[locale];
   const [mode, setMode] = useState<Mode>("day");
   const [selected, setSelected] = useState<Date>(startOfDay(new Date()));
   const dateRef = useRef<HTMLInputElement>(null);
@@ -78,7 +82,7 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
     d.setDate(weekStart.getDate() + i);
     const dayS = parsed.filter((s) => sameDay(s.d, d));
     return {
-      label: ["L", "M", "M", "G", "V", "S", "D"][i],
+      label: t("dash.weekInitials").split(",")[i],
       min: dayS.reduce((a, s) => a + s.min, 0),
       isSel: mode === "day" && sameDay(d, selected),
       date: d,
@@ -94,13 +98,13 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
   const isToday = mode === "day" && sameDay(selected, new Date());
   const label =
     mode === "day"
-      ? selected.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })
-      : `${rangeStart.toLocaleDateString("it-IT", { day: "numeric", month: "short" })} – ${new Date(rangeEnd.getTime() - DAY_MS).toLocaleDateString("it-IT", { day: "numeric", month: "short" })}`;
+      ? selected.toLocaleDateString(dl, { weekday: "long", day: "numeric", month: "long" })
+      : `${rangeStart.toLocaleDateString(dl, { day: "numeric", month: "short" })} – ${new Date(rangeEnd.getTime() - DAY_MS).toLocaleDateString(dl, { day: "numeric", month: "short" })}`;
 
   const metrics = [
-    { label: "Movimento", value: cal, goal: calGoal, unit: "CAL", color: "#FF375F", icon: Flame },
-    { label: "Esercizio", value: min, goal: minGoal, unit: "MIN", color: "#30D158", icon: Timer },
-    { label: "Allenamenti", value: count, goal: wGoal, unit: count === 1 ? "SESS." : "SESS.", color: "#5AC8FA", icon: Dumbbell },
+    { label: t("prog.move"), value: cal, goal: calGoal, unit: "CAL", color: "#FF375F", icon: Flame },
+    { label: t("prog.exercise"), value: min, goal: minGoal, unit: "MIN", color: "#30D158", icon: Timer },
+    { label: t("prog.workouts"), value: count, goal: wGoal, unit: count === 1 ? "SESS." : "SESS.", color: "#5AC8FA", icon: Dumbbell },
   ];
 
   return (
@@ -124,7 +128,7 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
             <ChevronRight className="h-4 w-4" />
           </button>
           <p className="ml-2 text-sm font-semibold text-slate-900 capitalize">
-            {isToday ? "Oggi" : label}
+            {isToday ? t("common.today") : label}
           </p>
         </div>
 
@@ -158,7 +162,7 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
               mode === m ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
             }`}
           >
-            {m === "day" ? "Giorno" : "Settimana"}
+            {m === "day" ? t("prog.day") : t("prog.week")}
           </button>
         ))}
       </div>
@@ -166,14 +170,14 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
       {/* Anelli di attività + legenda */}
       <div className="rounded-3xl bg-depth-dark p-5 sm:p-6 text-white">
         <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/50 mb-4">
-          Anelli di attività
+          {t("prog.rings")}
         </p>
         <div className="flex items-center gap-5 sm:gap-8">
           <div className="relative shrink-0">
             <ActivityRings rings={rings} size={168} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-bold tnum leading-none">{count}</span>
-              <span className="text-[10px] uppercase tracking-wide text-white/50">allen.</span>
+              <span className="text-[10px] uppercase tracking-wide text-white/50">{t("prog.short")}</span>
             </div>
           </div>
           <div className="flex-1 space-y-3">
@@ -198,26 +202,26 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
         <div className="rounded-3xl glass p-4">
           <Flame className="h-5 w-5 text-orange-500 mb-2" />
           <p className="text-2xl font-bold text-slate-900 tnum leading-none">{cal}</p>
-          <p className="text-xs text-slate-400 mt-1">kcal</p>
+          <p className="text-xs text-slate-400 mt-1">{t("prog.kcal")}</p>
         </div>
         <div className="rounded-3xl glass p-4">
           <Timer className="h-5 w-5 text-blue-500 mb-2" />
           <p className="text-2xl font-bold text-slate-900 tnum leading-none">{min}</p>
-          <p className="text-xs text-slate-400 mt-1">minuti</p>
+          <p className="text-xs text-slate-400 mt-1">{t("prog.minutes")}</p>
         </div>
         <div className="rounded-3xl glass p-4">
           <Heart className="h-5 w-5 text-brand mb-2" />
           <p className="text-2xl font-bold text-slate-900 tnum leading-none">{avgHr ?? "—"}</p>
-          <p className="text-xs text-slate-400 mt-1">bpm medio</p>
+          <p className="text-xs text-slate-400 mt-1">{t("prog.avgBpm")}</p>
         </div>
       </div>
 
       {/* Grafico settimanale */}
       <div className="rounded-3xl glass p-5 sm:p-6">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-semibold text-slate-900">Minuti di allenamento</h2>
+          <h2 className="font-semibold text-slate-900">{t("prog.chart")}</h2>
           <span className="text-xs text-slate-400 tnum">
-            {weekStart.toLocaleDateString("it-IT", { day: "numeric", month: "short" })}
+            {weekStart.toLocaleDateString(dl, { day: "numeric", month: "short" })}
           </span>
         </div>
         <div className="h-40 mt-3">
@@ -227,7 +231,7 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
               <Tooltip
                 cursor={{ fill: "rgba(255,59,48,.06)" }}
                 contentStyle={{ borderRadius: 14, border: "1px solid rgba(0,0,0,.06)", fontSize: 12 }}
-                formatter={(v: number) => [`${v} min`, "Allenamento"]}
+                formatter={(v: number) => [`${v} min`, t("prog.oneSession")]}
                 labelFormatter={() => ""}
               />
               <Bar dataKey="min" radius={[6, 6, 0, 0]} maxBarSize={26}>
@@ -243,11 +247,11 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
       {/* Sessioni del periodo */}
       <div className="rounded-3xl glass p-5 sm:p-6">
         <h2 className="font-semibold text-slate-900 mb-3">
-          {mode === "day" ? "Allenamento" : "Allenamenti della settimana"}
+          {mode === "day" ? t("prog.oneSession") : t("prog.weekSessions")}
         </h2>
         {inRange.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">
-            Nessun allenamento in questo {mode === "day" ? "giorno" : "periodo"}.
+            {mode === "day" ? t("prog.emptyDay") : t("prog.emptyWeek")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -260,15 +264,15 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
                     <Dumbbell className="h-5 w-5 text-emerald-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 truncate">{s.name || "Allenamento"}</p>
+                    <p className="font-semibold text-slate-900 truncate">{s.name || t("prog.oneSession")}</p>
                     <p className="text-xs text-slate-400 tnum">
-                      {s.d.toLocaleDateString("it-IT", { day: "numeric", month: "short" })} ·{" "}
-                      {s.d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+                      {s.d.toLocaleDateString(dl, { day: "numeric", month: "short" })} ·{" "}
+                      {s.d.toLocaleTimeString(dl, { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-emerald-600 tnum leading-none">{s.cal}</p>
-                    <p className="text-[11px] font-semibold uppercase text-slate-400">cal</p>
+                    <p className="text-[11px] font-semibold uppercase text-slate-400">{t("prog.cal")}</p>
                   </div>
                 </div>
               ))}

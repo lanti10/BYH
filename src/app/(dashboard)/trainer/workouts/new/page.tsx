@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { WorkoutCreator, type ClientOption } from "./workout-creator";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +17,7 @@ export default async function NewWorkoutPage({
   searchParams: Promise<{ client?: string }>;
 }) {
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
   const { client: preselectedClient } = await searchParams;
 
@@ -41,11 +43,11 @@ export default async function NewWorkoutPage({
           href="/trainer/workouts"
           className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-3"
         >
-          <ArrowLeft className="h-4 w-4" /> Schede
+          <ArrowLeft className="h-4 w-4" /> {t("nav.workouts")}
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Nuova scheda</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("wk.newPlan")}</h1>
         <p className="text-slate-500 mt-1">
-          Imposta i parametri e lascia che l&apos;AI crei la scheda, oppure costruiscila a mano.
+          {t("wk.newSub")}
         </p>
       </div>
 

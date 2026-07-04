@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, Check, AlertCircle } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 export function AccountSettings() {
   const { user, isLoaded } = useUser();
+  const { t } = useT();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -30,9 +32,9 @@ export function AccountSettings() {
     try {
       await user.update({ firstName, lastName });
       router.refresh();
-      setMsg({ type: "ok", text: "Nome aggiornato." });
+      setMsg({ type: "ok", text: t("acct.nameOk") });
     } catch {
-      setMsg({ type: "err", text: "Errore nell'aggiornamento del nome." });
+      setMsg({ type: "err", text: t("acct.nameErr") });
     } finally {
       setSavingName(false);
     }
@@ -46,9 +48,9 @@ export function AccountSettings() {
     try {
       await user.setProfileImage({ file });
       router.refresh();
-      setMsg({ type: "ok", text: "Foto profilo aggiornata." });
+      setMsg({ type: "ok", text: t("acct.photoOk") });
     } catch {
-      setMsg({ type: "err", text: "Errore nel caricamento della foto." });
+      setMsg({ type: "err", text: t("acct.photoErr") });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -81,13 +83,13 @@ export function AccountSettings() {
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
         </div>
         <div>
-          <p className="font-semibold text-slate-900">Foto profilo</p>
+          <p className="font-semibold text-slate-900">{t("acct.photo")}</p>
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
             className="text-sm font-medium text-brand hover:underline disabled:opacity-60"
           >
-            {uploading ? "Caricamento..." : "Cambia foto"}
+            {uploading ? t("acct.uploading") : t("acct.change")}
           </button>
         </div>
       </div>
@@ -95,7 +97,7 @@ export function AccountSettings() {
       {/* Nome */}
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col">
-          <span className="text-sm text-slate-500 mb-1.5">Nome</span>
+          <span className="text-sm text-slate-500 mb-1.5">{t("acct.first")}</span>
           <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -103,7 +105,7 @@ export function AccountSettings() {
           />
         </label>
         <label className="flex flex-col">
-          <span className="text-sm text-slate-500 mb-1.5">Cognome</span>
+          <span className="text-sm text-slate-500 mb-1.5">{t("acct.last")}</span>
           <input
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -128,11 +130,11 @@ export function AccountSettings() {
         disabled={savingName}
         className="rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-60"
       >
-        {savingName ? "Salvataggio..." : "Salva nome"}
+        {savingName ? t("session.saving") : t("acct.saveName")}
       </button>
 
       <p className="text-xs text-slate-400">
-        L&apos;email e la password si gestiscono dall&apos;icona account in basso nel menu.
+        {t("acct.note")}
       </p>
     </div>
   );

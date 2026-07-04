@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, MessageCircle, ShoppingBag, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -8,6 +9,7 @@ import { it } from "date-fns/locale";
 
 export default async function TrainerDashboard() {
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
 
   const [clients, recentMessages, pendingRecs, earnings] = await Promise.all([
@@ -39,10 +41,10 @@ export default async function TrainerDashboard() {
   const totalEarnings = earnings._sum.amount ?? 0;
 
   const stats = [
-    { label: "Clienti attivi", value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
-    { label: "Messaggi non letti", value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
-    { label: "Da validare", value: pendingRecs.length, icon: ShoppingBag, tint: "bg-amber-500/10 text-amber-600" },
-    { label: "Guadagni totali", value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand" },
+    { label: t("tr.activeClients"), value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
+    { label: t("tr.unread"), value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
+    { label: t("tr.toValidate"), value: pendingRecs.length, icon: ShoppingBag, tint: "bg-amber-500/10 text-amber-600" },
+    { label: t("tr.earnings"), value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand" },
   ];
 
   return (
@@ -51,26 +53,26 @@ export default async function TrainerDashboard() {
       <div className="rounded-3xl bg-depth-dark p-6 sm:p-8 text-white shadow-lg">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-white/70 text-sm">Bentornato</p>
+            <p className="text-white/70 text-sm">{t("tr.welcome")}</p>
             <h1 className="text-3xl font-bold tracking-tight mt-0.5">{user.name.split(" ")[0]}</h1>
             <p className="text-white/80 mt-2 text-sm">
               {clients.length === 0
-                ? "Inizia invitando il tuo primo cliente."
-                : `Stai seguendo ${clients.length} client${clients.length === 1 ? "e" : "i"}.`}
+                ? t("tr.startFirst")
+                : t("tr.following", { n: clients.length })}
             </p>
           </div>
           <Link
             href="/trainer/clients/new"
             className="hidden sm:inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors hover:bg-white/25"
           >
-            <UserPlus className="h-4 w-4" /> Aggiungi cliente
+            <UserPlus className="h-4 w-4" /> {t("tr.addClient")}
           </Link>
         </div>
         <Link
           href="/trainer/clients/new"
           className="sm:hidden mt-4 flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur"
         >
-          <UserPlus className="h-4 w-4" /> Aggiungi cliente
+          <UserPlus className="h-4 w-4" /> {t("tr.addClient")}
         </Link>
       </div>
 
@@ -91,20 +93,20 @@ export default async function TrainerDashboard() {
         {/* Client list */}
         <div className="rounded-3xl glass p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-900">I tuoi clienti</h2>
+            <h2 className="font-bold text-slate-900">{t("tr.yourClients")}</h2>
             <Link href="/trainer/clients" className="text-sm font-medium text-brand hover:underline">
-              Vedi tutti
+              {t("tr.seeAll")}
             </Link>
           </div>
           <div className="space-y-1">
             {clients.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-sm text-slate-400 mb-3">Nessun cliente ancora.</p>
+                <p className="text-sm text-slate-400 mb-3">{t("tr.noClients")}</p>
                 <Link
                   href="/trainer/clients/new"
                   className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
                 >
-                  <UserPlus className="h-4 w-4" /> Aggiungi il primo
+                  <UserPlus className="h-4 w-4" /> {t("tr.addFirst")}
                 </Link>
               </div>
             ) : (
@@ -139,15 +141,15 @@ export default async function TrainerDashboard() {
         {/* Pending recommendations */}
         <div className="rounded-3xl glass p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-900">Raccomandazioni da validare</h2>
+            <h2 className="font-bold text-slate-900">{t("tr.recs")}</h2>
             <Link href="/trainer/products" className="text-sm font-medium text-brand hover:underline">
-              Vedi tutte
+              {t("tr.seeAll")}
             </Link>
           </div>
           <div className="space-y-2">
             {pendingRecs.length === 0 ? (
               <p className="text-sm text-slate-400 text-center py-8">
-                Nessuna raccomandazione in attesa.
+                {t("tr.noRecs")}
               </p>
             ) : (
               pendingRecs.map((rec) => (
@@ -163,7 +165,7 @@ export default async function TrainerDashboard() {
                     href={`/trainer/products/recommendations/${rec.id}`}
                     className="text-xs font-semibold text-amber-700 hover:underline shrink-0"
                   >
-                    Valida →
+                    {t("tr.validate")} →
                   </Link>
                 </div>
               ))

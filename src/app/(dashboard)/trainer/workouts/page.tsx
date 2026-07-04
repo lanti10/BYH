@@ -1,10 +1,12 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { Plus, Dumbbell, CalendarDays, CalendarRange, ChevronRight, FileText } from "lucide-react";
 import Link from "next/link";
 
 export default async function WorkoutsPage() {
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
 
   const plans = await prisma.workoutPlan.findMany({
@@ -20,16 +22,16 @@ export default async function WorkoutsPage() {
     <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Schede</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("nav.workouts")}</h1>
           <p className="text-slate-500 mt-1">
-            {plans.length} {plans.length === 1 ? "scheda creata" : "schede create"}
+            {t("wk.created", { n: plans.length })}
           </p>
         </div>
         <Link
           href="/trainer/workouts/new"
           className="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
         >
-          <Plus className="h-4 w-4" /> Crea scheda
+          <Plus className="h-4 w-4" /> {t("wk.create")}
         </Link>
       </div>
 
@@ -38,13 +40,13 @@ export default async function WorkoutsPage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand/10">
             <Dumbbell className="h-7 w-7 text-brand" />
           </div>
-          <p className="text-lg font-semibold text-slate-700">Nessuna scheda ancora</p>
-          <p className="mt-1 text-sm text-slate-400">Crea la prima scheda o un modello da riutilizzare.</p>
+          <p className="text-lg font-semibold text-slate-700">{t("wk.none")}</p>
+          <p className="mt-1 text-sm text-slate-400">{t("wk.noneSub")}</p>
           <Link
             href="/trainer/workouts/new"
             className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
           >
-            <Plus className="h-4 w-4" /> Crea scheda
+            <Plus className="h-4 w-4" /> {t("wk.create")}
           </Link>
         </div>
       ) : (
@@ -63,17 +65,17 @@ export default async function WorkoutsPage() {
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900 truncate">{plan.name}</p>
                     <p className="text-sm text-slate-500 truncate">
-                      {plan.client ? plan.client.user.name || plan.client.user.email : "Modello (nessun cliente)"}
+                      {plan.client ? plan.client.user.name || plan.client.user.email : t("wk.templateNone")}
                     </p>
                   </div>
                   {plan.isTemplate ? (
                     <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
-                      <FileText className="h-3 w-3" /> Modello
+                      <FileText className="h-3 w-3" /> {t("wk.template")}
                     </span>
                   ) : (
                     plan.isActive && (
                       <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                        Attiva
+                        {t("wk.activeBadge")}
                       </span>
                     )
                   )}
@@ -81,14 +83,14 @@ export default async function WorkoutsPage() {
 
                 <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
                   <span className="flex items-center gap-1.5">
-                    <CalendarDays className="h-4 w-4" /> {dayCount} {dayCount === 1 ? "giorno" : "giorni"}
+                    <CalendarDays className="h-4 w-4" /> {t("wk.daysN", { n: dayCount })}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Dumbbell className="h-4 w-4" /> {totalExercises} esercizi
+                    <Dumbbell className="h-4 w-4" /> {t("wk.exercisesN", { n: totalExercises })}
                   </span>
                   {plan.durationWeeks && (
                     <span className="flex items-center gap-1.5">
-                      <CalendarRange className="h-4 w-4" /> {plan.durationWeeks} sett.
+                      <CalendarRange className="h-4 w-4" /> {t("wk.weeksShort", { n: plan.durationWeeks })}
                     </span>
                   )}
                 </div>
@@ -99,13 +101,13 @@ export default async function WorkoutsPage() {
                       key={i}
                       className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
                     >
-                      Giorno {i + 1}
+                      {t("plan.dayN", { n: i + 1 })}
                     </span>
                   ))}
                 </div>
 
                 <div className="mt-4 flex items-center justify-end text-sm font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100">
-                  Apri <ChevronRight className="h-4 w-4" />
+                  {t("wk.open")} <ChevronRight className="h-4 w-4" />
                 </div>
               </Link>
             );

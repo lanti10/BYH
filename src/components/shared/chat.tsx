@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Send } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 type Msg = { id: string; senderId: string; content: string; createdAt: string };
 
 export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
+  const { t } = useT();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -63,7 +65,7 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {loaded && messages.length === 0 && (
           <p className="text-center text-sm text-slate-400 py-10">
-            Nessun messaggio. Scrivi il primo!
+            {t("chat.empty")}
           </p>
         )}
         {messages.map((m) => {
@@ -103,7 +105,7 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
                 send();
               }
             }}
-            placeholder="Scrivi un messaggio..."
+            placeholder={t("chat.placeholder")}
             type="text"
             name="byh-chat-message"
             autoComplete="off"
