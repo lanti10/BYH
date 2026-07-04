@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { getLocale } from "@/lib/i18n/server";
 
 export const maxDuration = 60;
 
@@ -30,6 +31,8 @@ export async function POST(req: Request) {
     );
   }
 
+  const locale = await getLocale();
+  const langName = { it: "italiano", en: "inglese", pt: "portoghese", es: "spagnolo" }[locale];
   const body = (await req.json()) as GenerateBody;
   const frequency = Math.min(Math.max(body.frequency ?? 3, 1), 7);
 
@@ -49,7 +52,7 @@ Parametri:
 
 Crea esattamente ${frequency} giorni di allenamento (Giorno 1, Giorno 2, ...). Per ogni giorno indica un nome descrittivo (es. "Petto e tricipiti") e una lista di 4-7 esercizi con serie, ripetizioni, un peso indicativo in kg (stima realistica in base a sesso/peso/livello; usa null se a corpo libero) e secondi di recupero adeguati al livello e all'obiettivo.
 
-Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo, in questo formato esatto:
+Scrivi i nomi dei giorni e degli esercizi in ${langName}. Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo, in questo formato esatto:
 {
   "days": [
     {

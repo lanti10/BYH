@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
+import { GOAL_KEYS } from "@/lib/i18n/dict";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -88,7 +89,7 @@ export default async function ClientsPage() {
                     <div className="flex items-center gap-3 shrink-0">
                       {client.goals.slice(0, 2).map((goal) => (
                         <Badge key={goal} variant="outline" className="text-xs hidden sm:flex">
-                          {goal}
+                          {t(GOAL_KEYS[goal] ?? goal)}
                         </Badge>
                       ))}
                       <ChevronRight className="h-4 w-4 text-slate-400" />

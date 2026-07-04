@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
+import { GOAL_KEYS } from "@/lib/i18n/dict";
 import { WorkoutCreator, type ClientOption } from "./workout-creator";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -33,7 +34,7 @@ export default async function NewWorkoutPage({
     age: ageFromBirth(c.birthDate),
     weight: c.startWeight,
     height: c.height,
-    goals: c.goals.join(", ") || null,
+    goals: c.goals.map((g) => t(GOAL_KEYS[g] ?? g)).join(", ") || null,
   }));
 
   return (

@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
+import { GOAL_KEYS } from "@/lib/i18n/dict";
 import { Chat } from "@/components/shared/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, MessageSquare } from "lucide-react";
@@ -43,7 +44,7 @@ export default async function TrainerMessagesPage({
     if (selected.height) chips.push(`${selected.height} cm`);
     if (selected.startWeight) chips.push(`${selected.startWeight} kg`);
     if (selected.trainingDaysPerWeek) chips.push(t("u.perWeek", { n: selected.trainingDaysPerWeek }));
-    selected.goals.forEach((g) => chips.push(g));
+    selected.goals.forEach((g) => chips.push(t(GOAL_KEYS[g] ?? g)));
   }
 
   return (
@@ -80,7 +81,7 @@ export default async function TrainerMessagesPage({
                     <p className="font-semibold text-sm text-slate-900 truncate">
                       {cp.user.name || cp.user.email}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">{cp.goals[0] ?? t("role.client")}</p>
+                    <p className="text-xs text-slate-400 truncate">{cp.goals[0] ? t(GOAL_KEYS[cp.goals[0]] ?? cp.goals[0]) : t("role.client")}</p>
                   </div>
                   {unread > 0 && (
                     <span className="shrink-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white">

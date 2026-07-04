@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
+import { GOAL_KEYS, SEX_KEYS } from "@/lib/i18n/dict";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +68,7 @@ export default async function ClientDetailPage({
             <p className="text-slate-500 text-sm truncate">{client.user.email}</p>
             <div className="flex flex-wrap gap-2 mt-2">
               {client.goals.map((goal) => (
-                <Badge key={goal} variant="secondary">{goal}</Badge>
+                <Badge key={goal} variant="secondary">{t(GOAL_KEYS[goal] ?? goal)}</Badge>
               ))}
             </div>
           </div>
@@ -126,7 +127,7 @@ export default async function ClientDetailPage({
               <div className="flex flex-wrap gap-2">
                 {client.sex && (
                   <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                    {client.sex}
+                    {t(SEX_KEYS[client.sex] ?? client.sex)}
                   </span>
                 )}
                 {client.birthDate && (
@@ -146,7 +147,7 @@ export default async function ClientDetailPage({
                 )}
                 {client.goals.map((g) => (
                   <span key={g} className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    {g}
+                    {t(GOAL_KEYS[g] ?? g)}
                   </span>
                 ))}
               </div>

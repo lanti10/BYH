@@ -50,7 +50,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "jn.invitedBy": "Sei stato invitato da", "jn.fallback": "il tuo trainer", "jn.sub": "Crea il tuo account per ricevere schede di allenamento personalizzate, seguire i tuoi progressi e restare in contatto con il tuo trainer.", "jn.cta": "Crea il mio account", "jn.code": "Codice invito", "jn.invalid": "Codice non valido", "jn.invalidSub": "Il link d'invito {code} non corrisponde a nessun trainer.", "jn.anyway": "Registrati comunque",
     "jt.from": "Invito da parte di", "jt.fallback": "un trainer BYH", "jt.banner": "Entra come Personal Trainer nella rete BYH e inizia a guadagnare commissioni con i prodotti e la tua rete.", "jt.cta": "Diventa Trainer BYH",
     "err.noName": "Dai un nome alla scheda.", "err.save": "Errore nel salvataggio.", "err.generic": "Errore. Riprova.", "err.conn": "Errore di connessione. Riprova.", "err.gen": "Errore nella generazione.",
-    "wk.prefill": "Seleziona un cliente per precompilare i dati (puoi modificarli).", "prog.sessUnit": "SESS.",
+    "wk.prefill": "Seleziona un cliente per precompilare i dati (puoi modificarli).", "prog.sessUnit": "SESS.", "wk.nameSuggestion": "{type} · {n}x sett.",
     "tr.activeAgo": "Attivo {time}", "tr.noSessionYet": "Nessuna sessione ancora",
     "auth.signin": "Accedi al tuo account", "auth.signup": "Crea il tuo account",
   },
@@ -92,7 +92,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "jn.invitedBy": "You've been invited by", "jn.fallback": "your trainer", "jn.sub": "Create your account to get personalized workout plans, track your progress and stay in touch with your trainer.", "jn.cta": "Create my account", "jn.code": "Invite code", "jn.invalid": "Invalid code", "jn.invalidSub": "The invite link {code} doesn't match any trainer.", "jn.anyway": "Sign up anyway",
     "jt.from": "Invitation from", "jt.fallback": "a BYH trainer", "jt.banner": "Join the BYH network as a Personal Trainer and start earning commissions with products and your network.", "jt.cta": "Become a BYH Trainer",
     "err.noName": "Give the plan a name.", "err.save": "Error while saving.", "err.generic": "Error. Try again.", "err.conn": "Connection error. Try again.", "err.gen": "Generation error.",
-    "wk.prefill": "Select a client to pre-fill the data (you can edit it).", "prog.sessUnit": "WKTS",
+    "wk.prefill": "Select a client to pre-fill the data (you can edit it).", "prog.sessUnit": "WKTS", "wk.nameSuggestion": "{type} · {n}x/wk",
     "tr.activeAgo": "Active {time}", "tr.noSessionYet": "No sessions yet",
     "auth.signin": "Sign in to your account", "auth.signup": "Create your account",
   },
@@ -134,7 +134,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "jn.invitedBy": "Você foi convidado por", "jn.fallback": "seu trainer", "jn.sub": "Crie sua conta para receber fichas personalizadas, acompanhar seu progresso e manter contato com seu trainer.", "jn.cta": "Criar minha conta", "jn.code": "Código de convite", "jn.invalid": "Código inválido", "jn.invalidSub": "O link de convite {code} não corresponde a nenhum trainer.", "jn.anyway": "Registrar mesmo assim",
     "jt.from": "Convite de", "jt.fallback": "um trainer BYH", "jt.banner": "Entre na rede BYH como Personal Trainer e comece a ganhar comissões com produtos e sua rede.", "jt.cta": "Tornar-se Trainer BYH",
     "err.noName": "Dê um nome à ficha.", "err.save": "Erro ao salvar.", "err.generic": "Erro. Tente novamente.", "err.conn": "Erro de conexão. Tente novamente.", "err.gen": "Erro na geração.",
-    "wk.prefill": "Selecione um cliente para preencher os dados (você pode editar).", "prog.sessUnit": "TREIN.",
+    "wk.prefill": "Selecione um cliente para preencher os dados (você pode editar).", "prog.sessUnit": "TREIN.", "wk.nameSuggestion": "{type} · {n}x/sem",
     "tr.activeAgo": "Ativo {time}", "tr.noSessionYet": "Ainda sem sessões",
     "auth.signin": "Acesse sua conta", "auth.signup": "Crie sua conta",
   },
@@ -176,7 +176,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "jn.invitedBy": "Te ha invitado", "jn.fallback": "tu trainer", "jn.sub": "Crea tu cuenta para recibir rutinas personalizadas, seguir tu progreso y estar en contacto con tu trainer.", "jn.cta": "Crear mi cuenta", "jn.code": "Código de invitación", "jn.invalid": "Código no válido", "jn.invalidSub": "El enlace de invitación {code} no corresponde a ningún trainer.", "jn.anyway": "Registrarme igualmente",
     "jt.from": "Invitación de", "jt.fallback": "un trainer BYH", "jt.banner": "Únete a la red BYH como Personal Trainer y empieza a ganar comisiones con los productos y tu red.", "jt.cta": "Convertirme en Trainer BYH",
     "err.noName": "Dale un nombre a la rutina.", "err.save": "Error al guardar.", "err.generic": "Error. Inténtalo de nuevo.", "err.conn": "Error de conexión. Inténtalo de nuevo.", "err.gen": "Error en la generación.",
-    "wk.prefill": "Selecciona un cliente para precargar los datos (puedes editarlos).", "prog.sessUnit": "SES.",
+    "wk.prefill": "Selecciona un cliente para precargar los datos (puedes editarlos).", "prog.sessUnit": "SES.", "wk.nameSuggestion": "{type} · {n}x/sem",
     "tr.activeAgo": "Activo {time}", "tr.noSessionYet": "Aún sin sesiones",
     "auth.signin": "Accede a tu cuenta", "auth.signup": "Crea tu cuenta",
   },
@@ -193,6 +193,17 @@ export function translate(
   }
   return s;
 }
+
+// Mappa valori canonici salvati nel DB → chiavi etichetta (per visualizzarli tradotti)
+export const GOAL_KEYS: Record<string, string> = {
+  "Dimagrimento": "goal.loss", "Massa muscolare": "goal.mass", "Forza": "goal.strength",
+  "Tonificazione": "goal.tone", "Resistenza": "goal.endurance", "Salute generale": "goal.health",
+};
+export const SEX_KEYS: Record<string, string> = { "Uomo": "pf.man", "Donna": "pf.woman" };
+export const TT_KEYS: Record<string, string> = {
+  "Ipertrofia / Massa": "tt.mass", "Forza": "tt.strength", "Dimagrimento": "tt.loss",
+  "Resistenza": "tt.endurance", "Tonificazione": "tt.tone", "Functional / Full body": "tt.functional",
+};
 
 export const DATE_LOCALE: Record<Locale, string> = {
   it: "it-IT",

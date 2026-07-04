@@ -73,7 +73,8 @@ export function WorkoutCreator({
     }
   }
 
-  const suggestedName = `${trainingType} · ${frequency}x sett.`;
+  const ttKey = TRAINING_TYPES.find((x) => x.value === trainingType)?.key;
+  const suggestedName = t("wk.nameSuggestion", { type: t(ttKey ?? trainingType), n: frequency });
 
   async function generate() {
     setLoading(true);
