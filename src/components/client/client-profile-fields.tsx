@@ -76,7 +76,7 @@ export function ClientProfileFields({
       setSaved(true);
       onSaved?.();
     } else {
-      setError(res.error ?? "Errore. Riprova.");
+      setError(res.error ?? t("err.generic"));
     }
   }
 

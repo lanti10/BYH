@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ export default async function ClientDetailPage({
 }) {
   const { clientId } = await params;
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
 
   const client = await prisma.clientProfile.findFirst({
@@ -77,14 +79,14 @@ export default async function ClientDetailPage({
             render={<Link href={`/trainer/messages?client=${client.userId}`} />}
           >
             <MessageSquare className="h-4 w-4 mr-1" />
-            Messaggio
+            {t("cd.message")}
           </Button>
           <Button
             size="sm"
             render={<Link href={`/trainer/workouts/new?client=${client.id}`} />}
           >
             <Dumbbell className="h-4 w-4 mr-1" />
-            Nuova scheda
+            {t("cd.newPlan")}
           </Button>
         </div>
       </div>
@@ -94,7 +96,7 @@ export default async function ClientDetailPage({
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold">{client.startWeight ?? "—"}</p>
-            <p className="text-xs text-slate-500 mt-1">Peso iniziale (kg)</p>
+            <p className="text-xs text-slate-500 mt-1">{t("cd.startWeight")}</p>
           </CardContent>
         </Card>
         <Card>
@@ -102,13 +104,13 @@ export default async function ClientDetailPage({
             <p className="text-2xl font-bold">
               {client.progressLogs[client.progressLogs.length - 1]?.weight ?? "—"}
             </p>
-            <p className="text-xs text-slate-500 mt-1">Peso attuale (kg)</p>
+            <p className="text-xs text-slate-500 mt-1">{t("cd.currentWeight")}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-2xl font-bold">{client.sessions.length}</p>
-            <p className="text-xs text-slate-500 mt-1">Sessioni completate</p>
+            <p className="text-xs text-slate-500 mt-1">{t("cd.sessions")}</p>
           </CardContent>
         </Card>
       </div>
@@ -116,7 +118,7 @@ export default async function ClientDetailPage({
       {/* Scheda profilo del cliente */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Profilo cliente</CardTitle>
+          <CardTitle className="text-base">{t("cd.profile")}</CardTitle>
         </CardHeader>
         <CardContent>
           {client.profileCompleted ? (
@@ -129,7 +131,7 @@ export default async function ClientDetailPage({
                 )}
                 {client.birthDate && (
                   <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                    {Math.floor((Date.now() - new Date(client.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))} anni
+                    {t("u.years", { n: Math.floor((Date.now() - new Date(client.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) })}
                   </span>
                 )}
                 {client.height && (
@@ -139,7 +141,7 @@ export default async function ClientDetailPage({
                 )}
                 {client.trainingDaysPerWeek && (
                   <span className="rounded-lg bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
-                    {client.trainingDaysPerWeek} allenamenti/sett
+                    {t("u.trainPerWeek", { n: client.trainingDaysPerWeek })}
                   </span>
                 )}
                 {client.goals.map((g) => (
@@ -150,14 +152,14 @@ export default async function ClientDetailPage({
               </div>
               {client.notes && (
                 <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-                  <span className="font-medium text-slate-500">Note: </span>
+                  <span className="font-medium text-slate-500">{t("cd.notes")} </span>
                   {client.notes}
                 </div>
               )}
             </div>
           ) : (
             <p className="text-sm text-slate-400">
-              Il cliente non ha ancora completato il suo profilo.
+              {t("cd.noProfile")}
             </p>
           )}
         </CardContent>
@@ -168,25 +170,25 @@ export default async function ClientDetailPage({
         <TabsList>
           <TabsTrigger value="progress">
             <TrendingUp className="h-4 w-4 mr-1.5" />
-            Progressi
+            {t("prog.title")}
           </TabsTrigger>
           <TabsTrigger value="workouts">
             <Dumbbell className="h-4 w-4 mr-1.5" />
-            Schede
+            {t("nav.workouts")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="progress" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Andamento peso</CardTitle>
+              <CardTitle className="text-base">{t("cd.weightTrend")}</CardTitle>
             </CardHeader>
             <CardContent>
               {progressData.length > 0 ? (
                 <ProgressChart data={progressData} />
               ) : (
                 <p className="text-sm text-slate-400 text-center py-8">
-                  Nessun dato di progresso ancora.
+                  {t("cd.noProgress")}
                 </p>
               )}
             </CardContent>
@@ -197,13 +199,13 @@ export default async function ClientDetailPage({
           {client.workoutPlans.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-slate-400 text-sm">Nessuna scheda assegnata.</p>
+                <p className="text-slate-400 text-sm">{t("cd.noPlans")}</p>
                 <Button
                   size="sm"
                   className="mt-3"
                   render={<Link href={`/trainer/workouts/new?client=${client.id}`} />}
                 >
-                  Crea scheda
+                  {t("wk.create")}
                 </Button>
               </CardContent>
             </Card>
@@ -214,14 +216,14 @@ export default async function ClientDetailPage({
                   <CardTitle className="text-base">{plan.name}</CardTitle>
                   <div className="flex items-center gap-2">
                     {plan.isActive && (
-                      <Badge variant="default" className="bg-green-600">Attiva</Badge>
+                      <Badge variant="default" className="bg-green-600">{t("wk.activeBadge")}</Badge>
                     )}
                     <Button
                       variant="outline"
                       size="sm"
                       render={<Link href={`/trainer/workouts/${plan.id}`} />}
                     >
-                      Apri
+                      {t("wk.open")}
                     </Button>
                   </div>
                 </CardHeader>

@@ -95,13 +95,13 @@ export function WorkoutCreator({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Errore nella generazione.");
+        setError(data.error ?? t("err.gen"));
         return;
       }
       setGeneratedDays(data.days as DayInput[]);
       setPhase("edit");
     } catch {
-      setError("Errore di connessione. Riprova.");
+      setError(t("err.conn"));
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export function WorkoutCreator({
               ))}
             </select>
             <p className="mt-1 text-xs text-slate-400">
-              Seleziona un cliente per precompilare i dati (puoi modificarli).
+              {t("wk.prefill")}
             </p>
           </div>
         )}

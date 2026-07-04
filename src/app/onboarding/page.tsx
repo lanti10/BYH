@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
+
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -14,6 +16,7 @@ function OnboardingInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const { t } = useT();
   const [step, setStep] = useState<Step>("role");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +54,7 @@ function OnboardingInner() {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-white tracking-wide">BUILD YOUR HEALTH</h1>
             <p className="text-white/80 mt-1">
-              Ciao {user?.firstName}! {step === "role" ? "Come vuoi usare la piattaforma?" : "Inserisci il codice del tuo trainer"}
+              {t("setup.hi", { name: user?.firstName ?? "" })} {step === "role" ? t("ob.q") : t("ob.codeQ")}
             </p>
           </div>
         </div>
@@ -68,9 +71,9 @@ function OnboardingInner() {
                   <Dumbbell className="h-6 w-6 text-brand" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-slate-900">Sono un Personal Trainer</p>
+                  <p className="font-bold text-slate-900">{t("ob.pt")}</p>
                   <p className="text-sm text-slate-500 mt-0.5">
-                    Gestisci clienti, crea schede e guadagna con i prodotti BYH.
+                    {t("ob.ptSub")}
                   </p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-slate-300" />
@@ -87,9 +90,9 @@ function OnboardingInner() {
                   <Users className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-slate-900">Sono un Cliente</p>
+                  <p className="font-bold text-slate-900">{t("ob.cl")}</p>
                   <p className="text-sm text-slate-500 mt-0.5">
-                    Segui le tue schede, traccia i progressi e ricevi consigli dal tuo trainer.
+                    {t("ob.clSub")}
                   </p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-slate-300" />
@@ -101,7 +104,7 @@ function OnboardingInner() {
         {step === "code" && (
           <div className="rounded-3xl bg-white p-6 shadow-xl space-y-5">
             <div>
-              <label className="text-sm font-semibold text-slate-700">Codice del trainer</label>
+              <label className="text-sm font-semibold text-slate-700">{t("ob.codeLabel")}</label>
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -110,7 +113,7 @@ function OnboardingInner() {
                 className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-lg font-bold tracking-widest text-slate-900 uppercase outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
               <p className="mt-2 text-xs text-slate-400">
-                Te l&apos;ha dato il tuo personal trainer. Non ce l&apos;hai? Puoi aggiungerlo più tardi.
+                {t("ob.codeHint")}
               </p>
             </div>
 
@@ -121,7 +124,7 @@ function OnboardingInner() {
               onClick={() => submit("CLIENT", code.trim())}
               className="w-full rounded-full bg-brand py-3 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-50"
             >
-              {loading ? "Collegamento..." : "Collega al trainer"}
+              {loading ? t("nc.connecting") : t("ob.connect")}
             </button>
 
             <button
@@ -129,14 +132,14 @@ function OnboardingInner() {
               onClick={() => submit("CLIENT")}
               className="w-full text-sm font-medium text-slate-400 hover:text-slate-600"
             >
-              Salta per ora
+              {t("ob.skip")}
             </button>
 
             <button
               onClick={() => { setStep("role"); setError(null); }}
               className="flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-600"
             >
-              <ArrowLeft className="h-4 w-4" /> Indietro
+              <ArrowLeft className="h-4 w-4" /> {t("common.back")}
             </button>
           </div>
         )}

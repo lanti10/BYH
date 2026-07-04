@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { assignTemplateToClient } from "@/app/(dashboard)/trainer/workouts/actions";
@@ -10,6 +12,7 @@ type ClientOption = { id: string; name: string };
 
 export function AssignTemplate({ planId, clients }: { planId: string; clients: ClientOption[] }) {
   const router = useRouter();
+  const { t } = useT();
   const [clientId, setClientId] = useState(clients[0]?.id ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,23 +39,23 @@ export function AssignTemplate({ planId, clients }: { planId: string; clients: C
     <div className="rounded-2xl glass p-5">
       <div className="flex items-center gap-2 mb-1">
         <UserPlus className="h-4 w-4 text-brand" />
-        <h2 className="font-semibold text-slate-800">Assegna a un cliente</h2>
+        <h2 className="font-semibold text-slate-800">{t("as.title")}</h2>
       </div>
       <p className="text-sm text-slate-500 mb-4">
-        Crea una copia di questa scheda e assegnala come scheda attiva di un cliente. Il modello resta disponibile.
+        {t("as.sub")}
       </p>
 
       {clients.length === 0 ? (
         <p className="text-sm text-slate-400">
-          Non hai ancora clienti.{" "}
+          {t("as.none")}{" "}
           <Link href="/trainer/clients/new" className="font-semibold text-brand underline">
-            Aggiungine uno
+            {t("as.addOne")}
           </Link>{" "}
-          per poter assegnare questa scheda.
+          {t("as.suffix")}
         </p>
       ) : done ? (
         <p className="flex items-center gap-2 text-sm font-medium text-emerald-600">
-          <Check className="h-4 w-4" /> Scheda assegnata al cliente.
+          <Check className="h-4 w-4" /> {t("as.done")}
         </p>
       ) : (
         <>
@@ -74,7 +77,7 @@ export function AssignTemplate({ planId, clients }: { planId: string; clients: C
               className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-6 py-3 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-60"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-              Assegna
+              {t("as.btn")}
             </button>
           </div>
           {error && (

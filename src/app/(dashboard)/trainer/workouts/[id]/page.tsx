@@ -1,11 +1,13 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
 import { PlanActions } from "@/components/trainer/plan-actions";
 import { AssignTemplate } from "@/components/trainer/assign-template";
 import { ArrowLeft, FileText, User, CalendarRange } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DATE_LOCALE } from "@/lib/i18n/dict";
 
 export default async function WorkoutDetailPage({
   params,
@@ -13,6 +15,7 @@ export default async function WorkoutDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireRole("TRAINER");
+  const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
   const { id } = await params;
 
@@ -57,7 +60,7 @@ export default async function WorkoutDetailPage({
         href="/trainer/workouts"
         className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-3"
       >
-        <ArrowLeft className="h-4 w-4" /> Schede
+        <ArrowLeft className="h-4 w-4" /> {t("nav.workouts")}
       </Link>
 
       <div className="flex items-start justify-between gap-3 mb-1">
@@ -71,13 +74,13 @@ export default async function WorkoutDetailPage({
           </>
         ) : (
           <>
-            <FileText className="h-4 w-4" /> Modello (nessun cliente)
+            <FileText className="h-4 w-4" /> {t("wk.templateNone")}
           </>
         )}
         {plan.durationWeeks && (
           <>
             <span className="text-slate-300">·</span>
-            <CalendarRange className="h-4 w-4" /> {plan.durationWeeks} settimane
+            <CalendarRange className="h-4 w-4" /> {t("pd.weeks", { n: plan.durationWeeks })}
           </>
         )}
       </p>
@@ -85,16 +88,16 @@ export default async function WorkoutDetailPage({
       {plan.startDate && (
         <div className="mb-6 flex flex-wrap gap-3">
           <div className="rounded-2xl glass px-4 py-2.5">
-            <p className="text-xs text-slate-400">Inizio</p>
+            <p className="text-xs text-slate-400">{t("pd.start")}</p>
             <p className="font-semibold text-slate-800">
-              {plan.startDate.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
+              {plan.startDate.toLocaleDateString(DATE_LOCALE[locale], { day: "numeric", month: "short", year: "numeric" })}
             </p>
           </div>
           {plan.endDate && (
             <div className="rounded-2xl glass px-4 py-2.5">
-              <p className="text-xs text-slate-400">Fine</p>
+              <p className="text-xs text-slate-400">{t("pd.end")}</p>
               <p className="font-semibold text-slate-800">
-                {plan.endDate.toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}
+                {plan.endDate.toLocaleDateString(DATE_LOCALE[locale], { day: "numeric", month: "short", year: "numeric" })}
               </p>
             </div>
           )}

@@ -5,11 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, MessageCircle, ShoppingBag, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { it } from "date-fns/locale";
+import { dateFnsLocale } from "@/lib/i18n/datefns";
 
 export default async function TrainerDashboard() {
   const user = await requireRole("TRAINER");
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
   const [clients, recentMessages, pendingRecs, earnings] = await Promise.all([
@@ -126,8 +126,8 @@ export default async function TrainerDashboard() {
                       <p className="text-sm font-semibold text-slate-900 truncate">{client.user.name}</p>
                       <p className="text-xs text-slate-400">
                         {lastSession
-                          ? `Attivo ${formatDistanceToNow(lastSession.completedAt, { locale: it, addSuffix: true })}`
-                          : "Nessuna sessione ancora"}
+                          ? t("tr.activeAgo", { time: formatDistanceToNow(lastSession.completedAt, { locale: dateFnsLocale(locale), addSuffix: true }) })
+                          : t("tr.noSessionYet")}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />

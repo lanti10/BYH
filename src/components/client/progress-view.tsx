@@ -104,7 +104,7 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
   const metrics = [
     { label: t("prog.move"), value: cal, goal: calGoal, unit: "CAL", color: "#FF375F", icon: Flame },
     { label: t("prog.exercise"), value: min, goal: minGoal, unit: "MIN", color: "#30D158", icon: Timer },
-    { label: t("prog.workouts"), value: count, goal: wGoal, unit: count === 1 ? "SESS." : "SESS.", color: "#5AC8FA", icon: Dumbbell },
+    { label: t("prog.workouts"), value: count, goal: wGoal, unit: t("prog.sessUnit"), color: "#5AC8FA", icon: Dumbbell },
   ];
 
   return (

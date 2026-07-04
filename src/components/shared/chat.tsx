@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Send } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import { DATE_LOCALE } from "@/lib/i18n/dict";
 
 type Msg = { id: string; senderId: string; content: string; createdAt: string };
 
 export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -81,7 +82,7 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
               >
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
                 <p className={`mt-0.5 text-[10px] ${mine ? "text-white/60" : "text-slate-400"}`}>
-                  {new Date(m.createdAt).toLocaleTimeString("it-IT", {
+                  {new Date(m.createdAt).toLocaleTimeString(DATE_LOCALE[locale], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}

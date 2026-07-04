@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { WorkoutBuilder } from "../../new/workout-builder";
 import type { DayInput } from "../../actions";
 import { ArrowLeft } from "lucide-react";
@@ -12,6 +13,7 @@ export default async function EditWorkoutPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
   const { id } = await params;
 
@@ -54,9 +56,9 @@ export default async function EditWorkoutPage({
           href={`/trainer/workouts/${plan.id}`}
           className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-3"
         >
-          <ArrowLeft className="h-4 w-4" /> Annulla
+          <ArrowLeft className="h-4 w-4" /> {t("common.cancel")}
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Modifica scheda</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("pd.editPlan")}</h1>
       </div>
 
       <WorkoutBuilder

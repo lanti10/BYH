@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
+
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Check, Share2, MessageCircle, Users, Dumbbell } from "lucide-react";
@@ -7,6 +9,7 @@ import { Copy, Check, Share2, MessageCircle, Users, Dumbbell } from "lucide-reac
 type Tab = "client" | "trainer";
 
 export function InviteHub({ code, defaultTab = "client" }: { code: string; defaultTab?: Tab }) {
+  const { t } = useT();
   const [tab, setTab] = useState<Tab>(defaultTab);
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
@@ -17,10 +20,7 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
 
   const path = tab === "client" ? "join" : "join-trainer";
   const link = `${origin}/${path}/${code}`;
-  const message =
-    tab === "client"
-      ? `Ciao! Ti invito su BYH come mio cliente. Crea il tuo account con questo link e saremo subito collegati: ${link}`
-      : `Ciao! Ti invito a entrare nella rete BYH come Personal Trainer. Registrati con questo link: ${link}`;
+  const message = t(tab === "client" ? "inv.msgClient" : "inv.msgTrainer", { link });
 
   async function copy() {
     try {
@@ -54,7 +54,7 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
             tab === "client" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
           }`}
         >
-          <Users className="h-4 w-4" /> Cliente
+          <Users className="h-4 w-4" /> {t("role.client")}
         </button>
         <button
           onClick={() => setTab("trainer")}
@@ -68,8 +68,8 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
 
       <p className="text-sm text-slate-500 text-center mb-5">
         {tab === "client"
-          ? "Chi scansiona questo QR e crea l'account diventa tuo cliente."
-          : "Chi scansiona questo QR e si registra come trainer entra nella tua rete."}
+          ? t("inv.scanClient")
+          : t("inv.scanTrainer")}
       </p>
 
       {/* QR code */}
@@ -92,7 +92,7 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
 
       {/* Codice testuale */}
       <p className="text-center text-sm text-slate-400 mb-4">
-        Codice: <span className="font-bold tracking-widest text-slate-700">{code}</span>
+        {t("inv.code")}: <span className="font-bold tracking-widest text-slate-700">{code}</span>
       </p>
 
       {/* Link */}
@@ -123,7 +123,7 @@ export function InviteHub({ code, defaultTab = "client" }: { code: string; defau
           onClick={nativeShare}
           className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 py-3 font-semibold text-white transition-colors hover:bg-slate-700"
         >
-          <Share2 className="h-5 w-5" /> Condividi
+          <Share2 className="h-5 w-5" /> {t("inv.share")}
         </button>
       </div>
     </div>

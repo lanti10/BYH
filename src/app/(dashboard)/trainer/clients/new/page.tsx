@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 import { ensureFriendlyReferralCode } from "@/lib/referral";
 import { InviteHub } from "@/components/trainer/invite-hub";
 import { AddClientForm } from "./add-client-form";
@@ -7,6 +8,7 @@ import Link from "next/link";
 
 export default async function NewClientPage() {
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
   const code = await ensureFriendlyReferralCode(trainer.id, trainer.referralCode);
 
@@ -17,19 +19,19 @@ export default async function NewClientPage() {
           href="/trainer/clients"
           className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-3"
         >
-          <ArrowLeft className="h-4 w-4" /> Clienti
+          <ArrowLeft className="h-4 w-4" /> {t("nav.clients")}
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900">Aggiungi cliente</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("tr.addClient")}</h1>
         <p className="text-slate-500 mt-1">
-          Invita un nuovo cliente o collega chi è già registrato.
+          {t("nc.sub")}
         </p>
       </div>
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-semibold text-slate-800">1. Invita con QR o link</h2>
+          <h2 className="font-semibold text-slate-800">{t("nc.s1")}</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Fai scansionare il QR o condividi il link: chi crea l&apos;account viene collegato automaticamente a te.
+            {t("nc.s1sub")}
           </p>
         </div>
         <InviteHub code={code} defaultTab="client" />
@@ -37,9 +39,9 @@ export default async function NewClientPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-semibold text-slate-800">2. Collega un cliente già registrato</h2>
+          <h2 className="font-semibold text-slate-800">{t("nc.s2")}</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Inserisci l&apos;email con cui si è registrato su BYH.
+            {t("nc.s2sub")}
           </p>
         </div>
         <div className="rounded-2xl glass p-5">

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Image from "next/image";
@@ -12,6 +13,7 @@ export default async function JoinTrainerPage({
   const { code: rawCode } = await params;
   const code = rawCode.trim().toUpperCase();
 
+  const { t } = await getT();
   const inviter = await prisma.trainerProfile.findUnique({
     where: { referralCode: code },
     include: { user: true },
@@ -51,15 +53,15 @@ export default async function JoinTrainerPage({
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-slate-400">Invito da parte di</p>
-                  <p className="text-xl font-bold text-slate-900">{inviter.user.name || "un trainer BYH"}</p>
+                  <p className="text-sm text-slate-400">{t("jt.from")}</p>
+                  <p className="text-xl font-bold text-slate-900">{inviter.user.name || t("jt.fallback")}</p>
                 </div>
               </div>
 
               <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4 flex items-start gap-3 text-left">
                 <TrendingUp className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                 <p className="text-sm text-emerald-800">
-                  Entra come <strong>Personal Trainer</strong> nella rete BYH e inizia a guadagnare commissioni con i prodotti e la tua rete.
+                  {t("jt.banner")}
                 </p>
               </div>
 
@@ -68,22 +70,22 @@ export default async function JoinTrainerPage({
                   type="submit"
                   className="w-full rounded-2xl bg-slate-900 py-3.5 font-semibold text-white transition-colors hover:bg-slate-700"
                 >
-                  Diventa Trainer BYH
+                  {t("jt.cta")}
                 </button>
               </form>
 
               <p className="text-xs text-slate-400">
-                Codice invito: <span className="font-bold tracking-widest text-slate-600">{code}</span>
+                {t("jn.code")}: <span className="font-bold tracking-widest text-slate-600">{code}</span>
               </p>
             </>
           ) : (
             <>
-              <p className="text-lg font-semibold text-slate-800">Codice non valido</p>
+              <p className="text-lg font-semibold text-slate-800">{t("jn.invalid")}</p>
               <p className="text-slate-500 text-sm">
-                Il link d&apos;invito <span className="font-bold">{code}</span> non corrisponde a nessun trainer.
+                {t("jn.invalidSub", { code })}
               </p>
               <a href="/sign-up" className="inline-block w-full rounded-2xl bg-slate-900 py-3 font-semibold text-white">
-                Registrati comunque
+                {t("jn.anyway")}
               </a>
             </>
           )}

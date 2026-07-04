@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { Chat } from "@/components/shared/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, MessageSquare } from "lucide-react";
@@ -16,6 +17,7 @@ export default async function TrainerMessagesPage({
   searchParams: Promise<{ c?: string }>;
 }) {
   const user = await requireRole("TRAINER");
+  const { t } = await getT();
   const trainer = user.trainerProfile!;
   const { c } = await searchParams;
 
@@ -37,10 +39,10 @@ export default async function TrainerMessagesPage({
   const chips: string[] = [];
   if (selected) {
     const age = ageFromBirth(selected.birthDate);
-    if (age) chips.push(`${age} anni`);
+    if (age) chips.push(t("u.years", { n: age }));
     if (selected.height) chips.push(`${selected.height} cm`);
     if (selected.startWeight) chips.push(`${selected.startWeight} kg`);
-    if (selected.trainingDaysPerWeek) chips.push(`${selected.trainingDaysPerWeek}x/sett`);
+    if (selected.trainingDaysPerWeek) chips.push(t("u.perWeek", { n: selected.trainingDaysPerWeek }));
     selected.goals.forEach((g) => chips.push(g));
   }
 
@@ -51,12 +53,12 @@ export default async function TrainerMessagesPage({
         className={`${selected ? "hidden lg:flex" : "flex"} w-full lg:w-80 flex-col border-r border-slate-100 bg-white`}
       >
         <div className="px-5 py-4 border-b border-slate-100">
-          <h1 className="text-xl font-bold text-slate-900">Messaggi</h1>
+          <h1 className="text-xl font-bold text-slate-900">{t("nav.messages")}</h1>
         </div>
         <div className="flex-1 overflow-y-auto">
           {clientProfiles.length === 0 ? (
             <p className="p-6 text-center text-sm text-slate-400">
-              Nessun cliente con cui chattare.
+              {t("msgs.noClients")}
             </p>
           ) : (
             clientProfiles.map((cp) => {
@@ -78,7 +80,7 @@ export default async function TrainerMessagesPage({
                     <p className="font-semibold text-sm text-slate-900 truncate">
                       {cp.user.name || cp.user.email}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">{cp.goals[0] ?? "Cliente"}</p>
+                    <p className="text-xs text-slate-400 truncate">{cp.goals[0] ?? t("role.client")}</p>
                   </div>
                   {unread > 0 && (
                     <span className="shrink-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white">
@@ -135,7 +137,7 @@ export default async function TrainerMessagesPage({
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center text-slate-400">
             <MessageSquare className="h-10 w-10 mb-3" />
-            <p className="text-sm">Seleziona un cliente per chattare</p>
+            <p className="text-sm">{t("msgs.select")}</p>
           </div>
         )}
       </section>

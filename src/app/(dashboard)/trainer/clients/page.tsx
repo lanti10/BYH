@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getT } from "@/lib/i18n/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { it } from "date-fns/locale";
+import { dateFnsLocale } from "@/lib/i18n/datefns";
 
 export default async function ClientsPage() {
   const user = await requireRole("TRAINER");
+  const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
   const clients = await prisma.clientProfile.findMany({
@@ -28,23 +30,23 @@ export default async function ClientsPage() {
     <div className="p-4 sm:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Clienti</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("nav.clients")}</h1>
           <p className="text-slate-500 mt-1">
-            {clients.length} cliente{clients.length !== 1 ? "i" : ""}
+            {t("cl.count", { n: clients.length })}
           </p>
         </div>
         <Button render={<Link href="/trainer/clients/new" />}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Aggiungi cliente
+          {t("tr.addClient")}
         </Button>
       </div>
 
       {clients.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <p className="text-slate-400 text-sm">Nessun cliente ancora.</p>
+            <p className="text-slate-400 text-sm">{t("tr.noClients")}</p>
             <Button render={<Link href="/trainer/clients/new" />} className="mt-4">
-              Aggiungi il primo cliente
+              {t("cl.addFirst")}
             </Button>
           </CardContent>
         </Card>
@@ -77,8 +79,8 @@ export default async function ClientsPage() {
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
                         {lastSession
-                          ? `Ultima sessione ${formatDistanceToNow(lastSession.completedAt, { locale: it, addSuffix: true })}`
-                          : "Nessuna sessione"}
+                          ? t("cl.lastSession", { time: formatDistanceToNow(lastSession.completedAt, { locale: dateFnsLocale(locale), addSuffix: true }) })
+                          : t("cl.noSession")}
                         {lastLog?.weight && ` · ${lastLog.weight} kg`}
                       </p>
                     </div>

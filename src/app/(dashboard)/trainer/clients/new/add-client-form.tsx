@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
+
 import { useActionState } from "react";
 import { addClientByEmail, type AddClientState } from "./actions";
 import { Check, AlertCircle } from "lucide-react";
@@ -7,6 +9,7 @@ import { Check, AlertCircle } from "lucide-react";
 const initial: AddClientState = {};
 
 export function AddClientForm() {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(addClientByEmail, initial);
 
   return (
@@ -22,7 +25,7 @@ export function AddClientForm() {
         disabled={pending}
         className="w-full rounded-2xl bg-slate-900 py-3 font-semibold text-white transition-colors hover:bg-slate-700 disabled:opacity-50"
       >
-        {pending ? "Collegamento..." : "Collega cliente"}
+        {pending ? t("nc.connecting") : t("nc.connect")}
       </button>
 
       {state.error && (

@@ -129,7 +129,7 @@ export function WorkoutBuilder({
 
   async function save() {
     setError(null);
-    if (!name.trim()) return setError("Dai un nome alla scheda.");
+    if (!name.trim()) return setError(t("err.noName"));
 
     setSaving(true);
     const payload = {
@@ -157,7 +157,7 @@ export function WorkoutBuilder({
       router.push("/trainer/workouts");
       router.refresh();
     } else {
-      setError(res.error ?? "Errore nel salvataggio.");
+      setError(res.error ?? t("err.save"));
     }
   }
 
