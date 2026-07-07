@@ -65,7 +65,7 @@ export function SessionTracker({
 
   async function connectHr() {
     try {
-      const anyNav = navigator as unknown as { bluetooth: { requestDevice: (o: unknown) => Promise<BluetoothDevice> } };
+      const anyNav = navigator as unknown as { bluetooth: { requestDevice: (o: unknown) => Promise<{ gatt?: { connect: () => Promise<{ getPrimaryService: (s: string) => Promise<{ getCharacteristic: (c: string) => Promise<{ startNotifications: () => Promise<unknown>; addEventListener: (t: string, cb: (e: Event) => void) => void }> }> }> } }> } };
       const device = await anyNav.bluetooth.requestDevice({
         filters: [{ services: ["heart_rate"] }],
       });

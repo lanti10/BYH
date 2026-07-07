@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 import { AccountSettings } from "@/components/shared/account-settings";
 import { ClientProfileFields } from "@/components/client/client-profile-fields";
 

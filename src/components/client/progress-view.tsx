@@ -231,7 +231,7 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
               <Tooltip
                 cursor={{ fill: "rgba(255,59,48,.06)" }}
                 contentStyle={{ borderRadius: 14, border: "1px solid rgba(0,0,0,.06)", fontSize: 12 }}
-                formatter={(v: number) => [`${v} min`, t("prog.oneSession")]}
+                formatter={(v) => [`${Number(v)} min`, t("prog.oneSession")]}
                 labelFormatter={() => ""}
               />
               <Bar dataKey="min" radius={[6, 6, 0, 0]} maxBarSize={26}>

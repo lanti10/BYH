@@ -36,7 +36,7 @@ export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
     <nav className="lg:hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-md">
       <div className="flex items-center justify-around rounded-[28px] glass-prominent px-2 py-3">
         {items.map((item) => {
-          const isActive = item.exact
+          const isActive = ("exact" in item && item.exact)
             ? pathname === item.href
             : pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;

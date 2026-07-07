@@ -34,8 +34,8 @@ export function TrainingChart({ data }: { data: TrainingDatum[] }) {
               boxShadow: "0 8px 24px rgba(0,0,0,.08)",
               fontSize: 12,
             }}
-            formatter={(value: number, name: string) =>
-              name === "min" ? [`${value} min`, "Allenamento"] : [`${value} kcal`, "Calorie"]
+            formatter={(value, name) =>
+              name === "min" ? [`${Number(value)} min`, "Allenamento"] : [`${Number(value)} kcal`, "Calorie"]
             }
           />
           <Bar dataKey="min" fill="#FF3B30" radius={[6, 6, 0, 0]} maxBarSize={18} />
