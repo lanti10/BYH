@@ -35,6 +35,13 @@ enum ExerciseCategory {
   HIIT
 }
 
+// Tipo di scheda scelto dal trainer alla creazione
+enum PlanType {
+  WEIGHTS    // con pesi
+  BODYWEIGHT // corpo libero
+  SWIMMING   // nuoto
+}
+
 // ─── USERS ────────────────────────────────────────────────────────────────────
 
 model User {
@@ -138,6 +145,7 @@ model WorkoutPlan {
   isTemplate  Boolean @default(false)
 
   name          String
+  planType      PlanType @default(WEIGHTS)
   description   String?
   durationWeeks Int?
   isActive      Boolean  @default(true)

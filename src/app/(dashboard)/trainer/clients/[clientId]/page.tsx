@@ -230,6 +230,7 @@ export default async function ClientDetailPage({
                 </CardHeader>
                 <CardContent>
                   <PlanDayTabs
+                    planType={plan.planType}
                     days={plan.workouts.map((day) => ({
                       id: day.id,
                       name: day.name,
@@ -240,6 +241,7 @@ export default async function ClientDetailPage({
                         reps: ex.reps,
                         weight: ex.weight,
                         restSeconds: ex.restSeconds,
+                        notes: ex.notes,
                       })),
                     }))}
                   />

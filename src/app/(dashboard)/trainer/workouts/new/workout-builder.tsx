@@ -3,19 +3,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWorkoutPlan, updateWorkoutPlan, type DayInput } from "../actions";
-import { Plus, Trash2, GripVertical, AlertCircle, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, GripVertical, AlertCircle, ArrowLeft, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import { PlanTypePicker, typeUsesWeight, type PlanType } from "@/components/trainer/plan-type-picker";
 
 type ClientOption = { id: string; name: string };
 
 let uid = 0;
 const newId = () => `tmp-${uid++}`;
 
-type ExRow = { id: string; name: string; sets: string; reps: string; weight: string; restSeconds: string };
+type ExRow = {
+  id: string;
+  name: string;
+  sets: string;
+  reps: string;
+  weight: string;
+  restSeconds: string;
+  notes: string;
+};
 type DayCard = { id: string; name: string; exercises: ExRow[] };
 
 function emptyExercise(): ExRow {
-  return { id: newId(), name: "", sets: "3", reps: "10", weight: "", restSeconds: "60" };
+  return { id: newId(), name: "", sets: "3", reps: "10", weight: "", restSeconds: "60", notes: "" };
 }
 function emptyDay(): DayCard {
   return { id: newId(), name: "", exercises: [emptyExercise()] };
@@ -35,6 +44,7 @@ function toDayCards(days?: DayInput[]): DayCard[] {
             reps: e.reps,
             weight: e.weight != null ? String(e.weight) : "",
             restSeconds: String(e.restSeconds),
+            notes: e.notes ?? "",
           }))
         : [emptyExercise()],
   }));
@@ -45,6 +55,7 @@ export function WorkoutBuilder({
   planId,
   initialClientId,
   initialName = "",
+  initialPlanType = "WEIGHTS",
   initialDescription = "",
   initialDurationWeeks,
   initialStartDate,
@@ -55,6 +66,7 @@ export function WorkoutBuilder({
   planId?: string;
   initialClientId?: string;
   initialName?: string;
+  initialPlanType?: PlanType;
   initialDescription?: string;
   initialDurationWeeks?: number | null;
   initialStartDate?: string;
@@ -65,6 +77,8 @@ export function WorkoutBuilder({
   const { t } = useT();
   const isEdit = !!planId;
   const [clientId, setClientId] = useState(initialClientId ?? clients[0]?.id ?? "");
+  const [planType, setPlanType] = useState<PlanType>(initialPlanType);
+  const showWeight = typeUsesWeight(planType);
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
   const [durationWeeks, setDurationWeeks] = useState(
@@ -135,6 +149,7 @@ export function WorkoutBuilder({
     const payload = {
       clientId: clientId || null,
       name,
+      planType,
       description,
       durationWeeks: durationWeeks.trim() === "" ? null : Number(durationWeeks),
       startDate,
@@ -144,8 +159,9 @@ export function WorkoutBuilder({
           name: e.name,
           sets: e.sets.trim() === "" ? 0 : Number(e.sets),
           reps: e.reps,
-          weight: e.weight.trim() === "" ? null : Number(e.weight),
+          weight: showWeight && e.weight.trim() !== "" ? Number(e.weight) : null,
           restSeconds: e.restSeconds.trim() === "" ? 0 : Number(e.restSeconds),
+          notes: e.notes,
         })),
       })),
     };
@@ -174,6 +190,12 @@ export function WorkoutBuilder({
 
       {/* Dati scheda */}
       <div className="rounded-3xl glass p-5 sm:p-6 space-y-4">
+        <div>
+          <label className="text-sm font-semibold text-slate-700">{t("wk.planType")}</label>
+          <div className="mt-2">
+            <PlanTypePicker value={planType} onChange={setPlanType} />
+          </div>
+        </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">{t("wb.assign")}</label>
           <select
@@ -309,7 +331,7 @@ export function WorkoutBuilder({
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 pl-6">
+                <div className={`mt-2 grid grid-cols-2 gap-2 pl-6 ${showWeight ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
                   <label className="flex flex-col">
                     <span className="text-[11px] text-slate-400 mb-1">{t("wb.sets")}</span>
                     <input
@@ -322,27 +344,31 @@ export function WorkoutBuilder({
                     />
                   </label>
                   <label className="flex flex-col">
-                    <span className="text-[11px] text-slate-400 mb-1">{t("wb.reps")}</span>
+                    <span className="text-[11px] text-slate-400 mb-1">
+                      {planType === "SWIMMING" ? t("wb.repsSwim") : t("wb.reps")}
+                    </span>
                     <input
                       value={ex.reps}
                       onChange={(e) => updateExercise(activeDay.id, ex.id, { reps: e.target.value })}
-                      placeholder="8-12"
+                      placeholder={planType === "SWIMMING" ? "4 × 50m" : "8-12"}
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
-                  <label className="flex flex-col">
-                    <span className="text-[11px] text-slate-400 mb-1">{t("wb.weight")}</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min={0}
-                      step={0.5}
-                      value={ex.weight}
-                      onChange={(e) => updateExercise(activeDay.id, ex.id, { weight: e.target.value })}
-                      placeholder="—"
-                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-brand"
-                    />
-                  </label>
+                  {showWeight && (
+                    <label className="flex flex-col">
+                      <span className="text-[11px] text-slate-400 mb-1">{t("wb.weight")}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step={0.5}
+                        value={ex.weight}
+                        onChange={(e) => updateExercise(activeDay.id, ex.id, { weight: e.target.value })}
+                        placeholder="—"
+                        className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-brand"
+                      />
+                    </label>
+                  )}
                   <label className="flex flex-col">
                     <span className="text-[11px] text-slate-400 mb-1">{t("wb.rest")}</span>
                     <input
@@ -355,6 +381,20 @@ export function WorkoutBuilder({
                       className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
+                </div>
+
+                {/* Note libere per l'esercizio (tecnica, tempo, RPE, cue...) */}
+                <div className="mt-2 pl-6">
+                  <div className="flex items-center gap-1.5 mb-1 text-[11px] text-slate-400">
+                    <StickyNote className="h-3 w-3" /> {t("wb.notes")}
+                  </div>
+                  <textarea
+                    value={ex.notes}
+                    onChange={(e) => updateExercise(activeDay.id, ex.id, { notes: e.target.value })}
+                    rows={2}
+                    placeholder={t("wb.notesPh")}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none focus:border-brand resize-none"
+                  />
                 </div>
               </div>
             ))}

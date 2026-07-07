@@ -50,6 +50,7 @@ export default async function ClientWorkoutPage() {
       reps: e.reps,
       weight: e.weight,
       restSeconds: e.restSeconds,
+      notes: e.notes,
     })),
   }));
 
@@ -74,7 +75,7 @@ export default async function ClientWorkoutPage() {
           {plan.description}
         </p>
       )}
-      <PlanDayTabs days={days} startHrefBase="/workout-session" todayIndex={nextIndex} />
+      <PlanDayTabs days={days} startHrefBase="/workout-session" todayIndex={nextIndex} planType={plan.planType} />
     </div>
   );
 }

@@ -46,6 +46,7 @@ export default async function EditWorkoutPage({
       reps: e.reps,
       weight: e.weight,
       restSeconds: e.restSeconds,
+      notes: e.notes,
     })),
   }));
 
@@ -66,6 +67,7 @@ export default async function EditWorkoutPage({
         planId={plan.id}
         initialClientId={plan.clientId ?? ""}
         initialName={plan.name}
+        initialPlanType={plan.planType}
         initialDescription={plan.description ?? ""}
         initialDurationWeeks={plan.durationWeeks}
         initialStartDate={plan.startDate ? plan.startDate.toISOString().slice(0, 10) : undefined}

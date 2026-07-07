@@ -51,6 +51,7 @@ export default async function WorkoutDetailPage({
       reps: e.reps,
       weight: e.weight,
       restSeconds: e.restSeconds,
+      notes: e.notes,
     })),
   }));
 
@@ -83,6 +84,8 @@ export default async function WorkoutDetailPage({
             <CalendarRange className="h-4 w-4" /> {t("pd.weeks", { n: plan.durationWeeks })}
           </>
         )}
+        <span className="text-slate-300">·</span>
+        {t(`ptype.${plan.planType.toLowerCase()}`)}
       </p>
 
       {plan.startDate && (
@@ -116,7 +119,7 @@ export default async function WorkoutDetailPage({
         </div>
       )}
 
-      <PlanDayTabs days={days} />
+      <PlanDayTabs days={days} planType={plan.planType} />
     </div>
   );
 }

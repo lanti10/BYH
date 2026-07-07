@@ -2,12 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, Pause, Square, Heart, Flame, Timer, Check, X, ChevronRight } from "lucide-react";
+import { Play, Pause, Square, Heart, Flame, Timer, Check, X, Info, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import type { PlanType } from "@/components/trainer/plan-type-picker";
 
-type Ex = { id: string; name: string; sets: number; reps: string; weight: number | null };
+type Ex = {
+  id: string;
+  name: string;
+  sets: number;
+  reps: string;
+  weight: number | null;
+  restSeconds: number;
+  notes?: string | null;
+};
 
-const MET = 6; // allenamento con pesi (moderato-intenso)
+// MET (dispendio energetico) per tipo di scheda
+const MET_BY_TYPE: Record<PlanType, number> = {
+  WEIGHTS: 6, // pesi (moderato-intenso)
+  BODYWEIGHT: 5, // corpo libero
+  SWIMMING: 8, // nuoto
+};
 
 function fmt(sec: number) {
   const h = Math.floor(sec / 3600);
@@ -22,11 +36,13 @@ export function SessionTracker({
   dayName,
   exercises,
   weightKg,
+  planType = "WEIGHTS",
 }: {
   dayId: string;
   dayName: string;
   exercises: Ex[];
   weightKg: number;
+  planType?: PlanType;
 }) {
   const router = useRouter();
   const { t } = useT();
@@ -35,6 +51,8 @@ export function SessionTracker({
   const [done, setDone] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [detail, setDetail] = useState<Ex | null>(null);
+  const showWeight = planType === "WEIGHTS";
 
   // Battito (Web Bluetooth, se supportato)
   const [bpm, setBpm] = useState<number | null>(null);
@@ -61,7 +79,7 @@ export function SessionTracker({
     };
   }, []);
 
-  const calories = Math.round((MET * 3.5 * weightKg) / 200 * (elapsed / 60));
+  const calories = Math.round((MET_BY_TYPE[planType] * 3.5 * weightKg) / 200 * (elapsed / 60));
 
   async function connectHr() {
     try {
@@ -184,10 +202,10 @@ export function SessionTracker({
           {exercises.map((ex, i) => {
             const isDone = done.has(ex.id);
             return (
-              <button
+              <div
                 key={ex.id}
-                onClick={() => toggleDone(ex.id)}
-                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors ${
+                onClick={() => setDetail(ex)}
+                className={`flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.03] ${
                   i < exercises.length - 1 ? "border-b border-white/8" : ""
                 }`}
               >
@@ -199,22 +217,31 @@ export function SessionTracker({
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold truncate ${isDone ? "text-white/50" : "text-white"}`}>
-                    {ex.name}
+                  <p className={`flex items-center gap-1.5 text-sm font-semibold ${isDone ? "text-white/50" : "text-white"}`}>
+                    <span className="truncate">{ex.name}</span>
+                    {ex.notes?.trim() && <StickyNote className="h-3 w-3 shrink-0 text-white/40" />}
                   </p>
                   <p className="text-xs text-white/50 tnum">
                     {ex.sets} × {ex.reps}
-                    {ex.weight != null ? ` · ${ex.weight} kg` : ""}
+                    {showWeight && ex.weight != null ? ` · ${ex.weight} kg` : ""}
                   </p>
                 </div>
-                {isDone ? (
-                  <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-emerald-500">
-                    <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                  </span>
-                ) : (
-                  <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
-                )}
-              </button>
+                {/* Info: apre il dettaglio (esplicito, oltre al tap sulla riga) */}
+                <Info className="h-4 w-4 shrink-0 text-white/30" />
+                {/* Cerchio: seleziona il completamento dell'esercizio */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleDone(ex.id);
+                  }}
+                  aria-label={t("session.markDone")}
+                  className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                    isDone ? "border-emerald-500 bg-emerald-500" : "border-white/30 hover:border-white/60"
+                  }`}
+                >
+                  {isDone && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
+                </button>
+              </div>
             );
           })}
         </div>
@@ -264,6 +291,59 @@ export function SessionTracker({
           </div>
         )}
       </div>
+
+      {/* Sheet dettaglio esercizio (scuro) */}
+      {detail && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
+          onClick={() => setDetail(null)}
+        >
+          <div
+            className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl glass-dark-prominent p-6 pb-8 max-h-[85vh] overflow-y-auto text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 mb-5">
+              <h3 className="text-lg font-bold">{detail.name}</h3>
+              <button
+                onClick={() => setDetail(null)}
+                className="shrink-0 rounded-full bg-white/10 p-1.5 text-white/70 hover:bg-white/20"
+                aria-label={t("common.close")}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { label: t("wb.sets"), value: String(detail.sets) },
+                { label: t("wb.reps"), value: detail.reps },
+                ...(showWeight
+                  ? [{ label: t("wb.weight"), value: detail.weight != null ? `${detail.weight}` : "—" }]
+                  : []),
+                { label: t("wb.rest"), value: `${detail.restSeconds}` },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl bg-white/8 px-4 py-3">
+                  <p className="text-xs text-white/50">{s.label}</p>
+                  <p className="text-lg font-bold tnum">{s.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <div className="flex items-center gap-1.5 mb-1.5 text-sm font-semibold text-white/80">
+                <StickyNote className="h-4 w-4 text-[#ff6b61]" /> {t("plan.notes")}
+              </div>
+              {detail.notes?.trim() ? (
+                <p className="rounded-2xl bg-white/8 p-4 text-sm text-white/70 whitespace-pre-wrap">
+                  {detail.notes}
+                </p>
+              ) : (
+                <p className="text-sm text-white/40">{t("plan.noNotes")}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

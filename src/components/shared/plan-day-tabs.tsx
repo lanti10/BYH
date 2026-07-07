@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Dumbbell, Play, ChevronRight } from "lucide-react";
+import { Dumbbell, Play, ChevronRight, X, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import type { PlanType } from "@/components/trainer/plan-type-picker";
 
 export type PlanExercise = {
   id: string;
@@ -12,6 +13,7 @@ export type PlanExercise = {
   reps: string;
   weight: number | null;
   restSeconds: number;
+  notes?: string | null;
 };
 export type PlanDay = {
   id: string;
@@ -23,21 +25,25 @@ export function PlanDayTabs({
   days,
   startHrefBase,
   todayIndex,
+  planType = "WEIGHTS",
 }: {
   days: PlanDay[];
   startHrefBase?: string;
   todayIndex?: number; // giorno che tocca oggi (progressione): tab pre-selezionata + badge "Oggi"
+  planType?: PlanType;
 }) {
   const { t } = useT();
   const [active, setActive] = useState(
     todayIndex != null ? Math.min(todayIndex, Math.max(days.length - 1, 0)) : 0
   );
+  const [detail, setDetail] = useState<PlanExercise | null>(null);
 
   if (days.length === 0) {
     return <p className="text-sm text-slate-400 text-center py-8">{t("plan.noDays")}</p>;
   }
 
   const day = days[Math.min(active, days.length - 1)];
+  const showWeight = planType === "WEIGHTS";
 
   return (
     <div>
@@ -82,12 +88,13 @@ export function PlanDayTabs({
         </Link>
       )}
 
-      {/* Lista esercizi — list row dal design system (§04) */}
+      {/* Lista esercizi — list row dal design system (§04); tap = dettaglio */}
       <div className="mt-3 overflow-hidden rounded-3xl glass">
         {day.exercises.map((ex, i) => (
-          <div
+          <button
             key={ex.id}
-            className={`flex items-center gap-3 px-4 py-3.5 ${
+            onClick={() => setDetail(ex)}
+            className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-black/[0.02] ${
               i < day.exercises.length - 1 ? "border-b border-black/5" : ""
             }`}
           >
@@ -98,11 +105,15 @@ export function PlanDayTabs({
               <p className="text-sm font-semibold text-slate-900 truncate">{ex.name}</p>
               <p className="text-xs text-slate-500 tnum">
                 {ex.sets} × {ex.reps}
-                {ex.weight != null ? ` · ${ex.weight} kg` : ""} · {ex.restSeconds}s {t("plan.rest")}
+                {showWeight && ex.weight != null ? ` · ${ex.weight} kg` : ""} · {ex.restSeconds}s{" "}
+                {t("plan.rest")}
               </p>
             </div>
+            {ex.notes?.trim() && (
+              <StickyNote className="h-3.5 w-3.5 shrink-0 text-slate-300" />
+            )}
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-          </div>
+          </button>
         ))}
         {day.exercises.length === 0 && (
           <div className="flex flex-col items-center py-8 text-center text-slate-400">
@@ -110,6 +121,79 @@ export function PlanDayTabs({
             <p className="text-sm">{t("plan.noExercises")}</p>
           </div>
         )}
+      </div>
+
+      {/* Sheet dettaglio esercizio */}
+      {detail && (
+        <ExerciseDetailSheet
+          ex={detail}
+          showWeight={showWeight}
+          onClose={() => setDetail(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Bottom sheet con tutti i dettagli di un esercizio (chiaro, per la vista scheda)
+function ExerciseDetailSheet({
+  ex,
+  showWeight,
+  onClose,
+}: {
+  ex: PlanExercise;
+  showWeight: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useT();
+  const stats: { label: string; value: string }[] = [
+    { label: t("wb.sets"), value: String(ex.sets) },
+    { label: t("wb.reps"), value: ex.reps },
+    ...(showWeight ? [{ label: t("wb.weight"), value: ex.weight != null ? `${ex.weight}` : "—" }] : []),
+    { label: t("wb.rest"), value: `${ex.restSeconds}` },
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl glass-prominent p-6 pb-8 max-h-[85vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 mb-5">
+          <h3 className="text-lg font-bold text-slate-900">{ex.name}</h3>
+          <button
+            onClick={onClose}
+            className="shrink-0 rounded-full bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200"
+            aria-label={t("common.close")}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-xs text-slate-400">{s.label}</p>
+              <p className="text-lg font-bold text-slate-900 tnum">{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <div className="flex items-center gap-1.5 mb-1.5 text-sm font-semibold text-slate-700">
+            <StickyNote className="h-4 w-4 text-brand" /> {t("plan.notes")}
+          </div>
+          {ex.notes?.trim() ? (
+            <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 whitespace-pre-wrap">
+              {ex.notes}
+            </p>
+          ) : (
+            <p className="text-sm text-slate-400">{t("plan.noNotes")}</p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { WorkoutBuilder } from "./workout-builder";
 import type { DayInput } from "../actions";
 import { Sparkles, PencilLine, AlertCircle, Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import { PlanTypePicker, type PlanType } from "@/components/trainer/plan-type-picker";
 
 export type ClientOption = {
   id: string;
@@ -44,6 +45,7 @@ export function WorkoutCreator({
   const { t } = useT();
   const [phase, setPhase] = useState<"config" | "edit">("config");
 
+  const [planType, setPlanType] = useState<PlanType>("WEIGHTS");
   const [clientId, setClientId] = useState(
     initialClientId && clients.some((c) => c.id === initialClientId)
       ? initialClientId
@@ -84,6 +86,7 @@ export function WorkoutCreator({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          planType,
           trainingType,
           frequency,
           sex,
@@ -119,6 +122,7 @@ export function WorkoutCreator({
         clients={clients.map((c) => ({ id: c.id, name: c.name }))}
         initialClientId={clientId}
         initialName={suggestedName}
+        initialPlanType={planType}
         initialDays={generatedDays}
         onBack={() => setPhase("config")}
       />
@@ -127,6 +131,12 @@ export function WorkoutCreator({
 
   return (
     <div className="space-y-6">
+      {/* Tipo di scheda: con pesi / corpo libero / nuoto */}
+      <div className="rounded-3xl glass p-5 sm:p-6">
+        <h2 className="font-semibold text-slate-800 mb-3">{t("wk.planType")}</h2>
+        <PlanTypePicker value={planType} onChange={setPlanType} />
+      </div>
+
       {/* Tipo di allenamento */}
       <div className="rounded-3xl glass p-5 sm:p-6">
         <h2 className="font-semibold text-slate-800 mb-3">{t("wk.type")}</h2>

@@ -16,7 +16,10 @@ export default async function WorkoutSessionPage({
 
   const day = await prisma.workoutDay.findFirst({
     where: { id: dayId, plan: { clientId: user.clientProfile.id } },
-    include: { exercises: { orderBy: { order: "asc" }, include: { exercise: true } } },
+    include: {
+      plan: { select: { planType: true } },
+      exercises: { orderBy: { order: "asc" }, include: { exercise: true } },
+    },
   });
   if (!day) notFound();
 
@@ -32,12 +35,15 @@ export default async function WorkoutSessionPage({
       dayId={day.id}
       dayName={day.name}
       weightKg={weightKg}
+      planType={day.plan.planType}
       exercises={day.exercises.map((e) => ({
         id: e.id,
         name: e.exercise.name,
         sets: e.sets,
         reps: e.reps,
         weight: e.weight,
+        restSeconds: e.restSeconds,
+        notes: e.notes,
       }))}
     />
   );

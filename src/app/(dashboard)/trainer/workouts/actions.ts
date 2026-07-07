@@ -4,12 +4,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+import type { PlanType } from "@prisma/client";
+
 export type ExerciseInput = {
   name: string;
   sets: number;
   reps: string;
   weight?: number | null;
   restSeconds: number;
+  notes?: string | null;
 };
 
 export type DayInput = {
@@ -20,6 +23,7 @@ export type DayInput = {
 export type CreatePlanInput = {
   clientId?: string | null; // null/vuoto = modello (nessun cliente)
   name: string;
+  planType?: PlanType;
   description?: string;
   durationWeeks?: number | null;
   startDate?: string | null; // ISO "yyyy-mm-dd"
@@ -45,12 +49,15 @@ async function getTrainer() {
 }
 
 // Pulisce i giorni vuoti e mappa i nomi degli esercizi a id (find-or-create)
-async function buildWorkoutsCreate(days: DayInput[], trainerId: string) {
+async function buildWorkoutsCreate(days: DayInput[], trainerId: string, planType: PlanType) {
   const validDays = days
     .map((d) => ({ ...d, exercises: d.exercises.filter((e) => e.name.trim()) }))
     .filter((d) => d.exercises.length > 0);
 
   if (validDays.length === 0) return null;
+
+  // Categoria di default per gli esercizi appena creati, in base al tipo di scheda
+  const defaultCategory = planType === "SWIMMING" ? "CARDIO" : "STRENGTH";
 
   const uniqueNames = [...new Set(validDays.flatMap((d) => d.exercises.map((e) => e.name.trim())))];
   const exerciseIdByName = new Map<string, string>();
@@ -60,7 +67,7 @@ async function buildWorkoutsCreate(days: DayInput[], trainerId: string) {
       exerciseIdByName.set(name, existing.id);
     } else {
       const created = await prisma.exercise.create({
-        data: { name, category: "STRENGTH", isCustom: true, createdBy: trainerId },
+        data: { name, category: defaultCategory, isCustom: true, createdBy: trainerId },
       });
       exerciseIdByName.set(name, created.id);
     }
@@ -74,8 +81,11 @@ async function buildWorkoutsCreate(days: DayInput[], trainerId: string) {
         exerciseId: exerciseIdByName.get(e.name.trim())!,
         sets: e.sets || 3,
         reps: e.reps.trim() || "10",
-        weight: e.weight != null && !Number.isNaN(e.weight) ? e.weight : null,
+        // Il carico ha senso solo per le schede con pesi
+        weight:
+          planType === "WEIGHTS" && e.weight != null && !Number.isNaN(e.weight) ? e.weight : null,
         restSeconds: e.restSeconds || 60,
+        notes: e.notes?.trim() || null,
         order: i,
       })),
     },
@@ -90,13 +100,14 @@ export async function createWorkoutPlan(input: CreatePlanInput): Promise<CreateP
 
   const clientId = input.clientId?.trim() || null;
   const isTemplate = !clientId;
+  const planType = input.planType ?? "WEIGHTS";
 
   if (clientId) {
     const client = await prisma.clientProfile.findFirst({ where: { id: clientId, trainerId: trainer.id } });
     if (!client) return { ok: false, error: "Cliente non valido." };
   }
 
-  const workoutsCreate = await buildWorkoutsCreate(input.days, trainer.id);
+  const workoutsCreate = await buildWorkoutsCreate(input.days, trainer.id, planType);
   if (!workoutsCreate) return { ok: false, error: "Aggiungi almeno un giorno con un esercizio." };
 
   if (clientId) {
@@ -115,6 +126,7 @@ export async function createWorkoutPlan(input: CreatePlanInput): Promise<CreateP
       isTemplate,
       isActive: !isTemplate,
       name: input.name.trim(),
+      planType,
       description: input.description?.trim() || null,
       durationWeeks: input.durationWeeks ?? null,
       startDate: start,
@@ -145,13 +157,14 @@ export async function updateWorkoutPlan(
 
   const clientId = input.clientId?.trim() || null;
   const isTemplate = !clientId;
+  const planType = input.planType ?? "WEIGHTS";
 
   if (clientId) {
     const client = await prisma.clientProfile.findFirst({ where: { id: clientId, trainerId: trainer.id } });
     if (!client) return { ok: false, error: "Cliente non valido." };
   }
 
-  const workoutsCreate = await buildWorkoutsCreate(input.days, trainer.id);
+  const workoutsCreate = await buildWorkoutsCreate(input.days, trainer.id, planType);
   if (!workoutsCreate) return { ok: false, error: "Aggiungi almeno un giorno con un esercizio." };
 
   // Rimuovi i giorni precedenti (e le eventuali sessioni collegate)
@@ -176,6 +189,7 @@ export async function updateWorkoutPlan(
       isTemplate,
       isActive: !isTemplate,
       name: input.name.trim(),
+      planType,
       description: input.description?.trim() || null,
       durationWeeks: input.durationWeeks ?? null,
       startDate: computeDates(input.startDate, input.durationWeeks).start,
@@ -250,6 +264,7 @@ export async function assignTemplateToClient(
       isTemplate: false,
       isActive: true,
       name: source.name,
+      planType: source.planType,
       description: source.description,
       durationWeeks: source.durationWeeks,
       startDate: computeDates(null, source.durationWeeks).start,
@@ -265,6 +280,7 @@ export async function assignTemplateToClient(
               reps: e.reps,
               weight: e.weight,
               restSeconds: e.restSeconds,
+              notes: e.notes,
               order: e.order,
             })),
           },
