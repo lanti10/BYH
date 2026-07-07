@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
-import { getNextDayIndex } from "@/lib/workout";
+import { getNextDayIndex, getScheduledTodayIndex } from "@/lib/workout";
 import { Dumbbell } from "lucide-react";
 
 export default async function ClientWorkoutPage() {
@@ -43,6 +43,7 @@ export default async function ClientWorkoutPage() {
   const days: PlanDay[] = plan.workouts.map((w) => ({
     id: w.id,
     name: w.name,
+    weekday: w.scheduledWeekday,
     exercises: w.exercises.map((e) => ({
       id: e.id,
       name: e.exercise.name,
@@ -61,7 +62,10 @@ export default async function ClientWorkoutPage() {
     take: 30,
     select: { workoutDayId: true, completedAt: true },
   });
-  const { nextIndex } = getNextDayIndex(plan.workouts, sessions);
+  // Se la scheda è pianificata per giorni fissi della settimana, usa quello; altrimenti progressione ciclica
+  const scheduled = getScheduledTodayIndex(plan.workouts);
+  const { nextIndex: cyclicNext } = getNextDayIndex(plan.workouts, sessions);
+  const nextIndex = scheduled ? scheduled.index : cyclicNext;
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto">
@@ -75,7 +79,7 @@ export default async function ClientWorkoutPage() {
           {plan.description}
         </p>
       )}
-      <PlanDayTabs days={days} startHrefBase="/workout-session" todayIndex={nextIndex} planType={plan.planType} />
+      <PlanDayTabs days={days} startHrefBase="/workout-session" todayIndex={scheduled?.restToday ? undefined : nextIndex} planType={plan.planType} />
     </div>
   );
 }

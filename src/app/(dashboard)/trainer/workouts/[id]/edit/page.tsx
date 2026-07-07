@@ -40,6 +40,7 @@ export default async function EditWorkoutPage({
 
   const initialDays: DayInput[] = plan.workouts.map((w) => ({
     name: w.name,
+    weekday: w.scheduledWeekday,
     exercises: w.exercises.map((e) => ({
       name: e.exercise.name,
       sets: e.sets,

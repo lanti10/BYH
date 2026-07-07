@@ -18,6 +18,7 @@ export type PlanExercise = {
 export type PlanDay = {
   id: string;
   name: string;
+  weekday?: number | null; // 1=Lun..7=Dom, se pianificato
   exercises: PlanExercise[];
 };
 
@@ -44,6 +45,9 @@ export function PlanDayTabs({
 
   const day = days[Math.min(active, days.length - 1)];
   const showWeight = planType === "WEIGHTS";
+  const weekInitials = t("dash.weekInitials").split(",");
+  const weekdayLabel = (wd?: number | null) =>
+    wd != null && wd >= 1 && wd <= 7 ? weekInitials[wd - 1] : null;
 
   return (
     <div>
@@ -60,6 +64,15 @@ export function PlanDayTabs({
             }`}
           >
             {t("plan.dayN", { n: i + 1 })}
+            {weekdayLabel(d.weekday) && (
+              <span
+                className={`ml-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                  i === active ? "bg-white/20 text-white" : "bg-slate-200 text-slate-500"
+                }`}
+              >
+                {weekdayLabel(d.weekday)}
+              </span>
+            )}
             {todayIndex === i && (
               <span
                 className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${

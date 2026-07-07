@@ -17,6 +17,7 @@ export type ExerciseInput = {
 
 export type DayInput = {
   name: string;
+  weekday?: number | null; // giorno della settimana fissato (1=Lun..7=Dom); null = non pianificato
   exercises: ExerciseInput[];
 };
 
@@ -76,6 +77,7 @@ async function buildWorkoutsCreate(days: DayInput[], trainerId: string, planType
   return validDays.map((d, dayIndex) => ({
     name: d.name.trim() || `Giorno ${dayIndex + 1}`,
     dayOfWeek: dayIndex, // numero del giorno di allenamento (0-based)
+    scheduledWeekday: d.weekday != null && d.weekday >= 1 && d.weekday <= 7 ? d.weekday : null,
     exercises: {
       create: d.exercises.map((e, i) => ({
         exerciseId: exerciseIdByName.get(e.name.trim())!,
@@ -273,6 +275,7 @@ export async function assignTemplateToClient(
         create: source.workouts.map((w) => ({
           name: w.name,
           dayOfWeek: w.dayOfWeek,
+          scheduledWeekday: w.scheduledWeekday,
           exercises: {
             create: w.exercises.map((e) => ({
               exerciseId: e.exerciseId,

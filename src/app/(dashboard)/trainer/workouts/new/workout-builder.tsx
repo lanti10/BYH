@@ -21,13 +21,13 @@ type ExRow = {
   restSeconds: string;
   notes: string;
 };
-type DayCard = { id: string; name: string; exercises: ExRow[] };
+type DayCard = { id: string; name: string; weekday: number | null; exercises: ExRow[] };
 
 function emptyExercise(): ExRow {
   return { id: newId(), name: "", sets: "3", reps: "10", weight: "", restSeconds: "60", notes: "" };
 }
 function emptyDay(): DayCard {
-  return { id: newId(), name: "", exercises: [emptyExercise()] };
+  return { id: newId(), name: "", weekday: null, exercises: [emptyExercise()] };
 }
 
 function toDayCards(days?: DayInput[]): DayCard[] {
@@ -35,6 +35,7 @@ function toDayCards(days?: DayInput[]): DayCard[] {
   return days.map((d) => ({
     id: newId(),
     name: d.name,
+    weekday: d.weekday ?? null,
     exercises:
       d.exercises.length > 0
         ? d.exercises.map((e) => ({
@@ -155,6 +156,7 @@ export function WorkoutBuilder({
       startDate,
       days: days.map((d) => ({
         name: d.name,
+        weekday: d.weekday,
         exercises: d.exercises.map((e) => ({
           name: e.name,
           sets: e.sets.trim() === "" ? 0 : Number(e.sets),
@@ -309,6 +311,29 @@ export function WorkoutBuilder({
                 <Trash2 className="h-3.5 w-3.5" /> {t("wb.delDay")}
               </button>
             )}
+          </div>
+
+          {/* Giorno della settimana (opzionale): aggancia l'allenamento al calendario */}
+          <div className="mb-4">
+            <p className="text-[11px] text-slate-400 mb-1.5">{t("wb.weekday")}</p>
+            <div className="flex gap-1.5">
+              {t("dash.weekInitials").split(",").map((label, i) => {
+                const wd = i + 1; // 1=Lun..7=Dom
+                const selected = activeDay.weekday === wd;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => updateDay(activeDay.id, { weekday: selected ? null : wd })}
+                    className={`h-9 flex-1 rounded-xl text-xs font-bold transition-colors ${
+                      selected ? "bg-brand text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Esercizi */}

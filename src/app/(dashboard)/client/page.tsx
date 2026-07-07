@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ActivityRing } from "@/components/client/activity-ring";
 import { WeekStrip } from "@/components/client/week-strip";
-import { getNextDayIndex, estimateDuration, getStreak } from "@/lib/workout";
+import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDuration, getStreak } from "@/lib/workout";
 import { getT } from "@/lib/i18n/server";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
@@ -61,10 +61,16 @@ export default async function ClientDashboard() {
   const activePlan = profile.workoutPlans[0];
   const sessions = profile.sessions;
 
-  // ── Progressione: quale giorno tocca oggi ──
+  // ── Quale giorno tocca oggi ── (scheda pianificata per giorni fissi, altrimenti ciclica)
   const days = activePlan?.workouts ?? [];
-  const { nextIndex, doneToday } = getNextDayIndex(days, sessions);
+  const scheduled = getScheduledTodayIndex(days);
+  const cyclic = getNextDayIndex(days, sessions);
+  const nextIndex = scheduled ? scheduled.index : cyclic.nextIndex;
+  const restToday = scheduled?.restToday ?? false;
   const todayWorkout = days[nextIndex];
+  const doneToday = scheduled
+    ? todayWorkout != null && isDayDoneToday(todayWorkout.id, sessions)
+    : cyclic.doneToday;
   const estMin = todayWorkout ? estimateDuration(todayWorkout.exercises) : 0;
 
   // ── Statistiche settimana corrente (lun–dom) ──
@@ -119,7 +125,7 @@ export default async function ClientDashboard() {
             <div className="rounded-3xl bg-depth-dark p-6 text-white shadow-lg">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-white/50">
-                  {t("dash.dayOf", { n: nextIndex + 1, total: days.length })}
+                  {restToday ? t("dash.restToday") : t("dash.dayOf", { n: nextIndex + 1, total: days.length })}
                 </p>
                 {doneToday && (
                   <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">

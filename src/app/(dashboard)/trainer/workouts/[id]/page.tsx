@@ -44,6 +44,7 @@ export default async function WorkoutDetailPage({
   const days: PlanDay[] = plan.workouts.map((w) => ({
     id: w.id,
     name: w.name,
+    weekday: w.scheduledWeekday,
     exercises: w.exercises.map((e) => ({
       id: e.id,
       name: e.exercise.name,

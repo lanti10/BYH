@@ -31,6 +31,43 @@ export function getNextDayIndex(
   return { nextIndex, doneToday };
 }
 
+// Scheda pianificata per giorni fissi della settimana (scheduledWeekday 1=Lun..7=Dom).
+// Ritorna null se la scheda NON è pianificata (nessun giorno ha un weekday) → si usa la
+// progressione ciclica. Altrimenti dice quale giorno tocca oggi (o il prossimo se oggi è riposo).
+export function getScheduledTodayIndex(
+  days: { scheduledWeekday?: number | null }[]
+): { index: number; restToday: boolean } | null {
+  if (!days.some((d) => d.scheduledWeekday != null)) return null;
+
+  const todayW = ((new Date().getDay() + 6) % 7) + 1; // JS: 0=Dom → 1=Lun..7=Dom
+  const todayIdx = days.findIndex((d) => d.scheduledWeekday === todayW);
+  if (todayIdx !== -1) return { index: todayIdx, restToday: false };
+
+  // Oggi è riposo: trova il prossimo giorno pianificato (nella settimana, ciclico)
+  let best = -1;
+  let bestDelta = 8;
+  days.forEach((d, i) => {
+    if (d.scheduledWeekday == null) return;
+    let delta = (d.scheduledWeekday - todayW + 7) % 7;
+    if (delta === 0) delta = 7;
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      best = i;
+    }
+  });
+  return { index: best === -1 ? 0 : best, restToday: true };
+}
+
+// True se in `sessions` esiste un allenamento del giorno `dayId` completato oggi
+export function isDayDoneToday(dayId: string, sessions: { workoutDayId: string; completedAt: Date }[]): boolean {
+  const now = new Date();
+  return sessions.some((s) => {
+    if (s.workoutDayId !== dayId) return false;
+    const d = new Date(s.completedAt);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  });
+}
+
 // Durata stimata di un giorno di allenamento (minuti): ~45s per serie + recupero
 export function estimateDuration(
   exercises: { sets: number; restSeconds: number }[]

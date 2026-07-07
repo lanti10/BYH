@@ -163,9 +163,10 @@ model WorkoutDay {
   planId      String
   plan        WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
-  dayOfWeek   Int // 0=Mon ... 6=Sun
-  name        String
-  notes       String?
+  dayOfWeek        Int // indice del giorno di allenamento nella scheda (0-based, per l'ordine)
+  scheduledWeekday Int? // giorno della settimana fissato dalla scheda (1=Lun ... 7=Dom); null = non pianificato
+  name             String
+  notes            String?
 
   exercises WorkoutExercise[]
   sessions  WorkoutSession[]

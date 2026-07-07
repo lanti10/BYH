@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { WorkoutBuilder } from "./workout-builder";
 import type { DayInput } from "../actions";
-import { Sparkles, PencilLine, AlertCircle, Loader2 } from "lucide-react";
+import { Sparkles, PencilLine, AlertCircle, Loader2, Upload } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { PlanTypePicker, type PlanType } from "@/components/trainer/plan-type-picker";
 
@@ -64,6 +64,12 @@ export function WorkoutCreator({
   const [error, setError] = useState<string | null>(null);
   const [generatedDays, setGeneratedDays] = useState<DayInput[] | undefined>(undefined);
 
+  // Import da file (PDF/foto/CSV): dati estratti che precompilano il builder
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [importedName, setImportedName] = useState<string | null>(null);
+  const [importedDuration, setImportedDuration] = useState<number | null>(null);
+
   function selectClient(id: string) {
     setClientId(id);
     const c = clients.find((x) => x.id === id);
@@ -113,7 +119,36 @@ export function WorkoutCreator({
 
   function manual() {
     setGeneratedDays(undefined);
+    setImportedName(null);
+    setImportedDuration(null);
     setPhase("edit");
+  }
+
+  async function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permette di ricaricare lo stesso file
+    if (!file) return;
+    setImporting(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/workouts/import", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? t("err.gen"));
+        return;
+      }
+      if (data.planType) setPlanType(data.planType as PlanType);
+      setImportedName(typeof data.name === "string" && data.name.trim() ? data.name : null);
+      setImportedDuration(typeof data.durationWeeks === "number" ? data.durationWeeks : null);
+      setGeneratedDays(data.days as DayInput[]);
+      setPhase("edit");
+    } catch {
+      setError(t("err.conn"));
+    } finally {
+      setImporting(false);
+    }
   }
 
   if (phase === "edit") {
@@ -121,8 +156,9 @@ export function WorkoutCreator({
       <WorkoutBuilder
         clients={clients.map((c) => ({ id: c.id, name: c.name }))}
         initialClientId={clientId}
-        initialName={suggestedName}
+        initialName={importedName ?? suggestedName}
         initialPlanType={planType}
+        initialDurationWeeks={importedDuration}
         initialDays={generatedDays}
         onBack={() => setPhase("config")}
       />
@@ -305,11 +341,36 @@ export function WorkoutCreator({
         </button>
         <button
           onClick={manual}
-          disabled={loading}
+          disabled={loading || importing}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3.5 font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
         >
           <PencilLine className="h-5 w-5" /> {t("wk.manual")}
         </button>
+
+        {/* Importa una scheda già pronta (PDF, foto, CSV) → l'AI la ricostruisce nell'app */}
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.csv,.txt,image/jpeg,image/png,image/webp,image/gif"
+          onChange={onFilePicked}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={loading || importing}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3.5 font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60"
+        >
+          {importing ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" /> {t("wk.importing")}
+            </>
+          ) : (
+            <>
+              <Upload className="h-5 w-5" /> {t("wk.import")}
+            </>
+          )}
+        </button>
+        <p className="text-center text-xs text-slate-400">{t("wk.importHint")}</p>
       </div>
     </div>
   );
