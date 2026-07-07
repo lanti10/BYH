@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   "/join(.*)",
   "/join-trainer(.*)",
   "/api/webhooks(.*)",
+  "/api/agent(.*)", // API per l'agente esterno: protetta da Bearer AGENT_API_KEY, non dal login Clerk
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
