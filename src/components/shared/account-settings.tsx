@@ -40,16 +40,55 @@ export function AccountSettings() {
     }
   }
 
+  // Converte qualsiasi immagine (anche HEIC di iPhone) in un JPEG ridimensionato.
+  // Il browser decodifica il file in un <img>, lo ridisegna su canvas a max 512px
+  // e lo riesporta come JPEG: risolve formato non supportato + file troppo grandi.
+  async function toJpeg(file: File): Promise<File> {
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("read failed"));
+      reader.readAsDataURL(file);
+    });
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("image decode failed"));
+      i.src = dataUrl;
+    });
+    const max = 512;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("canvas unavailable");
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob: Blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("encode failed"))),
+        "image/jpeg",
+        0.9
+      );
+    });
+    return new File([blob], "avatar.jpg", { type: "image/jpeg" });
+  }
+
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     setUploading(true);
     setMsg(null);
     try {
-      await user.setProfileImage({ file });
+      const jpeg = await toJpeg(file);
+      await user.setProfileImage({ file: jpeg });
+      await user.reload();
       router.refresh();
       setMsg({ type: "ok", text: t("acct.photoOk") });
-    } catch {
+    } catch (err) {
+      console.error("Profile image upload failed:", err);
       setMsg({ type: "err", text: t("acct.photoErr") });
     } finally {
       setUploading(false);
