@@ -23,10 +23,7 @@ export function DashboardShell({
   }, []);
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ height: "var(--app-height, 100dvh)" }}
-    >
+    <div className="flex flex-col h-[100dvh]">
       {/* Top bar mobile con hamburger — nero pieno, il rosso resta solo per accenti */}
       <header className="flex items-center gap-3 px-4 h-14 bg-ink text-white shrink-0 lg:hidden">
         <button

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { itIT, ptBR, esES } from "@clerk/localizations";
 import { Toaster } from "@/components/ui/sonner";
-import { ViewportHeight } from "@/components/shared/viewport-height";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +29,6 @@ export default async function RootLayout({
     <ClerkProvider localization={clerkLocalization}>
       <html lang={locale} className="h-full antialiased">
         <body className="min-h-full bg-background text-foreground">
-          <ViewportHeight />
           {children}
           <Toaster richColors position="top-right" />
         </body>
