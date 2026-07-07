@@ -24,15 +24,8 @@ export function DashboardShell({
 
   return (
     <div className="flex flex-col h-[100dvh]">
-      {/* Top bar mobile con hamburger — nero pieno, il rosso resta solo per accenti */}
+      {/* Top bar mobile — solo brand + notifiche/lingua (niente hamburger: la nav è nella barra in basso) */}
       <header className="flex items-center gap-3 px-4 h-14 bg-ink text-white shrink-0 lg:hidden">
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Apri menu"
-          className="flex h-11 w-11 -ml-2 items-center justify-center rounded-full hover:bg-white/10"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
         <div className="relative h-8 w-8 overflow-hidden rounded-lg shrink-0">
           <Image src="/byh-logo.jpg" alt="BYH" fill className="object-cover" />
         </div>

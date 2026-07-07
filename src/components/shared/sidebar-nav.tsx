@@ -104,7 +104,7 @@ export function SidebarNav({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen w-64 flex-col bg-depth-dark text-white transition-transform duration-300",
+        "fixed left-0 top-0 z-50 hidden lg:flex h-screen w-64 flex-col bg-depth-dark text-white transition-transform duration-300",
         open ? "translate-x-0" : "-translate-x-full"
       )}
     >
