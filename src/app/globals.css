@@ -266,6 +266,11 @@ input[type="date"] {
 .dark .bg-white\/80 {
   background-color: rgba(255, 255, 255, 0.08);
 }
+/* Bottoni "scuri" (bg-slate-900 + text-white): in dark il bg si inverte a chiaro,
+   quindi il testo bianco diventerebbe illeggibile → forza testo scuro. Il rosso (bg-brand) NON è toccato. */
+.dark .bg-slate-900.text-white {
+  color: #1c1c1e;
+}
 .dark .hover\:bg-white:hover {
   background-color: #2c2c2e;
 }
