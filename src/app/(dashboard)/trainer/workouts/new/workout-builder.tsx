@@ -180,7 +180,7 @@ export function WorkoutBuilder({
   }
 
   return (
-    <div className="space-y-6 pb-44 lg:pb-28">
+    <div className="space-y-6 pb-28 lg:pb-10">
       {onBack && (
         <button
           onClick={onBack}
@@ -226,16 +226,16 @@ export function WorkoutBuilder({
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className="min-w-0">
             <label className="text-sm font-semibold text-slate-700">{t("wb.startDate")}</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              className="mt-2 w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="text-sm font-semibold text-slate-700">{t("wb.duration")}</label>
             <input
               type="number"
@@ -244,7 +244,7 @@ export function WorkoutBuilder({
               value={durationWeeks}
               onChange={(e) => setDurationWeeks(e.target.value)}
               placeholder="Es. 6"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              className="mt-2 w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
           </div>
         </div>
@@ -434,22 +434,20 @@ export function WorkoutBuilder({
         </div>
       )}
 
-      {/* Barra salvataggio fissa — su mobile sta SOPRA la tab bar, su desktop in fondo */}
-      <div className="fixed bottom-[92px] left-0 right-0 lg:bottom-0 lg:left-64 glass-prominent p-4 z-40">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          {error && (
-            <p className="flex items-center gap-1.5 text-sm text-brand flex-1">
-              <AlertCircle className="h-4 w-4 shrink-0" /> {error}
-            </p>
-          )}
-          <button
-            onClick={save}
-            disabled={saving}
-            className="ml-auto rounded-full bg-brand px-8 py-3 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-50"
-          >
-            {saving ? t("session.saving") : isEdit ? t("wb.saveEdits") : t("wb.save")}
-          </button>
-        </div>
+      {/* Salvataggio — in fondo al contenuto (appare scrollando, non fisso) */}
+      <div className="space-y-3 pt-2">
+        {error && (
+          <p className="flex items-center gap-1.5 text-sm text-brand">
+            <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+          </p>
+        )}
+        <button
+          onClick={save}
+          disabled={saving}
+          className="w-full rounded-full bg-brand py-4 font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-50"
+        >
+          {saving ? t("session.saving") : isEdit ? t("wb.saveEdits") : t("wb.save")}
+        </button>
       </div>
     </div>
   );
