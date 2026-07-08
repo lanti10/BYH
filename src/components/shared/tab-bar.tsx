@@ -138,7 +138,7 @@ export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
       )}
 
       {/* Barra inferiore fissa */}
-      <nav className="lg:hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md">
+      <nav data-tabbar className="lg:hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md">
         <div className="flex items-stretch justify-around rounded-[28px] glass-prominent px-1.5 py-2.5">
           {primary.map((item) => {
             const active = isActive(pathname, item);

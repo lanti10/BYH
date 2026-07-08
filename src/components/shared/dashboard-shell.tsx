@@ -68,7 +68,7 @@ export function DashboardShell({
             open ? "lg:ml-64" : "ml-0"
           )}
         >
-          <div className="pb-28 lg:pb-0">{children}</div>
+          <div data-app-main className="pb-28 lg:pb-0">{children}</div>
         </main>
 
         {/* Tab bar mobile (design Pulse) */}

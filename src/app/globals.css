@@ -214,3 +214,14 @@
 @utility shadow-cta {
   box-shadow: 0 6px 18px rgba(255, 59, 48, 0.35);
 }
+
+/* Chat: quando l'utente scrive (input in focus) su mobile, nascondi la tab bar
+   e lo spazio inferiore, così l'input sale fino alla tastiera senza la barra dei comandi in mezzo. */
+@media (max-width: 1023px) {
+  body:has([data-chat-input]:focus) [data-tabbar] {
+    display: none;
+  }
+  body:has([data-chat-input]:focus) [data-app-main] {
+    padding-bottom: 0;
+  }
+}
