@@ -7,10 +7,11 @@ import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDurati
 import { getT } from "@/lib/i18n/server";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
-  Dumbbell, MessageSquare, TrendingUp, ShoppingBag,
+  Dumbbell, MessageSquare, ShoppingBag,
   Play, Flame, Timer, Check, ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { WeightWidget } from "@/components/client/weight-widget";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
@@ -264,15 +265,7 @@ export default async function ClientDashboard() {
                 <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-brand" />
               )}
             </Link>
-            <Link href="/client/progress" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 mb-2">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
-              </div>
-              <p className="text-2xl font-bold text-slate-900 leading-none tnum">
-                {lastWeight ?? "—"}<span className="text-sm font-medium text-slate-400"> kg</span>
-              </p>
-              <p className="text-xs text-slate-500 mt-1">{t("dash.currentWeight")}</p>
-            </Link>
+            <WeightWidget currentWeight={lastWeight ?? null} />
             <Link href="/client/workout" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 mb-2">
                 <Dumbbell className="h-4 w-4 text-brand" />
