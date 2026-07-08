@@ -48,7 +48,7 @@ export default async function TrainerMessagesPage({
   }
 
   return (
-    <div className="h-full flex">
+    <div data-chat-root className="flex h-[calc(100dvh-9.5rem)] lg:h-dvh">
       {/* Lista conversazioni */}
       <aside
         className={`${selected ? "hidden lg:flex" : "flex"} w-full lg:w-80 flex-col border-r border-slate-100 bg-white`}

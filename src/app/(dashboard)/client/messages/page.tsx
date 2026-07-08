@@ -30,7 +30,10 @@ export default async function ClientMessagesPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-slate-50">
+    <div
+      data-chat-root
+      className="flex flex-col bg-slate-50 h-[calc(100dvh-9.5rem)] lg:h-dvh"
+    >
       <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
         <Avatar>
           <AvatarImage src={trainer.user.avatarUrl ?? undefined} />

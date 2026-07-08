@@ -274,13 +274,18 @@ input[type="date"] {
   background-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Chat: quando l'utente scrive (input in focus) su mobile, nascondi la tab bar
-   e lo spazio inferiore, così l'input sale fino alla tastiera senza la barra dei comandi in mezzo. */
+/* Chat a tutta altezza + gestione tastiera.
+   - Le pagine con chat (data-chat-root) gestiscono la propria altezza: niente padding globale.
+   - Il root chat lascia in fondo lo spazio della tab bar (6rem) così l'input sta appena sopra.
+   - Mentre si scrive: nascondi la tab bar e recupera quello spazio, così l'input sale alla tastiera. */
+body:has([data-chat-root]) [data-app-main] {
+  padding-bottom: 0;
+}
 @media (max-width: 1023px) {
   body:has([data-chat-input]:focus) [data-tabbar] {
     display: none;
   }
-  body:has([data-chat-input]:focus) [data-app-main] {
-    padding-bottom: 0;
+  body:has([data-chat-input]:focus) [data-chat-root] {
+    height: calc(100dvh - 3.5rem) !important;
   }
 }
