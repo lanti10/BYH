@@ -7,6 +7,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "BYH — Build Your Health",
   description: "La piattaforma per personal trainer e i loro clienti.",
+  manifest: "/manifest.webmanifest",
+  // Icona home (iOS "Aggiungi a Home") + tab: usa apple-icon.jpg / icon.jpg (il logo rosso BYH)
+  appleWebApp: { capable: true, title: "BYH", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
