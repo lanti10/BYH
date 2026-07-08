@@ -180,7 +180,7 @@ export function WorkoutBuilder({
   }
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6 pb-44 lg:pb-28">
       {onBack && (
         <button
           onClick={onBack}
@@ -434,8 +434,8 @@ export function WorkoutBuilder({
         </div>
       )}
 
-      {/* Barra salvataggio fissa */}
-      <div className="fixed bottom-0 left-0 right-0 lg:left-64 glass-prominent border-t-0 p-4 z-30">
+      {/* Barra salvataggio fissa — su mobile sta SOPRA la tab bar, su desktop in fondo */}
+      <div className="fixed bottom-[92px] left-0 right-0 lg:bottom-0 lg:left-64 glass-prominent p-4 z-40">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           {error && (
             <p className="flex items-center gap-1.5 text-sm text-brand flex-1">
