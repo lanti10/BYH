@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWorkoutPlan, updateWorkoutPlan, type DayInput } from "../actions";
-import { Plus, Trash2, GripVertical, AlertCircle, ArrowLeft, StickyNote } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, AlertCircle, ArrowLeft, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { PlanTypePicker, typeUsesWeight, type PlanType } from "@/components/trainer/plan-type-picker";
 
@@ -125,6 +125,19 @@ export function WorkoutBuilder({
       ds.map((d) =>
         d.id === dayId ? { ...d, exercises: d.exercises.filter((e) => e.id !== exId) } : d
       )
+    );
+  }
+  // Sposta un esercizio su/giù nell'ordine del giorno
+  function moveExercise(dayId: string, index: number, dir: -1 | 1) {
+    setDays((ds) =>
+      ds.map((d) => {
+        if (d.id !== dayId) return d;
+        const j = index + dir;
+        if (j < 0 || j >= d.exercises.length) return d;
+        const ex = [...d.exercises];
+        [ex[index], ex[j]] = [ex[j], ex[index]];
+        return { ...d, exercises: ex };
+      })
     );
   }
   function addDay() {
@@ -338,10 +351,28 @@ export function WorkoutBuilder({
 
           {/* Esercizi */}
           <div className="space-y-2">
-            {activeDay.exercises.map((ex) => (
+            {activeDay.exercises.map((ex, exIndex) => (
               <div key={ex.id} className="rounded-2xl bg-slate-50 p-3">
                 <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-slate-300 shrink-0" />
+                  {/* Riordino esercizio (su/giù) */}
+                  <div className="flex flex-col -my-1 shrink-0">
+                    <button
+                      onClick={() => moveExercise(activeDay.id, exIndex, -1)}
+                      disabled={exIndex === 0}
+                      className="rounded-md p-0.5 text-slate-400 hover:text-brand disabled:opacity-25"
+                      aria-label={t("wb.moveUp")}
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => moveExercise(activeDay.id, exIndex, 1)}
+                      disabled={exIndex === activeDay.exercises.length - 1}
+                      className="rounded-md p-0.5 text-slate-400 hover:text-brand disabled:opacity-25"
+                      aria-label={t("wb.moveDown")}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
                   <input
                     value={ex.name}
                     onChange={(e) => updateExercise(activeDay.id, ex.id, { name: e.target.value })}

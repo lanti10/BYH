@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Check, MessageSquare } from "lucide-react";
+import { Bell, Check, MessageSquare, Moon, Sun } from "lucide-react";
 import { LOCALES, type Locale } from "@/lib/i18n/dict";
 import { useT, writeLocaleCookie } from "@/lib/i18n/client";
 
@@ -37,7 +37,24 @@ export function HeaderActions({
   const [items, setItems] = useState<Notif[]>([]);
   const [count, setCount] = useState(0);
   const [marking, setMarking] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Allinea lo stato del pulsante al tema effettivo (impostato dallo script anti-flash)
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggleTheme() {
+    const next = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("byh-theme", next ? "dark" : "light");
+    } catch {
+      /* storage non disponibile */
+    }
+    setIsDark(next);
+  }
 
   const load = useCallback(async () => {
     try {
@@ -115,6 +132,11 @@ export function HeaderActions({
             {count > 9 ? "9+" : count}
           </span>
         )}
+      </button>
+
+      {/* Tema chiaro/scuro */}
+      <button onClick={toggleTheme} aria-label={t("theme.toggle")} className={btnCls}>
+        {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
       </button>
 
       {/* Selettore lingua */}

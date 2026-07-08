@@ -29,6 +29,12 @@ export default async function RootLayout({
     <ClerkProvider localization={clerkLocalization}>
       <html lang={locale} className="h-full antialiased">
         <body className="min-h-full bg-background text-foreground">
+          {/* Applica il tema salvato prima del paint per evitare il flash bianco */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `try{if(localStorage.getItem('byh-theme')==='dark'){document.documentElement.classList.add('dark')}}catch(e){}`,
+            }}
+          />
           {children}
           <Toaster richColors position="top-right" />
         </body>

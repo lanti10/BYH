@@ -225,6 +225,55 @@ input[type="date"] {
   box-sizing: border-box;
 }
 
+/* ── Dark mode (classe .dark su <html>) ──
+   Inverte la scala neutri iOS e ridefinisce le superfici chiare, così l'intera app
+   passa a scuro senza toccare i singoli componenti. Rosso/verde/arancio restano uguali. */
+.dark {
+  --color-slate-50: #1c1c1e;
+  --color-slate-100: #2c2c2e;
+  --color-slate-200: #3a3a3c;
+  --color-slate-300: #48484a;
+  --color-slate-400: #8e8e93;
+  --color-slate-500: #98989d;
+  --color-slate-600: #c7c7cc;
+  --color-slate-700: #d1d1d6;
+  --color-slate-800: #e5e5ea;
+  --color-slate-900: #f5f5f7;
+  --color-slate-950: #ffffff;
+}
+.dark .bg-depth-light {
+  background:
+    radial-gradient(90% 50% at 20% -5%, rgba(255, 59, 48, 0.16), transparent 60%)
+    #0a0a0c;
+}
+.dark .glass {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.dark .glass-prominent {
+  background: rgba(30, 30, 32, 0.82);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+/* Superfici bianche piene/semitrasparenti → scure (le bg-white/5–25 restano: sono già su sfondi scuri) */
+.dark .bg-white {
+  background-color: #1c1c1e;
+}
+.dark .bg-white\/50,
+.dark .bg-white\/60,
+.dark .bg-white\/70,
+.dark .bg-white\/80 {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.dark .hover\:bg-white:hover {
+  background-color: #2c2c2e;
+}
+.dark .hover\:bg-white\/60:hover,
+.dark .hover\:bg-white\/70:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
 /* Chat: quando l'utente scrive (input in focus) su mobile, nascondi la tab bar
    e lo spazio inferiore, così l'input sale fino alla tastiera senza la barra dei comandi in mezzo. */
 @media (max-width: 1023px) {
