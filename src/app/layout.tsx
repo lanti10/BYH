@@ -8,7 +8,15 @@ export const metadata: Metadata = {
   title: "BYH — Build Your Health",
   description: "La piattaforma per personal trainer e i loro clienti.",
   manifest: "/manifest.webmanifest",
-  // Icona home (iOS "Aggiungi a Home") + tab: usa apple-icon.jpg / icon.jpg (il logo rosso BYH)
+  // Icona home iOS ("Aggiungi a Home") + tab: PNG rosso servito da URL puliti in /public.
+  // apple-touch-icon.png nella root è il percorso che iOS cerca di default.
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: { capable: true, title: "BYH", statusBarStyle: "default" },
 };
 
