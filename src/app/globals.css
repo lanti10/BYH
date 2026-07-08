@@ -215,6 +215,16 @@
   box-shadow: 0 6px 18px rgba(255, 59, 48, 0.35);
 }
 
+/* iOS Safari: input[type=date] ignora `width` e sfora il contenitore.
+   `-webkit-appearance: none` + max-width lo forzano dentro il suo spazio. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* Chat: quando l'utente scrive (input in focus) su mobile, nascondi la tab bar
    e lo spazio inferiore, così l'input sale fino alla tastiera senza la barra dei comandi in mezzo. */
 @media (max-width: 1023px) {
