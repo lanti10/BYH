@@ -8,7 +8,6 @@ import {
   User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X,
 } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
-import { isDisabled } from "@/lib/scope";
 
 type Item = { href: string; label: string; icon: typeof Home; exact?: boolean; badge?: boolean };
 
@@ -63,10 +62,7 @@ function isActive(pathname: string, item: Item): boolean {
 export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
   const pathname = usePathname();
   const { t } = useT();
-  const base = NAV[role];
-  // Nascondi le destinazioni fuori scope v1 (commerce). Vedi src/lib/scope.ts
-  const primary = base.primary.filter((i) => !isDisabled(i.href));
-  const more = base.more.filter((i) => !isDisabled(i.href));
+  const { primary, more } = NAV[role];
   const [sheet, setSheet] = useState(false);
   const [unread, setUnread] = useState(0);
 

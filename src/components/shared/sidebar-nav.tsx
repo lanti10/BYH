@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import { useT } from "@/lib/i18n/client";
-import { isDisabled } from "@/lib/scope";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
   ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy,
@@ -60,8 +59,7 @@ export function SidebarNav({
 }) {
   const pathname = usePathname();
   const { t } = useT();
-  // Nascondi le destinazioni fuori scope v1 (commerce). Vedi src/lib/scope.ts
-  const items = navConfig[role].filter((i) => !isDisabled(i.href));
+  const items = navConfig[role];
   const [unread, setUnread] = useState(0);
   const prev = useRef(0);
   const initialized = useRef(false);

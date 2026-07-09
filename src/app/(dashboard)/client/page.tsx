@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { WeightWidget } from "@/components/client/weight-widget";
-import { COMMERCE_ENABLED } from "@/lib/scope";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
@@ -274,15 +273,13 @@ export default async function ClientDashboard() {
               <p className="text-sm font-semibold text-slate-900 leading-tight">{t("nav.myPlan")}</p>
               <p className="text-xs text-slate-500 mt-1 truncate">{activePlan?.name ?? "—"}</p>
             </Link>
-            {COMMERCE_ENABLED && (
-              <Link href="/client/shop" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
-                  <ShoppingBag className="h-4 w-4 text-amber-600" />
-                </div>
-                <p className="text-sm font-semibold text-slate-900 leading-tight">{t("nav.shop")}</p>
-                <p className="text-xs text-slate-500 mt-1">{t("dash.shopSub")}</p>
-              </Link>
-            )}
+            <Link href="/client/shop" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
+                <ShoppingBag className="h-4 w-4 text-amber-600" />
+              </div>
+              <p className="text-sm font-semibold text-slate-900 leading-tight">{t("nav.shop")}</p>
+              <p className="text-xs text-slate-500 mt-1">{t("dash.shopSub")}</p>
+            </Link>
           </div>
 
           {/* Trainer */}
@@ -308,8 +305,8 @@ export default async function ClientDashboard() {
             </Link>
           </div>
 
-          {/* Raccomandazioni (commerce, Fase 2) */}
-          {COMMERCE_ENABLED && recommendations.length > 0 && (
+          {/* Raccomandazioni */}
+          {recommendations.length > 0 && (
             <div className="rounded-3xl glass p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-3">
                 {t("dash.recommended")}
