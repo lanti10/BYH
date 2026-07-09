@@ -6,6 +6,7 @@ import { Users, MessageCircle, ShoppingBag, TrendingUp, UserPlus, ChevronRight }
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
+import { COMMERCE_ENABLED } from "@/lib/scope";
 
 export default async function TrainerDashboard() {
   const user = await requireRole("TRAINER");
@@ -138,40 +139,42 @@ export default async function TrainerDashboard() {
           </div>
         </div>
 
-        {/* Pending recommendations */}
-        <div className="rounded-3xl glass p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-900">{t("tr.recs")}</h2>
-            <Link href="/trainer/products" className="text-sm font-medium text-brand hover:underline">
-              {t("tr.seeAll")}
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {pendingRecs.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-8">
-                {t("tr.noRecs")}
-              </p>
-            ) : (
-              pendingRecs.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 border border-amber-100"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{rec.product.name}</p>
-                    <p className="text-xs text-slate-500">per {rec.client.user.name}</p>
-                  </div>
-                  <Link
-                    href={`/trainer/products/recommendations/${rec.id}`}
-                    className="text-xs font-semibold text-amber-700 hover:underline shrink-0"
+        {/* Pending recommendations (commerce, Fase 2) */}
+        {COMMERCE_ENABLED && (
+          <div className="rounded-3xl glass p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-slate-900">{t("tr.recs")}</h2>
+              <Link href="/trainer/products" className="text-sm font-medium text-brand hover:underline">
+                {t("tr.seeAll")}
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {pendingRecs.length === 0 ? (
+                <p className="text-sm text-slate-400 text-center py-8">
+                  {t("tr.noRecs")}
+                </p>
+              ) : (
+                pendingRecs.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 border border-amber-100"
                   >
-                    {t("tr.validate")} →
-                  </Link>
-                </div>
-              ))
-            )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{rec.product.name}</p>
+                      <p className="text-xs text-slate-500">per {rec.client.user.name}</p>
+                    </div>
+                    <Link
+                      href={`/trainer/products/recommendations/${rec.id}`}
+                      className="text-xs font-semibold text-amber-700 hover:underline shrink-0"
+                    >
+                      {t("tr.validate")} →
+                    </Link>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
