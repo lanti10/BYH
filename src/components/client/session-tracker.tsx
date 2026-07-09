@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play, Pause, Square, Heart, Flame, Timer, Check, X, Info, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
@@ -60,12 +60,87 @@ export function SessionTracker({
   const hrStats = useRef({ sum: 0, count: 0, max: 0 });
   const hrSupported = typeof navigator !== "undefined" && "bluetooth" in navigator;
 
-  // Cronometro
+  // ── Cronometro basato sull'orologio reale ──
+  // iOS congela i timer JS quando il telefono è bloccato/in background: contare i secondi
+  // perderebbe il tempo trascorso. Teniamo invece i timestamp e ricalcoliamo il tempo REALE,
+  // persistendolo così sopravvive a schermo spento o app chiusa e riaperta.
+  const storageKey = `byh-session-${dayId}`;
+  const stateRef = useRef<{ startedAt: number; accumulatedMs: number; runningSince: number | null }>({
+    startedAt: Date.now(),
+    accumulatedMs: 0,
+    runningSince: Date.now(),
+  });
+
+  const persist = useCallback(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(stateRef.current));
+    } catch {
+      /* storage non disponibile */
+    }
+  }, [storageKey]);
+
+  const computeSec = useCallback(() => {
+    const s = stateRef.current;
+    const ms = s.accumulatedMs + (s.runningSince != null ? Date.now() - s.runningSince : 0);
+    return Math.max(0, Math.floor(ms / 1000));
+  }, []);
+
+  // Ripristina (o avvia) la sessione al mount
   useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => clearInterval(t);
-  }, [running]);
+    let s = stateRef.current;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const p = JSON.parse(raw);
+        // Scarta sessioni troppo vecchie (>12h): verosimilmente abbandonate
+        if (
+          typeof p.accumulatedMs === "number" &&
+          typeof p.startedAt === "number" &&
+          Date.now() - p.startedAt < 12 * 60 * 60 * 1000
+        ) {
+          s = {
+            startedAt: p.startedAt,
+            accumulatedMs: p.accumulatedMs,
+            runningSince: typeof p.runningSince === "number" ? p.runningSince : null,
+          };
+        }
+      }
+    } catch {
+      /* ignora */
+    }
+    stateRef.current = s;
+    setRunning(s.runningSince != null);
+    setElapsed(computeSec());
+    persist();
+  }, [storageKey, computeSec, persist]);
+
+  // Aggiorna il display ogni secondo + subito al ritorno in primo piano (recupera il tempo in background)
+  useEffect(() => {
+    const tick = () => setElapsed(computeSec());
+    const id = setInterval(tick, 1000);
+    const onVisible = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [computeSec]);
+
+  function togglePause() {
+    const s = stateRef.current;
+    if (s.runningSince != null) {
+      s.accumulatedMs += Date.now() - s.runningSince; // congela il tempo maturato
+      s.runningSince = null;
+      setRunning(false);
+    } else {
+      s.runningSince = Date.now();
+      setRunning(true);
+    }
+    persist();
+    setElapsed(computeSec());
+  }
 
   // Tieni acceso lo schermo se possibile
   useEffect(() => {
@@ -118,6 +193,14 @@ export function SessionTracker({
 
   async function end() {
     setSaving(true);
+    // Congela il tempo finale reale
+    const s = stateRef.current;
+    if (s.runningSince != null) {
+      s.accumulatedMs += Date.now() - s.runningSince;
+      s.runningSince = null;
+    }
+    const finalSec = Math.max(0, Math.floor(s.accumulatedMs / 1000));
+    const finalCalories = Math.round((MET_BY_TYPE[planType] * 3.5 * weightKg) / 200 * (finalSec / 60));
     setRunning(false);
     const st = hrStats.current;
     try {
@@ -126,12 +209,17 @@ export function SessionTracker({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workoutDayId: dayId,
-          durationSec: elapsed,
-          calories,
+          durationSec: finalSec,
+          calories: finalCalories,
           avgHeartRate: st.count ? Math.round(st.sum / st.count) : null,
           maxHeartRate: st.max || null,
         }),
       });
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {
+        /* ignora */
+      }
       router.push("/client/progress");
       router.refresh();
     } catch {
@@ -269,7 +357,7 @@ export function SessionTracker({
         ) : (
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setRunning((r) => !r)}
+              onClick={togglePause}
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-white/10 py-3.5 font-semibold hover:bg-white/20"
             >
               {running ? (
