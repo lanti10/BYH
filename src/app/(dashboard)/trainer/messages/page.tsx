@@ -4,8 +4,9 @@ import { getT } from "@/lib/i18n/server";
 import { GOAL_KEYS } from "@/lib/i18n/dict";
 import { Chat } from "@/components/shared/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { BackButton } from "@/components/shared/back-button";
 
 function ageFromBirth(birth?: Date | null): number | null {
   if (!birth) return null;
@@ -102,12 +103,11 @@ export default async function TrainerMessagesPage({
         {selected ? (
           <>
             <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
-              <Link
-                href="/trainer/messages"
+              <BackButton
+                fallbackHref="/trainer/messages"
+                label={t("common.back")}
                 className="lg:hidden -ml-1 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
+              />
               <Avatar>
                 <AvatarImage src={selected.user.avatarUrl ?? undefined} />
                 <AvatarFallback>{selected.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>

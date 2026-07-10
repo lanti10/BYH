@@ -19,11 +19,11 @@ const NAV: Record<"trainer" | "client" | "admin", { primary: Item[]; more: Item[
       { href: "/client", label: "dash.today", icon: Home, exact: true },
       { href: "/client/workout", label: "nav.workouts", icon: Dumbbell },
       { href: "/client/progress", label: "nav.progress", icon: BarChart3 },
-      { href: "/client/messages", label: "nav.messages", icon: MessageSquare, badge: true },
+      { href: "/client/shop", label: "nav.shop", icon: ShoppingBag },
     ],
     more: [
       { href: "/client/medals", label: "nav.medals", icon: Trophy },
-      { href: "/client/shop", label: "nav.shop", icon: ShoppingBag },
+      { href: "/client/messages", label: "nav.messages", icon: MessageSquare, badge: true },
       { href: "/client/profile", label: "nav.profile", icon: User },
     ],
   },
@@ -89,6 +89,8 @@ export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
   useEffect(() => setSheet(false), [pathname]);
 
   const moreActive = more.some((m) => isActive(pathname, m));
+  // Messaggi ora vive in "Altro" per il cliente: mostra il badge sul tasto Altro
+  const moreUnread = more.some((m) => m.badge) && unread > 0;
 
   return (
     <>
@@ -117,14 +119,19 @@ export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors hover:bg-white/60"
+                    className="relative flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-colors hover:bg-white/60"
                   >
                     <span
-                      className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                      className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${
                         active ? "bg-brand text-white shadow-cta" : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       <Icon className="h-5 w-5" />
+                      {item.badge && unread > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-white tnum">
+                          {unread > 9 ? "9+" : unread}
+                        </span>
+                      )}
                     </span>
                     <span className={`text-xs ${active ? "font-semibold text-brand" : "font-medium text-slate-600"}`}>
                       {t(item.label)}
@@ -174,6 +181,11 @@ export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
               className={`h-[22px] w-[22px] ${moreActive || sheet ? "text-brand" : "text-slate-400"}`}
               strokeWidth={moreActive || sheet ? 2.4 : 2}
             />
+            {moreUnread && !sheet && (
+              <span className="absolute top-0 right-[calc(50%-18px)] flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[9px] font-bold text-white tnum">
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
             <span className={`text-[10px] leading-tight ${moreActive || sheet ? "font-semibold text-brand" : "font-medium text-slate-500"}`}>
               {t("nav.more")}
             </span>
