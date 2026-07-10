@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -63,17 +63,10 @@ export function SidebarNav({
   const { t } = useT();
   const items = navConfig[role];
   const [unread, setUnread] = useState(0);
-  const prev = useRef(0);
-  const initialized = useRef(false);
 
-  // Richiedi il permesso notifiche una volta
-  useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission().catch(() => {});
-    }
-  }, []);
-
-  // Polling messaggi non letti
+  // Polling messaggi non letti — solo per il badge.
+  // Le notifiche di sistema (nome + foto + anteprima) le gestisce la Web Push
+  // (server → service worker), non più un `new Notification` generico qui.
   useEffect(() => {
     let activeFlag = true;
     async function poll() {
@@ -81,15 +74,6 @@ export function SidebarNav({
         const res = await fetch("/api/messages/unread", { cache: "no-store" });
         if (!res.ok || !activeFlag) return;
         const { count } = await res.json();
-        if (initialized.current && count > prev.current) {
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("BYH · Nuovo messaggio", {
-              body: "Hai ricevuto un nuovo messaggio.",
-            });
-          }
-        }
-        prev.current = count;
-        initialized.current = true;
         setUnread(count);
       } catch {
         /* offline */
