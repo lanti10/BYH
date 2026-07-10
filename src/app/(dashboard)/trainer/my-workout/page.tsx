@@ -5,9 +5,11 @@ import { getOrCreateSelfClient } from "@/lib/self-client";
 import { getNextDayIndex, getScheduledTodayIndex } from "@/lib/workout";
 import { computeMedals } from "@/lib/medals";
 import { WorkoutCreator, type ClientOption } from "../workouts/new/workout-creator";
+import { WorkoutBuilder } from "../workouts/new/workout-builder";
+import type { DayInput } from "../workouts/actions";
 import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
 import { ActivityRings } from "@/components/client/activity-rings";
-import { Plus, Flame, Timer, Dumbbell, Trophy, ChevronRight } from "lucide-react";
+import { Pencil, ArrowLeft, Flame, Timer, Dumbbell, Trophy, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 // "Il mio allenamento" del PT: crea la propria scheda e la segue come un cliente.
@@ -15,12 +17,12 @@ import Link from "next/link";
 export default async function MyWorkoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ new?: string }>;
+  searchParams: Promise<{ new?: string; edit?: string }>;
 }) {
   const user = await requireRole("TRAINER");
   const { t } = await getT();
   const trainer = user.trainerProfile!;
-  const { new: forceNew } = await searchParams;
+  const { new: forceNew, edit } = await searchParams;
 
   const self = await getOrCreateSelfClient(user.id, trainer.id);
 
@@ -53,6 +55,48 @@ export default async function MyWorkoutPage({
         <WorkoutCreator
           clients={[selfOption]}
           initialClientId={self.id}
+          hideClientSelect
+          redirectTo="/trainer/my-workout"
+        />
+      </div>
+    );
+  }
+
+  // Modifica della propria scheda (builder in edit, precompilato, sempre sulla stessa pagina)
+  if (edit) {
+    const initialDays: DayInput[] = activePlan.workouts.map((w) => ({
+      name: w.name,
+      weekday: w.scheduledWeekday,
+      exercises: w.exercises.map((e) => ({
+        name: e.exercise.name,
+        sets: e.sets,
+        reps: e.reps,
+        weight: e.weight,
+        restSeconds: e.restSeconds,
+        notes: e.notes,
+      })),
+    }));
+    return (
+      <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-6">
+        <div>
+          <Link
+            href="/trainer/my-workout"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-3"
+          >
+            <ArrowLeft className="h-4 w-4" /> {t("common.cancel")}
+          </Link>
+          <h1 className="text-2xl font-bold text-slate-900">{t("pd.editPlan")}</h1>
+        </div>
+        <WorkoutBuilder
+          clients={[{ id: self.id, name: user.name || t("nav.myWorkout") }]}
+          planId={activePlan.id}
+          initialClientId={self.id}
+          initialName={activePlan.name}
+          initialPlanType={activePlan.planType}
+          initialDescription={activePlan.description ?? ""}
+          initialDurationWeeks={activePlan.durationWeeks}
+          initialStartDate={activePlan.startDate ? activePlan.startDate.toISOString().slice(0, 10) : undefined}
+          initialDays={initialDays}
           hideClientSelect
           redirectTo="/trainer/my-workout"
         />
@@ -100,10 +144,10 @@ export default async function MyWorkoutPage({
           <p className="text-slate-500 mt-1">{activePlan.name}</p>
         </div>
         <Link
-          href="/trainer/my-workout?new=1"
+          href="/trainer/my-workout?edit=1"
           className="shrink-0 inline-flex items-center gap-1.5 rounded-full glass px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
         >
-          <Plus className="h-4 w-4" /> {t("myw.newPlan")}
+          <Pencil className="h-4 w-4" /> {t("myw.editPlan")}
         </Link>
       </div>
 
