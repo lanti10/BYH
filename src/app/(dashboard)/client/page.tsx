@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { WeightWidget } from "@/components/client/weight-widget";
+import { InstallPrompt } from "@/components/shared/install-prompt";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
@@ -107,6 +108,9 @@ export default async function ClientDashboard() {
 
   return (
     <div className="p-4 sm:p-8 space-y-5 max-w-5xl mx-auto pb-10">
+      {/* Installa l'app sulla Home (PWA) */}
+      <InstallPrompt />
+
       {/* Saluto */}
       <div>
         <p className="text-[13px] text-slate-500 capitalize">

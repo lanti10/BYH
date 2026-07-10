@@ -6,6 +6,7 @@ import { Users, MessageCircle, ShoppingBag, TrendingUp, UserPlus, ChevronRight }
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
+import { InstallPrompt } from "@/components/shared/install-prompt";
 
 export default async function TrainerDashboard() {
   const user = await requireRole("TRAINER");
@@ -49,6 +50,9 @@ export default async function TrainerDashboard() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
+      {/* Installa l'app sulla Home (PWA) */}
+      <InstallPrompt />
+
       {/* Hero */}
       <div className="rounded-3xl bg-depth-dark p-6 sm:p-8 text-white shadow-lg">
         <div className="flex items-start justify-between gap-4">
