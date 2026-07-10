@@ -5,6 +5,8 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, Check, AlertCircle } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import { EmailField } from "@/components/shared/email-field";
+import { syncMyEmail } from "@/app/(dashboard)/client/profile/actions";
 
 export function AccountSettings() {
   const { user, isLoaded } = useUser();
@@ -152,6 +154,9 @@ export function AccountSettings() {
           />
         </label>
       </div>
+
+      {/* Email (visualizza + modifica con verifica via codice) — sotto nome e cognome */}
+      <EmailField syncEmail={syncMyEmail} />
 
       {msg && (
         <p
