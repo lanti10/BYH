@@ -12,12 +12,14 @@ import {
   ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy,
 } from "lucide-react";
 
-const navConfig = {
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; badge?: boolean };
+
+const navConfig: Record<"trainer" | "client" | "admin", NavItem[]> = {
   trainer: [
     { href: "/trainer", label: "nav.dashboard", icon: LayoutDashboard },
-    { href: "/trainer/clients", label: "nav.clients", icon: Users },
+    // Clienti = inbox stile WhatsApp → badge dei non letti qui (niente più voce Messaggi)
+    { href: "/trainer/clients", label: "nav.clients", icon: Users, badge: true },
     { href: "/trainer/workouts", label: "nav.workouts", icon: Dumbbell },
-    { href: "/trainer/messages", label: "nav.messages", icon: MessageSquare },
     { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
     { href: "/trainer/earnings", label: "nav.earnings", icon: TrendingUp },
     { href: "/trainer/referral", label: "nav.network", icon: Gift },
@@ -28,7 +30,7 @@ const navConfig = {
     { href: "/client/workout", label: "nav.myPlan", icon: Dumbbell },
     { href: "/client/progress", label: "nav.progress", icon: TrendingUp },
     { href: "/client/medals", label: "nav.medals", icon: Trophy },
-    { href: "/client/messages", label: "nav.messages", icon: MessageSquare },
+    { href: "/client/messages", label: "nav.messages", icon: MessageSquare, badge: true },
     { href: "/client/shop", label: "nav.shop", icon: ShoppingBag },
     { href: "/client/profile", label: "nav.profile", icon: UserCog },
   ],
@@ -130,7 +132,7 @@ export function SidebarNav({
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          const showBadge = item.href.endsWith("/messages") && unread > 0;
+          const showBadge = Boolean(item.badge) && unread > 0;
           return (
             <Link
               key={item.href}

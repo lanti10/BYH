@@ -48,6 +48,11 @@ export default async function ClientDetailPage({
 
   if (!client) notFound();
 
+  // Messaggi non letti da questo cliente (badge sul tasto Chat)
+  const unread = await prisma.message.count({
+    where: { receiverId: user.id, senderId: client.userId, readAt: null },
+  });
+
   const progressData = client.progressLogs.map((log) => ({
     date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
     peso: log.weight,
@@ -77,10 +82,16 @@ export default async function ClientDetailPage({
           <Button
             variant="outline"
             size="sm"
-            render={<Link href={`/trainer/messages?client=${client.userId}`} />}
+            className="relative"
+            render={<Link href={`/trainer/messages?c=${client.userId}`} />}
           >
             <MessageSquare className="h-4 w-4 mr-1" />
-            {t("cd.message")}
+            {t("cd.chat")}
+            {unread > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white tnum">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
           </Button>
           <Button
             size="sm"

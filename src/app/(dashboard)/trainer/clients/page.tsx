@@ -16,7 +16,7 @@ export default async function ClientsPage() {
   const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
-  const clients = await prisma.clientProfile.findMany({
+  const rawClients = await prisma.clientProfile.findMany({
     where: { trainerId: trainer.id },
     include: {
       user: true,
@@ -25,6 +25,40 @@ export default async function ClientsPage() {
       progressLogs: { orderBy: { date: "desc" }, take: 1 },
     },
     orderBy: { createdAt: "desc" },
+  });
+
+  // Ordine "stile WhatsApp": in cima chi ha l'ultimo messaggio più recente.
+  const clientUserIds = rawClients.map((c) => c.userId);
+  const convo = await prisma.message.findMany({
+    where: {
+      OR: [
+        { senderId: user.id, receiverId: { in: clientUserIds } },
+        { senderId: { in: clientUserIds }, receiverId: user.id },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+    select: { senderId: true, receiverId: true, createdAt: true },
+  });
+  const lastAtByUser = new Map<string, number>();
+  for (const m of convo) {
+    const other = m.senderId === user.id ? m.receiverId : m.senderId;
+    // convo è ordinato desc → il primo che incontro per ciascuno è il più recente
+    if (!lastAtByUser.has(other)) lastAtByUser.set(other, m.createdAt.getTime());
+  }
+
+  // Messaggi non letti per cliente (il pallino sulla riga)
+  const unreadRows = await prisma.message.groupBy({
+    by: ["senderId"],
+    where: { receiverId: user.id, readAt: null, senderId: { in: clientUserIds } },
+    _count: true,
+  });
+  const unreadByUser = new Map(unreadRows.map((r) => [r.senderId, r._count]));
+
+  const clients = [...rawClients].sort((a, b) => {
+    const ta = lastAtByUser.get(a.userId) ?? 0;
+    const tb = lastAtByUser.get(b.userId) ?? 0;
+    if (tb !== ta) return tb - ta; // ultimo messaggio più recente in cima
+    return b.createdAt.getTime() - a.createdAt.getTime(); // senza messaggi: più recenti prima
   });
 
   return (
@@ -57,6 +91,7 @@ export default async function ClientsPage() {
             const lastSession = client.sessions[0];
             const lastLog = client.progressLogs[0];
             const activePlan = client.workoutPlans[0];
+            const unread = unreadByUser.get(client.userId) ?? 0;
 
             return (
               <Link key={client.id} href={`/trainer/clients/${client.id}`}>
@@ -92,6 +127,11 @@ export default async function ClientsPage() {
                           {t(GOAL_KEYS[goal] ?? goal)}
                         </Badge>
                       ))}
+                      {unread > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold text-white tnum">
+                          {unread > 99 ? "99+" : unread}
+                        </span>
+                      )}
                       <ChevronRight className="h-4 w-4 text-slate-400" />
                     </div>
                   </CardContent>

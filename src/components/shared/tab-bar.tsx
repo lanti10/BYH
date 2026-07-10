@@ -30,12 +30,12 @@ const NAV: Record<"trainer" | "client" | "admin", { primary: Item[]; more: Item[
   trainer: {
     primary: [
       { href: "/trainer", label: "dash.today", icon: Home, exact: true },
-      { href: "/trainer/clients", label: "nav.clients", icon: Users },
+      // Clienti = inbox stile WhatsApp: mostra qui il badge dei messaggi non letti
+      { href: "/trainer/clients", label: "nav.clients", icon: Users, badge: true },
       { href: "/trainer/workouts", label: "nav.workouts", icon: Dumbbell },
-      { href: "/trainer/messages", label: "nav.messages", icon: MessageSquare, badge: true },
+      { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
     ],
     more: [
-      { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
       { href: "/trainer/earnings", label: "nav.earnings", icon: TrendingUp },
       { href: "/trainer/referral", label: "nav.network", icon: Gift },
       { href: "/trainer/profile", label: "nav.profile", icon: UserCog },
