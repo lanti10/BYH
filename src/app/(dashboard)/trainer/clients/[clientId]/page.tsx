@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Dumbbell, TrendingUp } from "lucide-react";
+import { Dumbbell, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { ProgressChart } from "@/components/trainer/progress-chart";
 import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
+import { ChatButton } from "@/components/trainer/chat-button";
 
 export default async function ClientDetailPage({
   params,
@@ -79,20 +80,7 @@ export default async function ClientDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            className="relative"
-            render={<Link href={`/trainer/messages?c=${client.userId}`} />}
-          >
-            <MessageSquare className="h-4 w-4 mr-1" />
-            {t("cd.chat")}
-            {unread > 0 && (
-              <span className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white tnum">
-                {unread > 99 ? "99+" : unread}
-              </span>
-            )}
-          </Button>
+          <ChatButton withUserId={client.userId} initialUnread={unread} />
           <Button
             size="sm"
             render={<Link href={`/trainer/workouts/new?client=${client.id}`} />}
