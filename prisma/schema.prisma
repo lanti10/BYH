@@ -63,6 +63,22 @@ model User {
   // Messages
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+
+  // Notifiche push (Web Push): un utente può avere più device iscritti
+  pushSubscriptions PushSubscription[]
+}
+
+// Iscrizione Web Push di un device (browser/PWA) a cui inviare le notifiche.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String // chiave pubblica del client (per cifrare il payload)
+  auth      String // secret di autenticazione del client
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model TrainerProfile {

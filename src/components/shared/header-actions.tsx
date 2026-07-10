@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Check, MessageSquare, Moon, Sun } from "lucide-react";
+import { Bell, BellRing, Check, MessageSquare, Moon, Sun } from "lucide-react";
 import { LOCALES, type Locale } from "@/lib/i18n/dict";
 import { useT, writeLocaleCookie } from "@/lib/i18n/client";
+import { usePush } from "@/lib/use-push";
 
 type Notif = {
   id: string;
@@ -39,6 +40,7 @@ export function HeaderActions({
   const [marking, setMarking] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const push = usePush();
 
   // Allinea lo stato del pulsante al tema effettivo (impostato dallo script anti-flash)
   useEffect(() => {
@@ -163,6 +165,22 @@ export function HeaderActions({
               </button>
             )}
           </div>
+
+          {/* Attiva notifiche push sul telefono (gesto richiesto su iOS) */}
+          {push.supported && push.permission === "default" && (
+            <button
+              onClick={push.enable}
+              disabled={push.busy}
+              className="mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-2 rounded-2xl bg-brand/10 px-3 py-2.5 text-left text-sm font-semibold text-brand hover:bg-brand/15 disabled:opacity-60"
+            >
+              <BellRing className="h-4 w-4 shrink-0" />
+              <span className="flex-1">{t("notif.enable")}</span>
+            </button>
+          )}
+          {push.supported && push.permission === "denied" && (
+            <p className="mx-4 mb-2 text-xs text-slate-400">{t("notif.blocked")}</p>
+          )}
+
           <div className="max-h-[55vh] overflow-y-auto px-2 pb-2">
             {items.length === 0 ? (
               <div className="py-10 text-center">

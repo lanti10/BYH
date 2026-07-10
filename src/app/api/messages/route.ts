@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendPushToUser } from "@/lib/push";
 
 type Me = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
@@ -75,6 +76,26 @@ export async function POST(req: Request) {
   const msg = await prisma.message.create({
     data: { senderId: me.id, receiverId, content: content.trim() },
   });
+
+  // Notifica push al destinatario (stile WhatsApp: nome + foto + anteprima).
+  // Non deve mai far fallire l'invio del messaggio → tutto in try/catch.
+  try {
+    const receiver = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { role: true },
+    });
+    const preview = msg.content.length > 120 ? msg.content.slice(0, 117) + "…" : msg.content;
+    const url = receiver?.role === "TRAINER" ? `/trainer/messages?c=${me.id}` : "/client/messages";
+    await sendPushToUser(receiverId, {
+      title: me.name || "BYH",
+      body: preview,
+      icon: me.avatarUrl || "/icon-192.png",
+      url,
+      tag: `chat-${me.id}`,
+    });
+  } catch {
+    /* la push è best-effort */
+  }
 
   return NextResponse.json({
     id: msg.id,
