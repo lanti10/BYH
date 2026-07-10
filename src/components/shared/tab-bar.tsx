@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, Dumbbell, BarChart3, MessageSquare, Users, Trophy, ShoppingBag,
-  User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X,
+  User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X, Activity,
 } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 
@@ -33,9 +33,10 @@ const NAV: Record<"trainer" | "client" | "admin", { primary: Item[]; more: Item[
       // Clienti = inbox stile WhatsApp: mostra qui il badge dei messaggi non letti
       { href: "/trainer/clients", label: "nav.clients", icon: Users, badge: true },
       { href: "/trainer/workouts", label: "nav.workouts", icon: Dumbbell },
-      { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
+      { href: "/trainer/my-workout", label: "nav.myWorkout", icon: Activity },
     ],
     more: [
+      { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
       { href: "/trainer/earnings", label: "nav.earnings", icon: TrendingUp },
       { href: "/trainer/referral", label: "nav.network", icon: Gift },
       { href: "/trainer/profile", label: "nav.profile", icon: UserCog },

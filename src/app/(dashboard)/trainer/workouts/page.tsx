@@ -10,7 +10,9 @@ export default async function WorkoutsPage() {
   const trainer = user.trainerProfile!;
 
   const plans = await prisma.workoutPlan.findMany({
-    where: { trainerId: trainer.id },
+    // Esclude la scheda personale del PT (auto-cliente): si gestisce da "Il mio allenamento".
+    // I template senza cliente (client null) restano visibili.
+    where: { trainerId: trainer.id, NOT: { client: { userId: user.id } } },
     include: {
       client: { include: { user: true } },
       workouts: { include: { _count: { select: { exercises: true } } } },

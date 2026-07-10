@@ -15,7 +15,8 @@ export default async function TrainerDashboard() {
 
   const [clients, recentMessages, pendingRecs, earnings] = await Promise.all([
     prisma.clientProfile.findMany({
-      where: { trainerId: trainer.id },
+      // Esclude l'auto-cliente del PT (la sua scheda personale)
+      where: { trainerId: trainer.id, userId: { not: user.id } },
       include: {
         user: true,
         progressLogs: { orderBy: { date: "desc" }, take: 1 },

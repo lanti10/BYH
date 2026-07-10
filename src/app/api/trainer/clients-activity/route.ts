@@ -12,7 +12,8 @@ export async function GET() {
   }
 
   const clients = await prisma.clientProfile.findMany({
-    where: { trainerId: me.trainerProfile.id },
+    // Esclude l'auto-cliente del PT
+    where: { trainerId: me.trainerProfile.id, userId: { not: me.id } },
     select: { userId: true },
   });
   const ids = clients.map((c) => c.userId);

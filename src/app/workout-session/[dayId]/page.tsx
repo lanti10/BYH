@@ -10,7 +10,8 @@ export default async function WorkoutSessionPage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
-  if (user.role !== "CLIENT" || !user.clientProfile) redirect("/");
+  // Sia i clienti sia il PT (auto-cliente) possono allenarsi sulle proprie schede.
+  if (!user.clientProfile) redirect("/");
 
   const { dayId } = await params;
 

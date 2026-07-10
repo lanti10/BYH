@@ -23,7 +23,8 @@ export default async function NewWorkoutPage({
   const { client: preselectedClient } = await searchParams;
 
   const clientProfiles = await prisma.clientProfile.findMany({
-    where: { trainerId: trainer.id },
+    // Esclude l'auto-cliente del PT dal selettore (la scheda per sé si crea da "Il mio allenamento")
+    where: { trainerId: trainer.id, userId: { not: user.id } },
     include: { user: true },
     orderBy: { createdAt: "desc" },
   });

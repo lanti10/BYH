@@ -13,7 +13,8 @@ export default async function ClientsPage() {
   const trainer = user.trainerProfile!;
 
   const rawClients = await prisma.clientProfile.findMany({
-    where: { trainerId: trainer.id },
+    // Esclude l'auto-cliente del PT (la sua scheda personale) dalla lista clienti
+    where: { trainerId: trainer.id, userId: { not: user.id } },
     include: {
       user: true,
       workoutPlans: { where: { isActive: true }, take: 1 },

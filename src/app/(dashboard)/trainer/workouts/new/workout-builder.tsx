@@ -62,6 +62,8 @@ export function WorkoutBuilder({
   initialStartDate,
   initialDays,
   onBack,
+  hideClientSelect = false,
+  redirectTo = "/trainer/workouts",
 }: {
   clients: ClientOption[];
   planId?: string;
@@ -73,6 +75,8 @@ export function WorkoutBuilder({
   initialStartDate?: string;
   initialDays?: DayInput[];
   onBack?: () => void;
+  hideClientSelect?: boolean; // nasconde il selettore cliente (es. scheda del PT per sé)
+  redirectTo?: string; // dove tornare dopo il salvataggio
 }) {
   const router = useRouter();
   const { t } = useT();
@@ -185,7 +189,7 @@ export function WorkoutBuilder({
       : await createWorkoutPlan(payload);
     setSaving(false);
     if (res.ok) {
-      router.push("/trainer/workouts");
+      router.push(redirectTo);
       router.refresh();
     } else {
       setError(res.error ?? t("err.save"));
@@ -211,24 +215,26 @@ export function WorkoutBuilder({
             <PlanTypePicker value={planType} onChange={setPlanType} />
           </div>
         </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-700">{t("wb.assign")}</label>
-          <select
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-          >
-            <option value="">{t("wb.noClient")}</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-slate-400">
-            {t("wb.templateHint")}
-          </p>
-        </div>
+        {!hideClientSelect && (
+          <div>
+            <label className="text-sm font-semibold text-slate-700">{t("wb.assign")}</label>
+            <select
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+            >
+              <option value="">{t("wb.noClient")}</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-400">
+              {t("wb.templateHint")}
+            </p>
+          </div>
+        )}
         <div>
           <label className="text-sm font-semibold text-slate-700">{t("wb.name")}</label>
           <input

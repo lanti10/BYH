@@ -24,7 +24,8 @@ export default async function TrainerMessagesPage({
   const { c } = await searchParams;
 
   const clientProfiles = await prisma.clientProfile.findMany({
-    where: { trainerId: trainer.id },
+    // Esclude l'auto-cliente del PT (non è una conversazione)
+    where: { trainerId: trainer.id, userId: { not: user.id } },
     include: { user: true },
     orderBy: { createdAt: "desc" },
   });

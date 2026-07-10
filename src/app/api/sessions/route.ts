@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const me = await getCurrentUser();
-  if (!me || me.role !== "CLIENT" || !me.clientProfile) {
+  // Chiunque abbia un clientProfile può salvare sessioni per le PROPRIE schede:
+  // sia i clienti veri, sia il PT che si allena (auto-cliente). Il controllo di
+  // proprietà del giorno qui sotto garantisce che sia roba sua.
+  if (!me || !me.clientProfile) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

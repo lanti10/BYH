@@ -9,7 +9,7 @@ import { UserButton } from "@clerk/nextjs";
 import { useT } from "@/lib/i18n/client";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
-  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy,
+  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy, Activity,
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; badge?: boolean };
@@ -20,6 +20,7 @@ const navConfig: Record<"trainer" | "client" | "admin", NavItem[]> = {
     // Clienti = inbox stile WhatsApp → badge dei non letti qui (niente più voce Messaggi)
     { href: "/trainer/clients", label: "nav.clients", icon: Users, badge: true },
     { href: "/trainer/workouts", label: "nav.workouts", icon: Dumbbell },
+    { href: "/trainer/my-workout", label: "nav.myWorkout", icon: Activity },
     { href: "/trainer/products", label: "nav.products", icon: ShoppingBag },
     { href: "/trainer/earnings", label: "nav.earnings", icon: TrendingUp },
     { href: "/trainer/referral", label: "nav.network", icon: Gift },

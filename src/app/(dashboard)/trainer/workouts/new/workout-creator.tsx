@@ -38,9 +38,13 @@ const SEXES = [
 export function WorkoutCreator({
   clients,
   initialClientId,
+  hideClientSelect = false,
+  redirectTo,
 }: {
   clients: ClientOption[];
   initialClientId?: string;
+  hideClientSelect?: boolean; // scheda del PT per sé: niente selettore cliente
+  redirectTo?: string; // dove tornare dopo il salvataggio
 }) {
   const { t } = useT();
   const [phase, setPhase] = useState<"config" | "edit">("config");
@@ -161,6 +165,8 @@ export function WorkoutCreator({
         initialDurationWeeks={importedDuration}
         initialDays={generatedDays}
         onBack={() => setPhase("config")}
+        hideClientSelect={hideClientSelect}
+        redirectTo={redirectTo}
       />
     );
   }
@@ -217,7 +223,7 @@ export function WorkoutCreator({
       <div className="rounded-3xl glass p-5 sm:p-6 space-y-4">
         <h2 className="font-semibold text-slate-800">{t("wk.clientData")}</h2>
 
-        {clients.length > 0 && (
+        {!hideClientSelect && clients.length > 0 && (
           <div>
             <label className="text-sm text-slate-500">{t("role.client")}</label>
             <select

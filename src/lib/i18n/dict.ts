@@ -13,7 +13,7 @@ export const LOCALE_COOKIE = "byh_locale";
 
 export const dict: Record<Locale, Record<string, string>> = {
   it: {
-    "nav.dashboard": "Dashboard", "nav.clients": "Clienti", "nav.workouts": "Schede", "nav.messages": "Messaggi", "nav.products": "Prodotti", "nav.earnings": "Guadagni", "nav.network": "Rete / Inviti", "nav.profile": "Profilo", "nav.myPlan": "La mia scheda", "nav.progress": "Progressi", "nav.medals": "Medagliere", "nav.shop": "Shop", "nav.catalog": "Catalogo Prodotti", "nav.users": "Utenti", "nav.trainerNetwork": "Rete Trainer", "nav.sales": "Vendite", "nav.settings": "Impostazioni", "nav.account": "Account",
+    "nav.dashboard": "Dashboard", "nav.clients": "Clienti", "nav.workouts": "Schede", "nav.myWorkout": "Mio allenamento", "myw.createSub": "Crea la tua scheda personale e allenati come un cliente.", "myw.newPlan": "Nuova scheda", "nav.messages": "Messaggi", "nav.products": "Prodotti", "nav.earnings": "Guadagni", "nav.network": "Rete / Inviti", "nav.profile": "Profilo", "nav.myPlan": "La mia scheda", "nav.progress": "Progressi", "nav.medals": "Medagliere", "nav.shop": "Shop", "nav.catalog": "Catalogo Prodotti", "nav.users": "Utenti", "nav.trainerNetwork": "Rete Trainer", "nav.sales": "Vendite", "nav.settings": "Impostazioni", "nav.account": "Account",
     "role.trainer": "Personal Trainer", "role.client": "Cliente", "role.admin": "Admin",
     "notif.title": "Notifiche", "notif.markRead": "Segna come lette", "notif.empty": "Nessuna notifica", "notif.enable": "Attiva le notifiche sul telefono", "notif.blocked": "Notifiche bloccate — abilitale nelle impostazioni del telefono.", "notif.newMessage": "Nuovo messaggio da {name}",
     "lang.title": "Lingua",
@@ -56,7 +56,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "auth.signin": "Accedi al tuo account", "auth.signup": "Crea il tuo account",
   },
   en: {
-    "nav.dashboard": "Dashboard", "nav.clients": "Clients", "nav.workouts": "Plans", "nav.messages": "Messages", "nav.products": "Products", "nav.earnings": "Earnings", "nav.network": "Network / Invites", "nav.profile": "Profile", "nav.myPlan": "My plan", "nav.progress": "Progress", "nav.medals": "Medals", "nav.shop": "Shop", "nav.catalog": "Product Catalog", "nav.users": "Users", "nav.trainerNetwork": "Trainer Network", "nav.sales": "Sales", "nav.settings": "Settings", "nav.account": "Account",
+    "nav.dashboard": "Dashboard", "nav.clients": "Clients", "nav.workouts": "Plans", "nav.myWorkout": "My workout", "myw.createSub": "Build your own plan and train like a client.", "myw.newPlan": "New plan", "nav.messages": "Messages", "nav.products": "Products", "nav.earnings": "Earnings", "nav.network": "Network / Invites", "nav.profile": "Profile", "nav.myPlan": "My plan", "nav.progress": "Progress", "nav.medals": "Medals", "nav.shop": "Shop", "nav.catalog": "Product Catalog", "nav.users": "Users", "nav.trainerNetwork": "Trainer Network", "nav.sales": "Sales", "nav.settings": "Settings", "nav.account": "Account",
     "role.trainer": "Personal Trainer", "role.client": "Client", "role.admin": "Admin",
     "notif.title": "Notifications", "notif.markRead": "Mark as read", "notif.empty": "No notifications", "notif.enable": "Turn on phone notifications", "notif.blocked": "Notifications blocked — enable them in your phone settings.", "notif.newMessage": "New message from {name}",
     "lang.title": "Language",
@@ -99,7 +99,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "auth.signin": "Sign in to your account", "auth.signup": "Create your account",
   },
   pt: {
-    "nav.dashboard": "Painel", "nav.clients": "Clientes", "nav.workouts": "Fichas", "nav.messages": "Mensagens", "nav.products": "Produtos", "nav.earnings": "Ganhos", "nav.network": "Rede / Convites", "nav.profile": "Perfil", "nav.myPlan": "Minha ficha", "nav.progress": "Progresso", "nav.medals": "Medalhas", "nav.shop": "Loja", "nav.catalog": "Catálogo de Produtos", "nav.users": "Usuários", "nav.trainerNetwork": "Rede de Trainers", "nav.sales": "Vendas", "nav.settings": "Configurações", "nav.account": "Conta",
+    "nav.dashboard": "Painel", "nav.clients": "Clientes", "nav.workouts": "Fichas", "nav.myWorkout": "Meu treino", "myw.createSub": "Crie sua ficha pessoal e treine como um cliente.", "myw.newPlan": "Nova ficha", "nav.messages": "Mensagens", "nav.products": "Produtos", "nav.earnings": "Ganhos", "nav.network": "Rede / Convites", "nav.profile": "Perfil", "nav.myPlan": "Minha ficha", "nav.progress": "Progresso", "nav.medals": "Medalhas", "nav.shop": "Loja", "nav.catalog": "Catálogo de Produtos", "nav.users": "Usuários", "nav.trainerNetwork": "Rede de Trainers", "nav.sales": "Vendas", "nav.settings": "Configurações", "nav.account": "Conta",
     "role.trainer": "Personal Trainer", "role.client": "Cliente", "role.admin": "Admin",
     "notif.title": "Notificações", "notif.markRead": "Marcar como lidas", "notif.empty": "Nenhuma notificação", "notif.enable": "Ativar as notificações no telefone", "notif.blocked": "Notificações bloqueadas — ative-as nas configurações do telefone.", "notif.newMessage": "Nova mensagem de {name}",
     "lang.title": "Idioma",
@@ -142,7 +142,7 @@ export const dict: Record<Locale, Record<string, string>> = {
     "auth.signin": "Acesse sua conta", "auth.signup": "Crie sua conta",
   },
   es: {
-    "nav.dashboard": "Panel", "nav.clients": "Clientes", "nav.workouts": "Rutinas", "nav.messages": "Mensajes", "nav.products": "Productos", "nav.earnings": "Ganancias", "nav.network": "Red / Invitaciones", "nav.profile": "Perfil", "nav.myPlan": "Mi rutina", "nav.progress": "Progreso", "nav.medals": "Medallas", "nav.shop": "Tienda", "nav.catalog": "Catálogo de Productos", "nav.users": "Usuarios", "nav.trainerNetwork": "Red de Trainers", "nav.sales": "Ventas", "nav.settings": "Ajustes", "nav.account": "Cuenta",
+    "nav.dashboard": "Panel", "nav.clients": "Clientes", "nav.workouts": "Rutinas", "nav.myWorkout": "Mi entrenamiento", "myw.createSub": "Crea tu propia rutina y entrena como un cliente.", "myw.newPlan": "Nueva rutina", "nav.messages": "Mensajes", "nav.products": "Productos", "nav.earnings": "Ganancias", "nav.network": "Red / Invitaciones", "nav.profile": "Perfil", "nav.myPlan": "Mi rutina", "nav.progress": "Progreso", "nav.medals": "Medallas", "nav.shop": "Tienda", "nav.catalog": "Catálogo de Productos", "nav.users": "Usuarios", "nav.trainerNetwork": "Red de Trainers", "nav.sales": "Ventas", "nav.settings": "Ajustes", "nav.account": "Cuenta",
     "role.trainer": "Personal Trainer", "role.client": "Cliente", "role.admin": "Admin",
     "notif.title": "Notificaciones", "notif.markRead": "Marcar como leídas", "notif.empty": "Sin notificaciones", "notif.enable": "Activar las notificaciones en el teléfono", "notif.blocked": "Notificaciones bloqueadas — actívalas en los ajustes del teléfono.", "notif.newMessage": "Nuevo mensaje de {name}",
     "lang.title": "Idioma",
