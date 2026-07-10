@@ -104,7 +104,7 @@ export default async function TrainerMessagesPage({
           <>
             <header className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
               <BackButton
-                fallbackHref="/trainer/messages"
+                fallbackHref="/trainer/clients"
                 label={t("common.back")}
                 className="lg:hidden -ml-1 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
               />
