@@ -6,8 +6,8 @@ import { getNextDayIndex, getScheduledTodayIndex } from "@/lib/workout";
 import { computeMedals } from "@/lib/medals";
 import { WorkoutCreator, type ClientOption } from "../workouts/new/workout-creator";
 import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
-import { MedalBadge } from "@/components/client/medal-badge";
-import { Plus, Flame, Timer, Dumbbell, Trophy } from "lucide-react";
+import { ActivityRings } from "@/components/client/activity-rings";
+import { Plus, Flame, Timer, Dumbbell, Trophy, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 // "Il mio allenamento" del PT: crea la propria scheda e la segue come un cliente.
@@ -67,15 +67,29 @@ export default async function MyWorkoutPage({
   const todayIndex = scheduled ? scheduled.index : cyclic.nextIndex;
 
   // Progressi + medaglie (come vede un cliente)
+  const weeklyGoal = self.trainingDaysPerWeek ?? 3;
   const totalMin = sessions.reduce((a, s) => a + (s.durationMin ?? 0), 0);
   const totalCal = sessions.reduce((a, s) => a + (s.calories ?? 0), 0);
-  const medals = computeMedals(sessions, self.trainingDaysPerWeek ?? 3);
+  const medals = computeMedals(sessions, weeklyGoal);
   const unlockedMedals = medals.filter((m) => m.unlocked);
+
+  // Attività di questa settimana (anelli stile Apple)
+  const weekAgo = Date.now() - 7 * 86400000;
+  const wSess = sessions.filter((s) => s.completedAt.getTime() >= weekAgo);
+  const weekSessions = wSess.length;
+  const weekMin = wSess.reduce((a, s) => a + (s.durationMin ?? 0), 0);
+  const weekCal = wSess.reduce((a, s) => a + (s.calories ?? 0), 0);
+  const rings = [
+    { value: weekCal, goal: 400 * weeklyGoal, color: "#FF375F", track: "#FF375F22", label: t("session.calories"), display: `${weekCal}` },
+    { value: weekMin, goal: 45 * weeklyGoal, color: "#30D158", track: "#30D15822", label: t("dash.activeTime"), display: `${weekMin} ${t("dash.min")}` },
+    { value: weekSessions, goal: weeklyGoal, color: "#5AC8FA", track: "#5AC8FA22", label: t("dash.workoutsLabel"), display: `${weekSessions}/${weeklyGoal}` },
+  ];
+
   const stats = [
-    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions") },
-    { icon: Flame, tint: "text-orange-500 bg-orange-500/10", value: totalCal, label: t("session.calories") },
-    { icon: Timer, tint: "text-blue-500 bg-blue-500/10", value: totalMin, label: t("dash.min") },
-    { icon: Trophy, tint: "text-amber-500 bg-amber-500/10", value: unlockedMedals.length, label: t("nav.medals") },
+    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: undefined as string | undefined },
+    { icon: Flame, tint: "text-orange-500 bg-orange-500/10", value: totalCal, label: t("session.calories"), href: undefined },
+    { icon: Timer, tint: "text-blue-500 bg-blue-500/10", value: totalMin, label: t("dash.min"), href: undefined },
+    { icon: Trophy, tint: "text-amber-500 bg-amber-500/10", value: unlockedMedals.length, label: t("nav.medals"), href: "/trainer/medals" },
   ];
 
   return (
@@ -113,32 +127,51 @@ export default async function MyWorkoutPage({
         }))}
       />
 
-      {/* Progressi (come un cliente) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-3xl glass p-4">
-            <span className={`flex h-9 w-9 items-center justify-center rounded-xl mb-2 ${s.tint}`}>
-              <s.icon className="h-4 w-4" />
-            </span>
-            <p className="text-2xl font-bold text-slate-900 leading-none tnum">{s.value}</p>
-            <p className="text-xs text-slate-500 mt-1">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Medaglie sbloccate */}
-      {unlockedMedals.length > 0 && (
-        <div className="rounded-3xl glass p-5 sm:p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400 mb-4">
-            {t("medals.unlocked")}
-          </p>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
-            {unlockedMedals.map((m) => (
-              <MedalBadge key={m.id} medal={m} size={72} />
+      {/* Anelli attività della settimana (dati in modo visivo, come sul cliente) */}
+      <div className="rounded-3xl glass p-5 sm:p-6">
+        <h2 className="font-semibold text-slate-900 mb-4">{t("dash.thisWeek")}</h2>
+        <div className="flex items-center gap-5 sm:gap-8">
+          <ActivityRings rings={rings} size={140} />
+          <div className="flex-1 space-y-3">
+            {rings.map((r) => (
+              <div key={r.label} className="flex items-center gap-3">
+                <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: r.color }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-lg font-bold text-slate-900 leading-none tnum">{r.display}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{r.label}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Widget totali (l'ultimo, Medaglie, porta al medagliere) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {stats.map((s) => {
+          const inner = (
+            <>
+              <span className={`flex h-9 w-9 items-center justify-center rounded-xl mb-2 ${s.tint}`}>
+                <s.icon className="h-4 w-4" />
+              </span>
+              <p className="text-2xl font-bold text-slate-900 leading-none tnum">{s.value}</p>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-0.5">
+                {s.label}
+                {s.href && <ChevronRight className="h-3 w-3 text-slate-300" />}
+              </p>
+            </>
+          );
+          return s.href ? (
+            <Link key={s.label} href={s.href} className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
+              {inner}
+            </Link>
+          ) : (
+            <div key={s.label} className="rounded-3xl glass p-4">
+              {inner}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
