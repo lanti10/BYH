@@ -7,9 +7,10 @@ import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDurati
 import { getT } from "@/lib/i18n/server";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
-  Dumbbell, MessageSquare, ShoppingBag,
+  Dumbbell, MessageSquare, ShoppingBag, Trophy,
   Play, Flame, Timer, Check, ChevronRight,
 } from "lucide-react";
+import { computeMedals } from "@/lib/medals";
 import Link from "next/link";
 import { WeightWidget } from "@/components/client/weight-widget";
 import { InstallPrompt } from "@/components/shared/install-prompt";
@@ -19,7 +20,7 @@ export default async function ClientDashboard() {
   const client = user.clientProfile!;
   const { t, locale } = await getT();
 
-  const [profile, recommendations, unreadCount] = await Promise.all([
+  const [profile, recommendations, medalSessions] = await Promise.all([
     prisma.clientProfile.findUnique({
       where: { id: client.id },
       include: {
@@ -46,8 +47,18 @@ export default async function ClientDashboard() {
       orderBy: { approvedAt: "desc" },
       take: 3,
     }),
-    prisma.message.count({ where: { receiverId: user.id, readAt: null } }),
+    // Sessioni (solo date) per calcolare le medaglie sbloccate — vedi src/lib/medals.ts
+    prisma.workoutSession.findMany({
+      where: { clientId: client.id },
+      select: { completedAt: true },
+      take: 400,
+    }),
   ]);
+
+  // Numero di medaglie sbloccate (per il widget in dashboard)
+  const unlockedMedals = computeMedals(medalSessions, client.trainingDaysPerWeek ?? 3).filter(
+    (m) => m.unlocked
+  ).length;
 
   if (!profile || !profile.trainer) {
     return (
@@ -259,15 +270,12 @@ export default async function ClientDashboard() {
         <div className="space-y-4">
           {/* Widget rapidi */}
           <div className="grid grid-cols-2 gap-3">
-            <Link href="/client/messages" className="relative rounded-3xl glass p-4 transition-shadow hover:shadow-md">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 mb-2">
-                <MessageSquare className="h-4 w-4 text-blue-500" />
+            <Link href="/client/medals" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 mb-2">
+                <Trophy className="h-4 w-4 text-amber-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 leading-none tnum">{unreadCount}</p>
-              <p className="text-xs text-slate-500 mt-1">{t("dash.unread")}</p>
-              {unreadCount > 0 && (
-                <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-brand" />
-              )}
+              <p className="text-2xl font-bold text-slate-900 leading-none tnum">{unlockedMedals}</p>
+              <p className="text-xs text-slate-500 mt-1">{t("nav.medals")}</p>
             </Link>
             <WeightWidget currentWeight={lastWeight ?? null} />
             <Link href="/client/workout" className="rounded-3xl glass p-4 transition-shadow hover:shadow-md">
