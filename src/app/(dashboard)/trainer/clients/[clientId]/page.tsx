@@ -234,6 +234,7 @@ export default async function ClientDetailPage({
                       id: day.id,
                       name: day.name,
                       weekday: day.scheduledWeekday,
+                      durationMin: day.durationMin,
                       exercises: day.exercises.map((ex) => ({
                         id: ex.id,
                         name: ex.exercise.name,

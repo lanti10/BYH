@@ -84,7 +84,7 @@ export default async function ClientDashboard() {
   const doneToday = scheduled
     ? todayWorkout != null && isDayDoneToday(todayWorkout.id, sessions)
     : cyclic.doneToday;
-  const estMin = todayWorkout ? estimateDuration(todayWorkout.exercises) : 0;
+  const estMin = todayWorkout ? (todayWorkout.durationMin ?? estimateDuration(todayWorkout.exercises)) : 0;
 
   // ── Statistiche settimana corrente (lun–dom) ──
   const now = new Date();

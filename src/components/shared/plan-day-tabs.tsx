@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Dumbbell, Play, ChevronRight, X, StickyNote } from "lucide-react";
+import { Dumbbell, Play, ChevronRight, X, StickyNote, Timer } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
+import { estimateDuration } from "@/lib/workout";
 import type { PlanType } from "@/components/trainer/plan-type-picker";
 
 export type PlanExercise = {
@@ -19,6 +20,7 @@ export type PlanDay = {
   id: string;
   name: string;
   weekday?: number | null; // 1=Lun..7=Dom, se pianificato
+  durationMin?: number | null; // durata impostata dal trainer; null = stima automatica
   exercises: PlanExercise[];
 };
 
@@ -89,6 +91,16 @@ export function PlanDayTabs({
       {/* Nome giorno */}
       {day.name && (
         <p className="mt-4 text-lg font-bold text-slate-900">{day.name}</p>
+      )}
+
+      {/* Durata allenamento (manuale se impostata, altrimenti stima) */}
+      {day.exercises.length > 0 && (
+        <div className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+          <Timer className="h-4 w-4 text-slate-400" />
+          <span className="tnum">
+            {day.durationMin ?? estimateDuration(day.exercises)} {t("dash.min")}
+          </span>
+        </div>
       )}
 
       {/* Inizia allenamento */}

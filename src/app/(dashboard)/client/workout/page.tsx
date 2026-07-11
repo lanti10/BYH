@@ -44,6 +44,7 @@ export default async function ClientWorkoutPage() {
     id: w.id,
     name: w.name,
     weekday: w.scheduledWeekday,
+    durationMin: w.durationMin,
     exercises: w.exercises.map((e) => ({
       id: e.id,
       name: e.exercise.name,

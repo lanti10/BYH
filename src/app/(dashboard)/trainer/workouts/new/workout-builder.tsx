@@ -21,13 +21,13 @@ type ExRow = {
   restSeconds: string;
   notes: string;
 };
-type DayCard = { id: string; name: string; weekday: number | null; exercises: ExRow[] };
+type DayCard = { id: string; name: string; weekday: number | null; durationMin: string; exercises: ExRow[] };
 
 function emptyExercise(): ExRow {
   return { id: newId(), name: "", sets: "3", reps: "10", weight: "", restSeconds: "60", notes: "" };
 }
 function emptyDay(): DayCard {
-  return { id: newId(), name: "", weekday: null, exercises: [emptyExercise()] };
+  return { id: newId(), name: "", weekday: null, durationMin: "", exercises: [emptyExercise()] };
 }
 
 function toDayCards(days?: DayInput[]): DayCard[] {
@@ -36,6 +36,7 @@ function toDayCards(days?: DayInput[]): DayCard[] {
     id: newId(),
     name: d.name,
     weekday: d.weekday ?? null,
+    durationMin: d.durationMin != null ? String(d.durationMin) : "",
     exercises:
       d.exercises.length > 0
         ? d.exercises.map((e) => ({
@@ -174,6 +175,7 @@ export function WorkoutBuilder({
       days: days.map((d) => ({
         name: d.name,
         weekday: d.weekday,
+        durationMin: d.durationMin.trim() === "" ? null : Number(d.durationMin),
         exercises: d.exercises.map((e) => ({
           name: e.name,
           sets: e.sets.trim() === "" ? 0 : Number(e.sets),
@@ -352,6 +354,23 @@ export function WorkoutBuilder({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Durata allenamento (minuti): se impostata, sostituisce ovunque la stima */}
+          <div className="mb-4">
+            <p className="text-[11px] text-slate-400 mb-1.5">{t("wb.durationMin")}</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={activeDay.durationMin}
+                onChange={(e) => updateDay(activeDay.id, { durationMin: e.target.value })}
+                placeholder={t("wb.durationAuto")}
+                className="w-32 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-brand"
+              />
+              <span className="text-sm text-slate-400">{t("dash.min")}</span>
             </div>
           </div>
 

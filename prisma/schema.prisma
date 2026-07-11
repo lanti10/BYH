@@ -182,6 +182,7 @@ model WorkoutDay {
   dayOfWeek        Int // indice del giorno di allenamento nella scheda (0-based, per l'ordine)
   scheduledWeekday Int? // giorno della settimana fissato dalla scheda (1=Lun ... 7=Dom); null = non pianificato
   name             String
+  durationMin      Int? // durata allenamento in minuti impostata dal trainer; null = usa la stima
   notes            String?
 
   exercises WorkoutExercise[]
