@@ -131,9 +131,9 @@ export default async function MyWorkoutPage({
   }));
 
   const stats = [
-    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: "/trainer/my-workout/history" as string | undefined },
+    { icon: Timer, tint: "text-blue-500 bg-blue-500/10", value: totalMin, label: t("dash.min"), href: undefined as string | undefined },
     { icon: Flame, tint: "text-orange-500 bg-orange-500/10", value: totalCal, label: t("session.calories"), href: undefined },
-    { icon: Timer, tint: "text-blue-500 bg-blue-500/10", value: totalMin, label: t("dash.min"), href: undefined },
+    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: "/trainer/my-workout/history" },
     { icon: Trophy, tint: "text-amber-500 bg-amber-500/10", value: unlockedMedals.length, label: t("nav.medals"), href: "/trainer/medals" },
   ];
 
