@@ -42,6 +42,7 @@ export default async function EditWorkoutPage({
     name: w.name,
     weekday: w.scheduledWeekday,
     durationMin: w.durationMin,
+    targetCalories: w.targetCalories,
     exercises: w.exercises.map((e) => ({
       name: e.exercise.name,
       sets: e.sets,
