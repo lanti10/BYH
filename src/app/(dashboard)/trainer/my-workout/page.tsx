@@ -8,7 +8,7 @@ import { WorkoutCreator, type ClientOption } from "../workouts/new/workout-creat
 import { WorkoutBuilder } from "../workouts/new/workout-builder";
 import type { DayInput } from "../workouts/actions";
 import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
-import { ActivityRings } from "@/components/client/activity-rings";
+import { WorkoutRings } from "@/components/trainer/workout-rings";
 import { Pencil, ArrowLeft, Flame, Timer, Dumbbell, Trophy, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -123,22 +123,15 @@ export default async function MyWorkoutPage({
   const planMin = activePlan.workouts.map((w) => w.durationMin).find((v) => v != null) ?? 45;
   const planCal = activePlan.workouts.map((w) => w.targetCalories).find((v) => v != null) ?? 400;
 
-  // Attività di questa settimana (anelli stile Apple)
-  const weekAgo = Date.now() - 7 * 86400000;
-  const wSess = sessions.filter((s) => s.completedAt.getTime() >= weekAgo);
-  const weekSessions = wSess.length;
-  const weekMin = wSess.reduce((a, s) => a + (s.durationMin ?? 0), 0);
-  const weekCal = wSess.reduce((a, s) => a + (s.calories ?? 0), 0);
-  const calGoal = planCal * weeklyGoal;
-  const minGoal = planMin * weeklyGoal;
-  const rings = [
-    { value: weekCal, goal: calGoal, color: "#FF375F", track: "#FF375F22", label: t("session.calories"), display: `${weekCal}/${calGoal}` },
-    { value: weekMin, goal: minGoal, color: "#30D158", track: "#30D15822", label: t("dash.activeTime"), display: `${weekMin}/${minGoal} ${t("dash.min")}` },
-    { value: weekSessions, goal: weeklyGoal, color: "#5AC8FA", track: "#5AC8FA22", label: t("dash.workoutsLabel"), display: `${weekSessions}/${weeklyGoal}` },
-  ];
+  // Dati sessioni per gli anelli (toggle Oggi/Settimana, settimana lun–dom)
+  const ringSessions = sessions.map((s) => ({
+    ts: s.completedAt.getTime(),
+    min: s.durationMin ?? 0,
+    cal: s.calories ?? 0,
+  }));
 
   const stats = [
-    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: undefined as string | undefined },
+    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: "/trainer/my-workout/history" as string | undefined },
     { icon: Flame, tint: "text-orange-500 bg-orange-500/10", value: totalCal, label: t("session.calories"), href: undefined },
     { icon: Timer, tint: "text-blue-500 bg-blue-500/10", value: totalMin, label: t("dash.min"), href: undefined },
     { icon: Trophy, tint: "text-amber-500 bg-amber-500/10", value: unlockedMedals.length, label: t("nav.medals"), href: "/trainer/medals" },
@@ -180,24 +173,13 @@ export default async function MyWorkoutPage({
         }))}
       />
 
-      {/* Anelli attività della settimana (dati in modo visivo, come sul cliente) */}
-      <div className="rounded-3xl glass p-5 sm:p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">{t("dash.thisWeek")}</h2>
-        <div className="flex items-center gap-5 sm:gap-8">
-          <ActivityRings rings={rings} size={140} />
-          <div className="flex-1 space-y-3">
-            {rings.map((r) => (
-              <div key={r.label} className="flex items-center gap-3">
-                <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: r.color }} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-lg font-bold text-slate-900 leading-none tnum">{r.display}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{r.label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Anelli attività: toggle Oggi / Settimana (la settimana si azzera ogni lunedì) */}
+      <WorkoutRings
+        sessions={ringSessions}
+        weeklyGoal={weeklyGoal}
+        planMin={planMin}
+        planCal={planCal}
+      />
 
       {/* Widget totali (l'ultimo, Medaglie, porta al medagliere) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
