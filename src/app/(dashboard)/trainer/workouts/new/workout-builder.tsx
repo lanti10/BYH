@@ -96,6 +96,10 @@ export function WorkoutBuilder({
   // sostituisce ovunque la stima automatica per ogni giorno.
   const initialMin = initialDays?.map((d) => d.durationMin).find((v) => v != null);
   const [planDurationMin, setPlanDurationMin] = useState(initialMin != null ? String(initialMin) : "");
+  // Calorie da bruciare UNICHE per la scheda: se impostate, guidano l'obiettivo
+  // degli anelli calorie ovunque (cliente e PT).
+  const initialCal = initialDays?.map((d) => d.targetCalories).find((v) => v != null);
+  const [planTargetCalories, setPlanTargetCalories] = useState(initialCal != null ? String(initialCal) : "");
 
   // Anteprima data di fine
   const endPreview =
@@ -178,8 +182,9 @@ export function WorkoutBuilder({
       days: days.map((d) => ({
         name: d.name,
         weekday: d.weekday,
-        // Durata unica di scheda applicata a ogni giorno (o null = stima)
+        // Durata e calorie uniche di scheda applicate a ogni giorno (o null = default)
         durationMin: planDurationMin.trim() === "" ? null : Number(planDurationMin),
+        targetCalories: planTargetCalories.trim() === "" ? null : Number(planTargetCalories),
         exercises: d.exercises.map((e) => ({
           name: e.name,
           sets: e.sets.trim() === "" ? 0 : Number(e.sets),
@@ -276,22 +281,39 @@ export function WorkoutBuilder({
         {endPreview && (
           <p className="text-xs text-slate-400 -mt-1">{t("wb.endPreview", { date: endPreview })}</p>
         )}
-        <div>
-          <label className="text-sm font-semibold text-slate-700">{t("wb.durationMin")}</label>
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={planDurationMin}
-              onChange={(e) => setPlanDurationMin(e.target.value)}
-              placeholder={t("wb.durationAuto")}
-              className="block w-40 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-            />
-            <span className="text-sm text-slate-400">{t("dash.min")}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="min-w-0">
+            <label className="text-sm font-semibold text-slate-700">{t("wb.durationMin")}</label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={planDurationMin}
+                onChange={(e) => setPlanDurationMin(e.target.value)}
+                placeholder={t("wb.durationAuto")}
+                className="block w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              />
+              <span className="text-sm text-slate-400">{t("dash.min")}</span>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-slate-400">{t("wb.durationHint")}</p>
+          <div className="min-w-0">
+            <label className="text-sm font-semibold text-slate-700">{t("wb.targetCalories")}</label>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={planTargetCalories}
+                onChange={(e) => setPlanTargetCalories(e.target.value)}
+                placeholder={t("wb.durationAuto")}
+                className="block w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              />
+              <span className="text-sm text-slate-400">kcal</span>
+            </div>
+          </div>
         </div>
+        <p className="-mt-2 text-xs text-slate-400">{t("wb.durationHint")}</p>
         <div>
           <label className="text-sm font-semibold text-slate-700">{t("wb.desc")}</label>
           <textarea

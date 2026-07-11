@@ -37,6 +37,14 @@ export default async function ClientProgressPage() {
     name: s.workoutDay?.name || "Allenamento",
   }));
 
+  // Obiettivi anelli presi dalla scheda attiva (durata + calorie impostate dal trainer)
+  const activePlan = await prisma.workoutPlan.findFirst({
+    where: { clientId: client.id, isActive: true },
+    select: { workouts: { select: { durationMin: true, targetCalories: true } } },
+  });
+  const planMin = activePlan?.workouts.map((w) => w.durationMin).find((v) => v != null) ?? null;
+  const planCal = activePlan?.workouts.map((w) => w.targetCalories).find((v) => v != null) ?? null;
+
   const weeklyGoal = client.trainingDaysPerWeek ?? 3;
   const medals = computeMedals(
     rawSessions.map((s) => ({ completedAt: s.completedAt })),
@@ -52,7 +60,7 @@ export default async function ClientProgressPage() {
         <span className="text-sm text-slate-400 tnum">{t("prog.medalsCount", { a: unlocked.length, b: medals.length })}</span>
       </div>
 
-      <ProgressView sessions={sessions} weeklyGoal={weeklyGoal} />
+      <ProgressView sessions={sessions} weeklyGoal={weeklyGoal} planMin={planMin} planCal={planCal} />
 
       {/* Medagliere (anteprima) */}
       <Link

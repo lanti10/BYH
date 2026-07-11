@@ -39,7 +39,17 @@ const toISODate = (d: Date) => {
   return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
 };
 
-export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weeklyGoal: number }) {
+export function ProgressView({
+  sessions,
+  weeklyGoal,
+  planMin,
+  planCal,
+}: {
+  sessions: Sess[];
+  weeklyGoal: number;
+  planMin?: number | null; // durata (min) impostata nella scheda; guida l'obiettivo minuti
+  planCal?: number | null; // calorie da bruciare impostate nella scheda; guida l'obiettivo calorie
+}) {
   const { t, locale } = useT();
   const dl = DATE_LOCALE[locale];
   const [mode, setMode] = useState<Mode>("day");
@@ -63,10 +73,12 @@ export function ProgressView({ sessions, weeklyGoal }: { sessions: Sess[]; weekl
   const hrVals = inRange.filter((s) => s.hr != null).map((s) => s.hr!);
   const avgHr = hrVals.length ? Math.round(hrVals.reduce((a, b) => a + b, 0) / hrVals.length) : null;
 
-  // Obiettivi
+  // Obiettivi (per sessione dalla scheda se impostati, altrimenti default 45min/400kcal)
   const g = weeklyGoal || 3;
-  const calGoal = mode === "day" ? 400 : 400 * g;
-  const minGoal = mode === "day" ? 45 : 45 * g;
+  const perMin = planMin && planMin > 0 ? planMin : 45;
+  const perCal = planCal && planCal > 0 ? planCal : 400;
+  const calGoal = mode === "day" ? perCal : perCal * g;
+  const minGoal = mode === "day" ? perMin : perMin * g;
   const wGoal = mode === "day" ? 1 : g;
 
   const rings = [

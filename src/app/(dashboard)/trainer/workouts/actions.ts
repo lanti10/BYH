@@ -19,6 +19,7 @@ export type DayInput = {
   name: string;
   weekday?: number | null; // giorno della settimana fissato (1=Lun..7=Dom); null = non pianificato
   durationMin?: number | null; // durata allenamento in minuti (impostata dal trainer); null = usa la stima
+  targetCalories?: number | null; // calorie da bruciare (impostate dal trainer); null = obiettivo di default
   exercises: ExerciseInput[];
 };
 
@@ -80,6 +81,7 @@ async function buildWorkoutsCreate(days: DayInput[], trainerId: string, planType
     dayOfWeek: dayIndex, // numero del giorno di allenamento (0-based)
     scheduledWeekday: d.weekday != null && d.weekday >= 1 && d.weekday <= 7 ? d.weekday : null,
     durationMin: d.durationMin != null && d.durationMin > 0 ? Math.round(d.durationMin) : null,
+    targetCalories: d.targetCalories != null && d.targetCalories > 0 ? Math.round(d.targetCalories) : null,
     exercises: {
       create: d.exercises.map((e, i) => ({
         exerciseId: exerciseIdByName.get(e.name.trim())!,
@@ -279,6 +281,7 @@ export async function assignTemplateToClient(
           dayOfWeek: w.dayOfWeek,
           scheduledWeekday: w.scheduledWeekday,
           durationMin: w.durationMin,
+          targetCalories: w.targetCalories,
           exercises: {
             create: w.exercises.map((e) => ({
               exerciseId: e.exerciseId,

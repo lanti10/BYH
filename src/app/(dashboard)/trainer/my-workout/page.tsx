@@ -117,15 +117,21 @@ export default async function MyWorkoutPage({
   const medals = computeMedals(sessions, weeklyGoal);
   const unlockedMedals = medals.filter((m) => m.unlocked);
 
+  // Obiettivi presi dalla scheda (durata + calorie impostate dal trainer), con fallback
+  const planMin = activePlan.workouts.map((w) => w.durationMin).find((v) => v != null) ?? 45;
+  const planCal = activePlan.workouts.map((w) => w.targetCalories).find((v) => v != null) ?? 400;
+
   // Attività di questa settimana (anelli stile Apple)
   const weekAgo = Date.now() - 7 * 86400000;
   const wSess = sessions.filter((s) => s.completedAt.getTime() >= weekAgo);
   const weekSessions = wSess.length;
   const weekMin = wSess.reduce((a, s) => a + (s.durationMin ?? 0), 0);
   const weekCal = wSess.reduce((a, s) => a + (s.calories ?? 0), 0);
+  const calGoal = planCal * weeklyGoal;
+  const minGoal = planMin * weeklyGoal;
   const rings = [
-    { value: weekCal, goal: 400 * weeklyGoal, color: "#FF375F", track: "#FF375F22", label: t("session.calories"), display: `${weekCal}` },
-    { value: weekMin, goal: 45 * weeklyGoal, color: "#30D158", track: "#30D15822", label: t("dash.activeTime"), display: `${weekMin} ${t("dash.min")}` },
+    { value: weekCal, goal: calGoal, color: "#FF375F", track: "#FF375F22", label: t("session.calories"), display: `${weekCal}/${calGoal}` },
+    { value: weekMin, goal: minGoal, color: "#30D158", track: "#30D15822", label: t("dash.activeTime"), display: `${weekMin}/${minGoal} ${t("dash.min")}` },
     { value: weekSessions, goal: weeklyGoal, color: "#5AC8FA", track: "#5AC8FA22", label: t("dash.workoutsLabel"), display: `${weekSessions}/${weeklyGoal}` },
   ];
 
