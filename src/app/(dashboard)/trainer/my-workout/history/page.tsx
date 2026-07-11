@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { getOrCreateSelfClient } from "@/lib/self-client";
-import { SessionHistory, type HistSession } from "@/components/trainer/session-history";
+import { SessionHistory, type HistSession } from "@/components/shared/session-history";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
