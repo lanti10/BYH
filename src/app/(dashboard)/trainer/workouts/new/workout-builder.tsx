@@ -21,13 +21,13 @@ type ExRow = {
   restSeconds: string;
   notes: string;
 };
-type DayCard = { id: string; name: string; weekday: number | null; durationMin: string; exercises: ExRow[] };
+type DayCard = { id: string; name: string; weekday: number | null; exercises: ExRow[] };
 
 function emptyExercise(): ExRow {
   return { id: newId(), name: "", sets: "3", reps: "10", weight: "", restSeconds: "60", notes: "" };
 }
 function emptyDay(): DayCard {
-  return { id: newId(), name: "", weekday: null, durationMin: "", exercises: [emptyExercise()] };
+  return { id: newId(), name: "", weekday: null, exercises: [emptyExercise()] };
 }
 
 function toDayCards(days?: DayInput[]): DayCard[] {
@@ -36,7 +36,6 @@ function toDayCards(days?: DayInput[]): DayCard[] {
     id: newId(),
     name: d.name,
     weekday: d.weekday ?? null,
-    durationMin: d.durationMin != null ? String(d.durationMin) : "",
     exercises:
       d.exercises.length > 0
         ? d.exercises.map((e) => ({
@@ -93,6 +92,10 @@ export function WorkoutBuilder({
   const [startDate, setStartDate] = useState(
     initialStartDate ?? new Date().toISOString().slice(0, 10)
   );
+  // Durata allenamento (minuti) UNICA per tutta la scheda: se impostata,
+  // sostituisce ovunque la stima automatica per ogni giorno.
+  const initialMin = initialDays?.map((d) => d.durationMin).find((v) => v != null);
+  const [planDurationMin, setPlanDurationMin] = useState(initialMin != null ? String(initialMin) : "");
 
   // Anteprima data di fine
   const endPreview =
@@ -175,7 +178,8 @@ export function WorkoutBuilder({
       days: days.map((d) => ({
         name: d.name,
         weekday: d.weekday,
-        durationMin: d.durationMin.trim() === "" ? null : Number(d.durationMin),
+        // Durata unica di scheda applicata a ogni giorno (o null = stima)
+        durationMin: planDurationMin.trim() === "" ? null : Number(planDurationMin),
         exercises: d.exercises.map((e) => ({
           name: e.name,
           sets: e.sets.trim() === "" ? 0 : Number(e.sets),
@@ -273,6 +277,22 @@ export function WorkoutBuilder({
           <p className="text-xs text-slate-400 -mt-1">{t("wb.endPreview", { date: endPreview })}</p>
         )}
         <div>
+          <label className="text-sm font-semibold text-slate-700">{t("wb.durationMin")}</label>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={planDurationMin}
+              onChange={(e) => setPlanDurationMin(e.target.value)}
+              placeholder={t("wb.durationAuto")}
+              className="block w-40 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+            />
+            <span className="text-sm text-slate-400">{t("dash.min")}</span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">{t("wb.durationHint")}</p>
+        </div>
+        <div>
           <label className="text-sm font-semibold text-slate-700">{t("wb.desc")}</label>
           <textarea
             value={description}
@@ -357,22 +377,6 @@ export function WorkoutBuilder({
             </div>
           </div>
 
-          {/* Durata allenamento (minuti): se impostata, sostituisce ovunque la stima */}
-          <div className="mb-4">
-            <p className="text-[11px] text-slate-400 mb-1.5">{t("wb.durationMin")}</p>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                value={activeDay.durationMin}
-                onChange={(e) => updateDay(activeDay.id, { durationMin: e.target.value })}
-                placeholder={t("wb.durationAuto")}
-                className="w-32 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-brand"
-              />
-              <span className="text-sm text-slate-400">{t("dash.min")}</span>
-            </div>
-          </div>
 
           {/* Esercizi */}
           <div className="space-y-2">

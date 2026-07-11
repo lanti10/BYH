@@ -56,7 +56,8 @@ export default async function WorkoutsPage() {
           {plans.map((plan) => {
             const totalExercises = plan.workouts.reduce((s, w) => s + w._count.exercises, 0);
             const dayCount = plan.workouts.length;
-            const href = plan.clientId ? `/trainer/clients/${plan.clientId}` : `/trainer/workouts/${plan.id}`;
+            // Clic sulla scheda → apre SEMPRE la scheda (non il profilo del cliente)
+            const href = `/trainer/workouts/${plan.id}`;
             return (
               <Link
                 key={plan.id}
