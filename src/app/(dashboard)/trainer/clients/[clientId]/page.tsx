@@ -7,11 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dumbbell, TrendingUp } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import Link from "next/link";
-import { ProgressChart } from "@/components/trainer/progress-chart";
-import { PlanDayTabs, type WeightEntry } from "@/components/shared/plan-day-tabs";
 import { SessionHistory, type HistSession } from "@/components/shared/session-history";
 import { ChatButton } from "@/components/trainer/chat-button";
 
@@ -74,22 +71,6 @@ export default async function ClientDetailPage({
     where: { receiverId: user.id, senderId: client.userId, readAt: null },
   });
 
-  // Pesi registrati dal cliente sui suoi esercizi: il trainer li vede in sola lettura
-  // nel dettaglio esercizio (storico dal più recente).
-  const wLogs = await prisma.exerciseWeightLog.findMany({
-    where: { clientId: client.id },
-    orderBy: { createdAt: "desc" },
-    take: 1000,
-    select: { workoutExerciseId: true, weight: true, createdAt: true },
-  });
-  const weightHistory: Record<string, WeightEntry[]> = {};
-  for (const l of wLogs) {
-    (weightHistory[l.workoutExerciseId] ??= []).push({
-      weight: l.weight,
-      date: l.createdAt.toISOString(),
-    });
-  }
-
   // Statistiche degli allenamenti del cliente, viste dal trainer (stesso formato
   // dello storico del PT: fiches per mese, tap = dettaglio della sessione).
   const history: HistSession[] = client.sessions.map((s) => ({
@@ -112,11 +93,8 @@ export default async function ClientDetailPage({
   const totalMin = client.sessions.reduce((a, s) => a + (s.durationMin ?? 0), 0);
   const totalCal = client.sessions.reduce((a, s) => a + (s.calories ?? 0), 0);
 
-  const progressData = client.progressLogs.map((log) => ({
-    date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
-    peso: log.weight,
-    grasso: log.bodyFat,
-  }));
+  // La scheda corrente del cliente: la apre il tasto "Scheda" in alto.
+  const activePlan = client.workoutPlans[0] ?? null;
 
   return (
     <div className="p-4 sm:p-8 space-y-6">
@@ -139,12 +117,22 @@ export default async function ClientDetailPage({
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
           <ChatButton withUserId={client.userId} initialUnread={unread} />
+          {/* Scheda corrente (da lì si apre e si modifica). Se il cliente non ne ha
+              ancora una, lo stesso tasto porta a crearla. */}
           <Button
             size="sm"
-            render={<Link href={`/trainer/workouts/new?client=${client.id}`} />}
+            render={
+              <Link
+                href={
+                  activePlan
+                    ? `/trainer/workouts/${activePlan.id}`
+                    : `/trainer/workouts/new?client=${client.id}`
+                }
+              />
+            }
           >
             <Dumbbell className="h-4 w-4 mr-1" />
-            {t("cd.newPlan")}
+            {activePlan ? t("cd.plan") : t("cd.newPlan")}
           </Button>
         </div>
       </div>
@@ -223,107 +211,19 @@ export default async function ClientDetailPage({
         </CardContent>
       </Card>
 
-      {/* Tabs */}
-      <Tabs defaultValue="progress">
-        <TabsList>
-          <TabsTrigger value="progress">
-            <TrendingUp className="h-4 w-4 mr-1.5" />
-            {t("prog.title")}
-          </TabsTrigger>
-          <TabsTrigger value="workouts">
-            <Dumbbell className="h-4 w-4 mr-1.5" />
-            {t("nav.workouts")}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="progress" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("cd.weightTrend")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {progressData.length > 0 ? (
-                <ProgressChart data={progressData} />
-              ) : (
-                <p className="text-sm text-slate-400 text-center py-8">
-                  {t("cd.noProgress")}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Allenamenti del cliente: totali + storico per mese, tap = statistiche */}
-          <section>
-            <div className="mb-3 flex items-baseline justify-between px-1">
-              <h2 className="font-semibold text-slate-900">{t("hist.title")}</h2>
-              {client.sessions.length > 0 && (
-                <span className="text-xs text-slate-400 tnum">
-                  {totalMin} {t("dash.min")} · {totalCal} {t("prog.kcal")}
-                </span>
-              )}
-            </div>
-            <SessionHistory sessions={history} />
-          </section>
-        </TabsContent>
-
-        <TabsContent value="workouts" className="mt-4 space-y-4">
-          {client.workoutPlans.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-slate-400 text-sm">{t("cd.noPlans")}</p>
-                <Button
-                  size="sm"
-                  className="mt-3"
-                  render={<Link href={`/trainer/workouts/new?client=${client.id}`} />}
-                >
-                  {t("wk.create")}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            client.workoutPlans.map((plan) => (
-              <Card key={plan.id}>
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                  <CardTitle className="text-base">{plan.name}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    {plan.isActive && (
-                      <Badge variant="default" className="bg-green-600">{t("wk.activeBadge")}</Badge>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      render={<Link href={`/trainer/workouts/${plan.id}`} />}
-                    >
-                      {t("wk.open")}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <PlanDayTabs
-                    planType={plan.planType}
-                    weightHistory={weightHistory}
-                    days={plan.workouts.map((day) => ({
-                      id: day.id,
-                      name: day.name,
-                      weekday: day.scheduledWeekday,
-                      durationMin: day.durationMin,
-                      exercises: day.exercises.map((ex) => ({
-                        id: ex.id,
-                        name: ex.exercise.name,
-                        sets: ex.sets,
-                        reps: ex.reps,
-                        weight: ex.weight,
-                        restSeconds: ex.restSeconds,
-                        notes: ex.notes,
-                      })),
-                    }))}
-                  />
-                </CardContent>
-              </Card>
-            ))
+      {/* Allenamenti del cliente: totali + storico per mese, tap = statistiche */}
+      <section>
+        <div className="mb-3 flex items-baseline justify-between px-1">
+          <h2 className="font-semibold text-slate-900">{t("hist.title")}</h2>
+          {client.sessions.length > 0 && (
+            <span className="text-xs text-slate-400 tnum">
+              {totalMin} {t("dash.min")} · {totalCal} {t("prog.kcal")}
+            </span>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+        <SessionHistory sessions={history} />
+      </section>
+
     </div>
   );
 }
