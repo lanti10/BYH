@@ -31,12 +31,20 @@ export default async function WorkoutSessionPage({
   });
   const weightKg = lastLog?.weight ?? user.clientProfile.startWeight ?? 70;
 
+  // Il PT si allena come auto-cliente: abbassando la tendina (o finendo) deve tornare
+  // nella SUA area, non in quella cliente.
+  const isTrainer = user.role === "TRAINER";
+  const homeHref = isTrainer ? "/trainer/my-workout" : "/client";
+  const doneHref = isTrainer ? "/trainer/my-workout" : "/client/progress";
+
   return (
     <SessionTracker
       dayId={day.id}
       dayName={day.name}
       weightKg={weightKg}
       planType={day.plan.planType}
+      homeHref={homeHref}
+      doneHref={doneHref}
       exercises={day.exercises.map((e) => ({
         id: e.id,
         name: e.exercise.name,

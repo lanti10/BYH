@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { SidebarNav } from "./sidebar-nav";
 import { HeaderActions } from "./header-actions";
 import { TabBar } from "./tab-bar";
+import { ActiveSessionBar } from "./active-session-bar";
 
 export function DashboardShell({
   role,
@@ -70,6 +71,9 @@ export function DashboardShell({
         >
           <div data-app-main className="pb-28 lg:pb-0">{children}</div>
         </main>
+
+        {/* Allenamento in corso con la tendina abbassata: tocca per riaprirlo */}
+        <ActiveSessionBar />
 
         {/* Tab bar mobile (design Pulse) */}
         <TabBar role={role} />

@@ -279,6 +279,17 @@ input[type="date"] {
   background-color: rgba(255, 255, 255, 0.12);
 }
 
+/* Barra "allenamento in corso" (tendina abbassata): lascia spazio in fondo così non
+   copre il contenuto. Sta PRIMA della regola chat, che deve poterla annullare. */
+body:has([data-session-bar]) [data-app-main] {
+  padding-bottom: 10rem;
+}
+@media (min-width: 1024px) {
+  body:has([data-session-bar]) [data-app-main] {
+    padding-bottom: 6rem;
+  }
+}
+
 /* Chat a tutta altezza + gestione tastiera.
    - Le pagine con chat (data-chat-root) gestiscono la propria altezza: niente padding globale.
    - Il root chat lascia in fondo lo spazio della tab bar (6rem) così l'input sta appena sopra.

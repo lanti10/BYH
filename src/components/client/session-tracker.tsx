@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, Pause, Square, Heart, Flame, Timer, Check, X, Info, StickyNote } from "lucide-react";
+import { Play, Pause, Square, Heart, Flame, Timer, Check, X, Info, StickyNote, ChevronDown } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import type { PlanType } from "@/components/trainer/plan-type-picker";
+import { clearSession, fmtDuration as fmt, readSession, writeSession } from "@/lib/session-store";
 
 type Ex = {
   id: string;
@@ -23,26 +24,22 @@ const MET_BY_TYPE: Record<PlanType, number> = {
   SWIMMING: 8, // nuoto
 };
 
-function fmt(sec: number) {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
-}
-
 export function SessionTracker({
   dayId,
   dayName,
   exercises,
   weightKg,
   planType = "WEIGHTS",
+  homeHref,
+  doneHref,
 }: {
   dayId: string;
   dayName: string;
   exercises: Ex[];
   weightKg: number;
   planType?: PlanType;
+  homeHref: string; // dove torna abbassando la tendina (dipende dal ruolo)
+  doneHref: string; // dove va a fine allenamento
 }) {
   const router = useRouter();
   const { t } = useT();
@@ -58,26 +55,33 @@ export function SessionTracker({
   const [bpm, setBpm] = useState<number | null>(null);
   const [hrConnected, setHrConnected] = useState(false);
   const hrStats = useRef({ sum: 0, count: 0, max: 0 });
+  const touchStartY = useRef<number | null>(null);
   const hrSupported = typeof navigator !== "undefined" && "bluetooth" in navigator;
 
   // ── Cronometro basato sull'orologio reale ──
   // iOS congela i timer JS quando il telefono è bloccato/in background: contare i secondi
   // perderebbe il tempo trascorso. Teniamo invece i timestamp e ricalcoliamo il tempo REALE,
   // persistendolo così sopravvive a schermo spento o app chiusa e riaperta.
-  const storageKey = `byh-session-${dayId}`;
   const stateRef = useRef<{ startedAt: number; accumulatedMs: number; runningSince: number | null }>({
     startedAt: Date.now(),
     accumulatedMs: 0,
     runningSince: Date.now(),
   });
+  // Gli esercizi spuntati vanno persistiti come il cronometro: abbassando la tendina
+  // il tracker si smonta, e senza questo al riaperture le spunte sarebbero perse.
+  const doneRef = useRef<Set<string>>(new Set());
 
   const persist = useCallback(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(stateRef.current));
-    } catch {
-      /* storage non disponibile */
-    }
-  }, [storageKey]);
+    const s = stateRef.current;
+    writeSession({
+      dayId,
+      dayName,
+      startedAt: s.startedAt,
+      accumulatedMs: s.accumulatedMs,
+      runningSince: s.runningSince,
+      done: [...doneRef.current],
+    });
+  }, [dayId, dayName]);
 
   const computeSec = useCallback(() => {
     const s = stateRef.current;
@@ -85,34 +89,23 @@ export function SessionTracker({
     return Math.max(0, Math.floor(ms / 1000));
   }, []);
 
-  // Ripristina (o avvia) la sessione al mount
+  // Ripristina (o avvia) la sessione al mount: vale sia alla prima apertura sia
+  // quando si rialza la tendina dopo aver navigato altrove.
   useEffect(() => {
-    let s = stateRef.current;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const p = JSON.parse(raw);
-        // Scarta sessioni troppo vecchie (>12h): verosimilmente abbandonate
-        if (
-          typeof p.accumulatedMs === "number" &&
-          typeof p.startedAt === "number" &&
-          Date.now() - p.startedAt < 12 * 60 * 60 * 1000
-        ) {
-          s = {
-            startedAt: p.startedAt,
-            accumulatedMs: p.accumulatedMs,
-            runningSince: typeof p.runningSince === "number" ? p.runningSince : null,
-          };
-        }
-      }
-    } catch {
-      /* ignora */
+    const p = readSession(dayId);
+    if (p) {
+      stateRef.current = {
+        startedAt: p.startedAt,
+        accumulatedMs: p.accumulatedMs,
+        runningSince: p.runningSince,
+      };
+      doneRef.current = new Set(p.done);
+      setDone(new Set(p.done));
     }
-    stateRef.current = s;
-    setRunning(s.runningSince != null);
+    setRunning(stateRef.current.runningSince != null);
     setElapsed(computeSec());
     persist();
-  }, [storageKey, computeSec, persist]);
+  }, [dayId, computeSec, persist]);
 
   // Aggiorna il display ogni secondo + subito al ritorno in primo piano (recupera il tempo in background)
   useEffect(() => {
@@ -183,12 +176,19 @@ export function SessionTracker({
   }
 
   function toggleDone(id: string) {
-    setDone((d) => {
-      const next = new Set(d);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    const next = new Set(doneRef.current);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    doneRef.current = next;
+    setDone(next);
+    persist();
+  }
+
+  // Tendina giù: il tracker si smonta ma il cronometro NON si ferma (il tempo si
+  // calcola dai timestamp salvati). Si rialza dalla barra in fondo all'app.
+  function minimize() {
+    persist();
+    router.push(homeHref);
   }
 
   async function end() {
@@ -215,12 +215,8 @@ export function SessionTracker({
           maxHeartRate: st.max || null,
         }),
       });
-      try {
-        localStorage.removeItem(storageKey);
-      } catch {
-        /* ignora */
-      }
-      router.push("/client/progress");
+      clearSession(dayId);
+      router.push(doneHref);
       router.refresh();
     } catch {
       setSaving(false);
@@ -229,12 +225,32 @@ export function SessionTracker({
 
   return (
     <div className="min-h-screen bg-depth-dark text-white flex flex-col">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-4 text-center">
-        <p className="text-sm text-white/50">{dayName || t("session.workout")}</p>
-        <p className="mt-1 text-xs font-medium text-emerald-400">
-          {running ? t("session.inProgress") : t("session.paused")}
-        </p>
+      {/* Tendina: trascina giù (o tocca) per ridurre e continuare a navigare.
+          L'allenamento resta in corso e si riapre dalla barra in fondo. */}
+      <div
+        onTouchStart={(e) => (touchStartY.current = e.touches[0].clientY)}
+        onTouchEnd={(e) => {
+          const start = touchStartY.current;
+          if (start != null && e.changedTouches[0].clientY - start > 60) minimize();
+          touchStartY.current = null;
+        }}
+      >
+        <button
+          onClick={minimize}
+          aria-label={t("session.minimize")}
+          className="flex w-full flex-col items-center gap-1 px-5 pt-3 pb-1"
+        >
+          <span className="h-1.5 w-12 rounded-full bg-white/25" />
+          <ChevronDown className="h-4 w-4 text-white/40" />
+        </button>
+
+        {/* Header */}
+        <div className="px-5 pt-2 pb-4 text-center">
+          <p className="text-sm text-white/50">{dayName || t("session.workout")}</p>
+          <p className="mt-1 text-xs font-medium text-emerald-400">
+            {running ? t("session.inProgress") : t("session.paused")}
+          </p>
+        </div>
       </div>
 
       {/* Timer grande */}
