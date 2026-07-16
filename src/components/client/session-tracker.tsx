@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Play, Pause, Square, Heart, Flame, Timer, Check, X, Info, StickyNote, ChevronDown } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import type { PlanType } from "@/components/trainer/plan-type-picker";
 import { clearSession, fmtDuration as fmt, readSession, writeSession } from "@/lib/session-store";
+import { ExerciseWeightEditor, type WeightEntry } from "@/components/shared/exercise-weight-editor";
 
 type Ex = {
   id: string;
@@ -32,6 +34,7 @@ export function SessionTracker({
   planType = "WEIGHTS",
   homeHref,
   doneHref,
+  weightHistory,
 }: {
   dayId: string;
   dayName: string;
@@ -40,6 +43,7 @@ export function SessionTracker({
   planType?: PlanType;
   homeHref: string; // dove torna abbassando la tendina (dipende dal ruolo)
   doneHref: string; // dove va a fine allenamento
+  weightHistory?: Record<string, WeightEntry[]>; // pesi già registrati, per id esercizio
 }) {
   const router = useRouter();
   const { t } = useT();
@@ -48,14 +52,22 @@ export function SessionTracker({
   const [done, setDone] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
-  const [detail, setDetail] = useState<Ex | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [logs, setLogs] = useState<Record<string, WeightEntry[]>>(weightHistory ?? {});
   const showWeight = planType === "WEIGHTS";
+  const detail = exercises.find((e) => e.id === detailId) ?? null;
+  // Peso da mostrare: quello aggiornato durante l'allenamento, se c'è
+  const currentWeight = (ex: Ex) => logs[ex.id]?.[0]?.weight ?? ex.weight;
 
   // Battito (Web Bluetooth, se supportato)
   const [bpm, setBpm] = useState<number | null>(null);
   const [hrConnected, setHrConnected] = useState(false);
   const hrStats = useRef({ sum: 0, count: 0, max: 0 });
   const touchStartY = useRef<number | null>(null);
+  const draggedRef = useRef(false); // distingue il trascinamento dal tocco sulla maniglia
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [closing, setClosing] = useState(false);
   const hrSupported = typeof navigator !== "undefined" && "bluetooth" in navigator;
 
   // ── Cronometro basato sull'orologio reale ──
@@ -184,12 +196,52 @@ export function SessionTracker({
     persist();
   }
 
-  // Tendina giù: il tracker si smonta ma il cronometro NON si ferma (il tempo si
-  // calcola dai timestamp salvati). Si rialza dalla barra in fondo all'app.
+  // ── Tendina ──
+  // Il tracker si smonta ma il cronometro NON si ferma (il tempo si calcola dai
+  // timestamp salvati). Si rialza dalla barra in fondo all'app.
+  // Il trascinamento segue il dito: la schermata scende e rimpicciolisce in modo
+  // progressivo, poi o torna su di scatto o completa la chiusura.
+  const DISMISS_PX = 110; // oltre questa trascinata, si chiude
+
   function minimize() {
     persist();
-    router.push(homeHref);
+    setClosing(true);
+    // lascia partire l'animazione di uscita prima di cambiare pagina
+    setTimeout(() => router.push(homeHref), 220);
   }
+
+  function onDragStart(y: number) {
+    touchStartY.current = y;
+    draggedRef.current = false;
+    setDragging(true);
+  }
+
+  function onDragMove(y: number) {
+    const start = touchStartY.current;
+    if (start == null) return;
+    const raw = y - start;
+    if (raw > 4) draggedRef.current = true;
+    // segue il dito 1:1 verso il basso; verso l'alto non si muove
+    setDragY(Math.max(0, raw));
+  }
+
+  function onDragEnd() {
+    const shouldClose = dragY > DISMISS_PX;
+    touchStartY.current = null;
+    setDragging(false);
+    if (shouldClose) minimize();
+    else setDragY(0); // torna su
+  }
+
+  // Quanto la schermata è "scesa": 0 = piena, 1 = chiusa
+  const p = Math.min(dragY / 420, 1);
+  const sheetStyle: React.CSSProperties = closing
+    ? { transform: "translateY(100%) scale(0.85)", opacity: 0, borderRadius: 28 }
+    : {
+        transform: `translateY(${dragY}px) scale(${1 - p * 0.22})`,
+        borderRadius: dragY > 0 ? Math.min(dragY / 3, 28) : 0,
+        opacity: 1 - p * 0.25,
+      };
 
   async function end() {
     setSaving(true);
@@ -223,20 +275,35 @@ export function SessionTracker({
     }
   }
 
+  // Il fondo nero fisso è quello che si intravede attorno alla schermata
+  // mentre rimpicciolisce seguendo il dito.
   return (
-    <div className="min-h-screen bg-depth-dark text-white flex flex-col">
+    <div className="fixed inset-0 bg-black">
+    <div
+      className="absolute inset-0 flex flex-col overflow-y-auto overflow-x-hidden bg-depth-dark text-white will-change-transform"
+      style={{
+        ...sheetStyle,
+        transformOrigin: "50% 50%",
+        // mentre il dito è giù nessuna transizione: deve seguirlo 1:1
+        transition: dragging
+          ? "none"
+          : "transform .32s cubic-bezier(.32,.72,0,1), opacity .32s ease, border-radius .32s ease",
+      }}
+    >
       {/* Tendina: trascina giù (o tocca) per ridurre e continuare a navigare.
           L'allenamento resta in corso e si riapre dalla barra in fondo. */}
       <div
-        onTouchStart={(e) => (touchStartY.current = e.touches[0].clientY)}
-        onTouchEnd={(e) => {
-          const start = touchStartY.current;
-          if (start != null && e.changedTouches[0].clientY - start > 60) minimize();
-          touchStartY.current = null;
-        }}
+        style={{ touchAction: "none" }}
+        onTouchStart={(e) => onDragStart(e.touches[0].clientY)}
+        onTouchMove={(e) => onDragMove(e.touches[0].clientY)}
+        onTouchEnd={onDragEnd}
+        onTouchCancel={onDragEnd}
       >
         <button
-          onClick={minimize}
+          onClick={() => {
+            // un trascinamento non deve valere anche come clic sulla maniglia
+            if (!draggedRef.current) minimize();
+          }}
           aria-label={t("session.minimize")}
           className="flex w-full flex-col items-center gap-1 px-5 pt-3 pb-1"
         >
@@ -308,7 +375,7 @@ export function SessionTracker({
             return (
               <div
                 key={ex.id}
-                onClick={() => setDetail(ex)}
+                onClick={() => setDetailId(ex.id)}
                 className={`flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.03] ${
                   i < exercises.length - 1 ? "border-b border-white/8" : ""
                 }`}
@@ -327,7 +394,7 @@ export function SessionTracker({
                   </p>
                   <p className="text-xs text-white/50 tnum">
                     {ex.sets} × {ex.reps}
-                    {showWeight && ex.weight != null ? ` · ${ex.weight} kg` : ""}
+                    {showWeight && currentWeight(ex) != null ? ` · ${currentWeight(ex)} kg` : ""}
                   </p>
                 </div>
                 {/* Info: apre il dettaglio (esplicito, oltre al tap sulla riga) */}
@@ -396,11 +463,13 @@ export function SessionTracker({
         )}
       </div>
 
-      {/* Sheet dettaglio esercizio (scuro) */}
-      {detail && (
+      {/* Sheet dettaglio esercizio (scuro). Montato su <body>: la schermata qui sopra
+          ha un transform, che renderebbe `position: fixed` relativo a lei invece
+          che allo schermo (finirebbe fuori posto appena la lista è scrollata). */}
+      {detail && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
-          onClick={() => setDetail(null)}
+          onClick={() => setDetailId(null)}
         >
           <div
             className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl glass-dark-prominent p-6 pb-8 max-h-[85vh] overflow-y-auto text-white"
@@ -409,7 +478,7 @@ export function SessionTracker({
             <div className="flex items-start justify-between gap-3 mb-5">
               <h3 className="text-lg font-bold">{detail.name}</h3>
               <button
-                onClick={() => setDetail(null)}
+                onClick={() => setDetailId(null)}
                 className="shrink-0 rounded-full bg-white/10 p-1.5 text-white/70 hover:bg-white/20"
                 aria-label={t("common.close")}
               >
@@ -421,9 +490,7 @@ export function SessionTracker({
               {[
                 { label: t("wb.sets"), value: String(detail.sets) },
                 { label: t("wb.reps"), value: detail.reps },
-                ...(showWeight
-                  ? [{ label: t("wb.weight"), value: detail.weight != null ? `${detail.weight}` : "—" }]
-                  : []),
+
                 { label: t("wb.rest"), value: `${detail.restSeconds}` },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl bg-white/8 px-4 py-3">
@@ -432,6 +499,20 @@ export function SessionTracker({
                 </div>
               ))}
             </div>
+
+            {/* Peso modificabile qui, mentre ti alleni: è il momento in cui scopri
+                che il carico non va più bene. Salva subito, senza uscire. */}
+            {showWeight && (
+              <ExerciseWeightEditor
+                exerciseId={detail.id}
+                coachWeight={detail.weight}
+                history={logs[detail.id] ?? []}
+                tone="dark"
+                onSaved={(entry) =>
+                  setLogs((m) => ({ ...m, [detail.id]: [entry, ...(m[detail.id] ?? [])] }))
+                }
+              />
+            )}
 
             <div className="mt-4">
               <div className="flex items-center gap-1.5 mb-1.5 text-sm font-semibold text-white/80">
@@ -446,8 +527,10 @@ export function SessionTracker({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+    </div>
     </div>
   );
 }

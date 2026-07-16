@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Dumbbell, Play, ChevronRight, X, StickyNote, Timer, Check, Loader2, AlertCircle, TrendingUp } from "lucide-react";
+import { Dumbbell, Play, ChevronRight, X, StickyNote, Timer, TrendingUp } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
-import { DATE_LOCALE } from "@/lib/i18n/dict";
+import {
+  ExerciseWeightEditor,
+  WeightReadout,
+  type WeightEntry,
+} from "./exercise-weight-editor";
 import { estimateDuration } from "@/lib/workout";
 import type { PlanType } from "@/components/trainer/plan-type-picker";
 
@@ -26,7 +30,7 @@ export type PlanDay = {
   exercises: PlanExercise[];
 };
 // Peso registrato dal cliente su un esercizio (storico, dal più recente)
-export type WeightEntry = { weight: number; date: string };
+export type { WeightEntry };
 
 export function PlanDayTabs({
   days,
@@ -251,7 +255,12 @@ function ExerciseDetailSheet({
         {/* Peso: modificabile per chi si allena, in sola lettura per il trainer */}
         {showWeight &&
           (editable ? (
-            <WeightEditor ex={ex} history={history} onSaved={onSaved} />
+            <ExerciseWeightEditor
+              exerciseId={ex.id}
+              coachWeight={ex.weight}
+              history={history}
+              onSaved={onSaved}
+            />
           ) : (
             history.length > 0 && <WeightReadout history={history} />
           ))}
@@ -271,163 +280,5 @@ function ExerciseDetailSheet({
       </div>
     </div>,
     document.body
-  );
-}
-
-// Casella peso modificabile dal cliente + storico degli aggiornamenti
-function WeightEditor({
-  ex,
-  history,
-  onSaved,
-}: {
-  ex: PlanExercise;
-  history: WeightEntry[];
-  onSaved: (entry: WeightEntry) => void;
-}) {
-  const { t } = useT();
-  const current = history[0]?.weight ?? ex.weight;
-  const [value, setValue] = useState(current != null ? String(current) : "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState(false);
-
-  const dirty = value.trim() !== "" && Number(value) !== current;
-
-  async function save() {
-    const w = Number(value);
-    if (!Number.isFinite(w) || w < 0 || w > 1000) {
-      setError(t("plan.weightInvalid"));
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/exercise-weight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workoutExerciseId: ex.id, weight: w }),
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      onSaved({ weight: data.weight, date: data.date });
-      setValue(String(data.weight));
-      setOk(true);
-      setTimeout(() => setOk(false), 1800);
-    } catch {
-      setError(t("plan.weightErr"));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="mt-2.5 rounded-2xl bg-slate-50 p-4">
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-700">{t("plan.myWeight")}</span>
-        <div className="mt-2 flex items-center gap-2">
-          <div className="relative flex-1">
-            <input
-              type="number"
-              inputMode="decimal"
-              min={0}
-              max={1000}
-              step={0.5}
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                setError(null);
-              }}
-              placeholder="20"
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base font-bold text-slate-900 tnum outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-            />
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">
-              kg
-            </span>
-          </div>
-          <button
-            onClick={save}
-            disabled={saving || !dirty}
-            className="flex h-[46px] shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand px-5 text-sm font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-40 disabled:shadow-none"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : ok ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              t("plan.weightSave")
-            )}
-          </button>
-        </div>
-      </label>
-
-      {error && (
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-brand">
-          <AlertCircle className="h-4 w-4 shrink-0" /> {error}
-        </p>
-      )}
-
-      {/* Prescrizione del trainer, come riferimento */}
-      {ex.weight != null && (
-        <p className="mt-2.5 text-xs text-slate-400 tnum">
-          {t("plan.coachWeight", { w: ex.weight })}
-        </p>
-      )}
-
-      {history.length > 0 && (
-        <WeightHistoryList history={history} className="mt-3 border-t border-black/5 pt-3" />
-      )}
-    </div>
-  );
-}
-
-// Vista in sola lettura del peso del cliente: la usa il trainer per seguire l'andamento.
-function WeightReadout({ history }: { history: WeightEntry[] }) {
-  const { t } = useT();
-  return (
-    <div className="mt-2.5 rounded-2xl bg-slate-50 p-4">
-      <p className="text-xs text-slate-400">{t("plan.clientWeight")}</p>
-      <p className="text-lg font-bold text-slate-900 tnum">{history[0].weight} kg</p>
-      <WeightHistoryList history={history} className="mt-3 border-t border-black/5 pt-3" />
-    </div>
-  );
-}
-
-// Andamento del carico: variazione rispetto all'aggiornamento precedente + ultime righe
-function WeightHistoryList({
-  history,
-  className = "",
-}: {
-  history: WeightEntry[];
-  className?: string;
-}) {
-  const { t, locale } = useT();
-  const dl = DATE_LOCALE[locale];
-  const prev = history[1]?.weight ?? null;
-  const delta = prev != null ? history[0].weight - prev : null;
-
-  return (
-    <div className={className}>
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-        <TrendingUp className="h-3.5 w-3.5 text-emerald-600" /> {t("plan.weightHistory")}
-        {delta != null && delta !== 0 && (
-          <span className={delta > 0 ? "text-emerald-600 tnum" : "text-slate-400 tnum"}>
-            {delta > 0 ? "+" : ""}
-            {Math.round(delta * 100) / 100} kg
-          </span>
-        )}
-      </div>
-      <div className="space-y-1">
-        {history.slice(0, 5).map((h, i) => (
-          <div key={i} className="flex items-center justify-between text-xs tnum">
-            <span className="text-slate-400">
-              {new Date(h.date).toLocaleDateString(dl, { day: "numeric", month: "short" })}
-            </span>
-            <span className={`font-semibold ${i === 0 ? "text-slate-900" : "text-slate-400"}`}>
-              {h.weight} kg
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
