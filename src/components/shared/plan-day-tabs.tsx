@@ -150,6 +150,10 @@ export function PlanDayTabs({
                   {t("plan.rest")}
                 </p>
               </div>
+              {/* Il trainer vede a colpo d'occhio dove il cliente ha registrato un peso */}
+              {!editableWeight && showWeight && logs[ex.id]?.length ? (
+                <TrendingUp className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+              ) : null}
               {ex.notes?.trim() && (
                 <StickyNote className="h-3.5 w-3.5 shrink-0 text-slate-300" />
               )}
@@ -238,7 +242,13 @@ function ExerciseDetailSheet({
           ))}
         </div>
 
-        {editable && <WeightEditor ex={ex} history={history} onSaved={onSaved} />}
+        {/* Peso: modificabile per chi si allena, in sola lettura per il trainer */}
+        {showWeight &&
+          (editable ? (
+            <WeightEditor ex={ex} history={history} onSaved={onSaved} />
+          ) : (
+            history.length > 0 && <WeightReadout history={history} />
+          ))}
 
         <div className="mt-4">
           <div className="flex items-center gap-1.5 mb-1.5 text-sm font-semibold text-slate-700">
@@ -267,8 +277,7 @@ function WeightEditor({
   history: WeightEntry[];
   onSaved: (entry: WeightEntry) => void;
 }) {
-  const { t, locale } = useT();
-  const dl = DATE_LOCALE[locale];
+  const { t } = useT();
   const current = history[0]?.weight ?? ex.weight;
   const [value, setValue] = useState(current != null ? String(current) : "");
   const [saving, setSaving] = useState(false);
@@ -303,10 +312,6 @@ function WeightEditor({
       setSaving(false);
     }
   }
-
-  // Andamento: differenza tra il peso attuale e quello registrato prima
-  const prev = history[1]?.weight ?? null;
-  const delta = prev != null && history[0] ? history[0].weight - prev : null;
 
   return (
     <div className="mt-2.5 rounded-2xl bg-slate-50 p-4">
@@ -361,32 +366,61 @@ function WeightEditor({
         </p>
       )}
 
-      {/* Storico aggiornamenti */}
       {history.length > 0 && (
-        <div className="mt-3 border-t border-black/5 pt-3">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-            <TrendingUp className="h-3.5 w-3.5 text-emerald-600" /> {t("plan.weightHistory")}
-            {delta != null && delta !== 0 && (
-              <span className={delta > 0 ? "text-emerald-600 tnum" : "text-slate-400 tnum"}>
-                {delta > 0 ? "+" : ""}
-                {Math.round(delta * 100) / 100} kg
-              </span>
-            )}
-          </div>
-          <div className="space-y-1">
-            {history.slice(0, 5).map((h, i) => (
-              <div key={i} className="flex items-center justify-between text-xs tnum">
-                <span className="text-slate-400">
-                  {new Date(h.date).toLocaleDateString(dl, { day: "numeric", month: "short" })}
-                </span>
-                <span className={`font-semibold ${i === 0 ? "text-slate-900" : "text-slate-400"}`}>
-                  {h.weight} kg
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <WeightHistoryList history={history} className="mt-3 border-t border-black/5 pt-3" />
       )}
+    </div>
+  );
+}
+
+// Vista in sola lettura del peso del cliente: la usa il trainer per seguire l'andamento.
+function WeightReadout({ history }: { history: WeightEntry[] }) {
+  const { t } = useT();
+  return (
+    <div className="mt-2.5 rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs text-slate-400">{t("plan.clientWeight")}</p>
+      <p className="text-lg font-bold text-slate-900 tnum">{history[0].weight} kg</p>
+      <WeightHistoryList history={history} className="mt-3 border-t border-black/5 pt-3" />
+    </div>
+  );
+}
+
+// Andamento del carico: variazione rispetto all'aggiornamento precedente + ultime righe
+function WeightHistoryList({
+  history,
+  className = "",
+}: {
+  history: WeightEntry[];
+  className?: string;
+}) {
+  const { t, locale } = useT();
+  const dl = DATE_LOCALE[locale];
+  const prev = history[1]?.weight ?? null;
+  const delta = prev != null ? history[0].weight - prev : null;
+
+  return (
+    <div className={className}>
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+        <TrendingUp className="h-3.5 w-3.5 text-emerald-600" /> {t("plan.weightHistory")}
+        {delta != null && delta !== 0 && (
+          <span className={delta > 0 ? "text-emerald-600 tnum" : "text-slate-400 tnum"}>
+            {delta > 0 ? "+" : ""}
+            {Math.round(delta * 100) / 100} kg
+          </span>
+        )}
+      </div>
+      <div className="space-y-1">
+        {history.slice(0, 5).map((h, i) => (
+          <div key={i} className="flex items-center justify-between text-xs tnum">
+            <span className="text-slate-400">
+              {new Date(h.date).toLocaleDateString(dl, { day: "numeric", month: "short" })}
+            </span>
+            <span className={`font-semibold ${i === 0 ? "text-slate-900" : "text-slate-400"}`}>
+              {h.weight} kg
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

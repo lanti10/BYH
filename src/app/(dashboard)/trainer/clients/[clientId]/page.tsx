@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dumbbell, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { ProgressChart } from "@/components/trainer/progress-chart";
-import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
+import { PlanDayTabs, type WeightEntry } from "@/components/shared/plan-day-tabs";
 import { ChatButton } from "@/components/trainer/chat-button";
 
 export default async function ClientDetailPage({
@@ -53,6 +53,22 @@ export default async function ClientDetailPage({
   const unread = await prisma.message.count({
     where: { receiverId: user.id, senderId: client.userId, readAt: null },
   });
+
+  // Pesi registrati dal cliente sui suoi esercizi: il trainer li vede in sola lettura
+  // nel dettaglio esercizio (storico dal più recente).
+  const wLogs = await prisma.exerciseWeightLog.findMany({
+    where: { clientId: client.id },
+    orderBy: { createdAt: "desc" },
+    take: 1000,
+    select: { workoutExerciseId: true, weight: true, createdAt: true },
+  });
+  const weightHistory: Record<string, WeightEntry[]> = {};
+  for (const l of wLogs) {
+    (weightHistory[l.workoutExerciseId] ??= []).push({
+      weight: l.weight,
+      date: l.createdAt.toISOString(),
+    });
+  }
 
   const progressData = client.progressLogs.map((log) => ({
     date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
@@ -230,6 +246,7 @@ export default async function ClientDetailPage({
                 <CardContent>
                   <PlanDayTabs
                     planType={plan.planType}
+                    weightHistory={weightHistory}
                     days={plan.workouts.map((day) => ({
                       id: day.id,
                       name: day.name,
