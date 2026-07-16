@@ -130,6 +130,7 @@ model ClientProfile {
   progressLogs    ProgressLog[]
   orders          Order[]
   recommendations ProductRecommendation[]
+  exerciseWeights ExerciseWeightLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -199,10 +200,28 @@ model WorkoutExercise {
 
   sets        Int
   reps        String // e.g. "8-12" or "AMRAP"
-  weight      Float? // kg consigliati per l'esercizio
+  weight      Float? // kg consigliati dal trainer (prescrizione: NON viene sovrascritta dal cliente)
   restSeconds Int    @default(60)
   notes       String?
   order       Int    @default(0)
+
+  weightLogs ExerciseWeightLog[]
+}
+
+// Peso usato davvero dal cliente su un esercizio della sua scheda.
+// È uno storico (una riga per aggiornamento): il peso "attuale" è la riga più recente.
+// Resta separato da WorkoutExercise.weight, che è la prescrizione del trainer.
+model ExerciseWeightLog {
+  id                String          @id @default(cuid())
+  clientId          String
+  client            ClientProfile   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  workoutExerciseId String
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  weight    Float // kg
+  createdAt DateTime @default(now())
+
+  @@index([clientId, workoutExerciseId, createdAt])
 }
 
 model WorkoutSession {
