@@ -207,6 +207,12 @@ export async function updateWorkoutPlan(
   revalidatePath("/trainer/workouts");
   revalidatePath(`/trainer/workouts/${planId}`);
   if (clientId) revalidatePath(`/trainer/clients/${clientId}`);
+  // Se la scheda è stata scollegata (nessun cliente) o spostata su un altro cliente,
+  // va invalidato anche il profilo del cliente PRECEDENTE: senza questo continua a
+  // mostrarla dalla cache (in particolare tornando indietro col browser).
+  if (existing.clientId && existing.clientId !== clientId) {
+    revalidatePath(`/trainer/clients/${existing.clientId}`);
+  }
   return { ok: true, planId };
 }
 

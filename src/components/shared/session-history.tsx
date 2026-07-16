@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Dumbbell, Flame, Timer, Heart, X, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
@@ -126,7 +127,11 @@ function SessionDetailSheet({ s, onClose }: { s: HistSession; onClose: () => voi
     { icon: Heart, tint: "text-brand", value: s.hr != null ? String(s.hr) : "—", label: t("prog.avgBpm") },
   ];
 
-  return (
+  // Montato su <body>: un antenato con backdrop-filter (utility `glass`) diventerebbe
+  // il containing block di `position: fixed` e sposterebbe il pop-up dentro la card.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
       onClick={onClose}
@@ -192,6 +197,7 @@ function SessionDetailSheet({ s, onClose }: { s: HistSession; onClose: () => voi
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

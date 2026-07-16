@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Dumbbell, Play, ChevronRight, X, StickyNote, Timer, Check, Loader2, AlertCircle, TrendingUp } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
@@ -213,7 +214,12 @@ function ExerciseDetailSheet({
     { label: t("wb.rest"), value: `${ex.restSeconds}` },
   ];
 
-  return (
+  // Il pop-up va montato su <body>: un antenato con backdrop-filter (utility `glass`,
+  // es. le Card del dettaglio cliente) diventa il containing block di `position: fixed`
+  // e lo farebbe finire in fondo alla card invece che sopra lo schermo.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4"
       onClick={onClose}
@@ -263,7 +269,8 @@ function ExerciseDetailSheet({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
