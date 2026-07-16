@@ -12,6 +12,7 @@ import { Dumbbell, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { ProgressChart } from "@/components/trainer/progress-chart";
 import { PlanDayTabs, type WeightEntry } from "@/components/shared/plan-day-tabs";
+import { SessionHistory, type HistSession } from "@/components/shared/session-history";
 import { ChatButton } from "@/components/trainer/chat-button";
 
 export default async function ClientDetailPage({
@@ -28,7 +29,11 @@ export default async function ClientDetailPage({
     where: { id: clientId, trainerId: trainer.id },
     include: {
       user: true,
+      // Solo le schede ATTIVE: una scheda staccata dal cliente (disattivata quando
+      // gliene assegni una nuova, o scollegata a mano) deve sparire dal suo profilo.
+      // Resta comunque consultabile in /trainer/workouts.
       workoutPlans: {
+        where: { isActive: true },
         orderBy: { createdAt: "desc" },
         include: {
           workouts: {
@@ -43,7 +48,22 @@ export default async function ClientDetailPage({
         },
       },
       progressLogs: { orderBy: { date: "asc" }, take: 30 },
-      sessions: { orderBy: { completedAt: "desc" }, take: 10 },
+      // Storico allenamenti del cliente: alimenta il conteggio e la sezione Progressi.
+      sessions: {
+        orderBy: { completedAt: "desc" },
+        take: 400,
+        include: {
+          workoutDay: {
+            include: {
+              plan: { select: { planType: true } },
+              exercises: {
+                orderBy: { order: "asc" },
+                include: { exercise: { select: { name: true } } },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -69,6 +89,28 @@ export default async function ClientDetailPage({
       date: l.createdAt.toISOString(),
     });
   }
+
+  // Statistiche degli allenamenti del cliente, viste dal trainer (stesso formato
+  // dello storico del PT: fiches per mese, tap = dettaglio della sessione).
+  const history: HistSession[] = client.sessions.map((s) => ({
+    id: s.id,
+    date: s.completedAt.toISOString(),
+    name: s.workoutDay?.name ?? "",
+    min: s.durationMin ?? 0,
+    cal: s.calories ?? 0,
+    hr: s.avgHeartRate ?? null,
+    planType: s.workoutDay?.plan?.planType ?? "WEIGHTS",
+    exercises: (s.workoutDay?.exercises ?? []).map((e) => ({
+      name: e.exercise.name,
+      sets: e.sets,
+      reps: e.reps,
+      weight: e.weight,
+      restSeconds: e.restSeconds,
+      notes: e.notes,
+    })),
+  }));
+  const totalMin = client.sessions.reduce((a, s) => a + (s.durationMin ?? 0), 0);
+  const totalCal = client.sessions.reduce((a, s) => a + (s.calories ?? 0), 0);
 
   const progressData = client.progressLogs.map((log) => ({
     date: log.date.toLocaleDateString("it-IT", { month: "short", day: "numeric" }),
@@ -194,7 +236,7 @@ export default async function ClientDetailPage({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="progress" className="mt-4">
+        <TabsContent value="progress" className="mt-4 space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">{t("cd.weightTrend")}</CardTitle>
@@ -209,6 +251,19 @@ export default async function ClientDetailPage({
               )}
             </CardContent>
           </Card>
+
+          {/* Allenamenti del cliente: totali + storico per mese, tap = statistiche */}
+          <section>
+            <div className="mb-3 flex items-baseline justify-between px-1">
+              <h2 className="font-semibold text-slate-900">{t("hist.title")}</h2>
+              {client.sessions.length > 0 && (
+                <span className="text-xs text-slate-400 tnum">
+                  {totalMin} {t("dash.min")} · {totalCal} {t("prog.kcal")}
+                </span>
+              )}
+            </div>
+            <SessionHistory sessions={history} />
+          </section>
         </TabsContent>
 
         <TabsContent value="workouts" className="mt-4 space-y-4">
