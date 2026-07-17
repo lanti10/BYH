@@ -33,10 +33,12 @@ export function ClientProfileFields({
   initial,
   submitLabel,
   onSaved,
+  redirectTo,
 }: {
   initial?: ProfileInitial;
   submitLabel: string;
   onSaved?: () => void;
+  redirectTo?: string; // se presente, il server reindirizza qui appena salvato
 }) {
   const { t } = useT();
   const [sex, setSex] = useState(initial?.sex ?? "");
@@ -62,21 +64,26 @@ export function ClientProfileFields({
     if (goals.length === 0) return setError(t("pf.errGoals"));
 
     setSaving(true);
-    const res = await completeClientProfile({
-      sex,
-      age: age ? Number(age) : null,
-      height: height ? Number(height) : null,
-      weight: weight ? Number(weight) : null,
-      goals,
-      trainingDaysPerWeek: days,
-      notes,
-    });
+    const res = await completeClientProfile(
+      {
+        sex,
+        age: age ? Number(age) : null,
+        height: height ? Number(height) : null,
+        weight: weight ? Number(weight) : null,
+        goals,
+        trainingDaysPerWeek: days,
+        notes,
+      },
+      redirectTo
+    );
+    // Con `redirectTo` il server reindirizza e qui non si torna: la navigazione
+    // parte da sola. Il ramo sotto vale per il salvataggio dal profilo.
     setSaving(false);
-    if (res.ok) {
+    if (res?.ok) {
       setSaved(true);
       onSaved?.();
     } else {
-      setError(res.error ?? t("err.generic"));
+      setError(res?.error ?? t("err.generic"));
     }
   }
 

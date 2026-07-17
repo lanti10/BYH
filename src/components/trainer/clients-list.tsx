@@ -70,7 +70,7 @@ export function ClientsList({
   });
 
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 gap-3">
       {sorted.map((client) => {
         const unread = activity[client.userId]?.unread ?? 0;
         const isTrainer = client.kind === "trainer";
@@ -83,8 +83,8 @@ export function ClientsList({
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate font-semibold text-slate-900">{client.name}</p>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="min-w-0 truncate font-semibold text-slate-900">{client.name}</p>
                     {/* Chi è: cliente tuo, o PT che hai portato in rete */}
                     <span
                       className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase ${
@@ -94,12 +94,12 @@ export function ClientsList({
                       {isTrainer ? t("cl.kindTrainer") : t("cl.kindClient")}
                     </span>
                     {client.activePlanName && (
-                      <Badge variant="secondary" className="text-xs">
-                        {client.activePlanName}
+                      <Badge variant="secondary" className="min-w-0 max-w-[45%] shrink-[99] text-xs">
+                        <span className="min-w-0 truncate">{client.activePlanName}</span>
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="truncate text-xs text-slate-500 mt-0.5">
                     {isTrainer
                       ? t("cl.count", { n: client.clientsCount ?? 0 })
                       : (client.lastSessionAt
@@ -132,9 +132,9 @@ export function ClientsList({
         );
         // Il profilo si apre solo per i clienti: un PT della rete non ha una scheda tua da vedere.
         return isTrainer ? (
-          <div key={client.id}>{card}</div>
+          <div key={client.id} className="min-w-0">{card}</div>
         ) : (
-          <Link key={client.id} href={`/trainer/clients/${client.id}`}>
+          <Link key={client.id} href={`/trainer/clients/${client.id}`} className="block min-w-0">
             {card}
           </Link>
         );

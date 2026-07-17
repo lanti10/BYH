@@ -1,12 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ClientProfileFields } from "@/components/client/client-profile-fields";
 import { useT } from "@/lib/i18n/client";
 
 export function ProfileSetupForm({ firstName }: { firstName: string }) {
-  const router = useRouter();
   const { t } = useT();
 
   return (
@@ -23,13 +21,7 @@ export function ProfileSetupForm({ firstName }: { firstName: string }) {
       </div>
 
       <div className="mx-auto -mt-10 max-w-lg px-4 pb-12">
-        <ClientProfileFields
-          submitLabel={t("setup.submit")}
-          onSaved={() => {
-            router.push("/client");
-            router.refresh();
-          }}
-        />
+        <ClientProfileFields submitLabel={t("setup.submit")} redirectTo="/client" />
       </div>
     </div>
   );

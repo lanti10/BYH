@@ -91,15 +91,15 @@ export default async function ClientsPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-slate-900">{t("nav.clients")}</h1>
           <p className="text-slate-500 mt-1">
             {t("cl.count", { n: rawClients.length })}
             {trainerRows.length > 0 ? ` · ${t("cl.ptCount", { n: trainerRows.length })}` : ""}
           </p>
         </div>
-        <Button render={<Link href="/trainer/clients/new" />}>
+        <Button className="shrink-0" render={<Link href="/trainer/clients/new" />}>
           <UserPlus className="h-4 w-4 mr-2" />
           {t("tr.addClient")}
         </Button>

@@ -2,6 +2,8 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export type ProfileInput = {
   sex: string;
@@ -13,8 +15,13 @@ export type ProfileInput = {
   notes?: string;
 };
 
+// `redirectTo`: al PRIMO setup il cliente deve atterrare sulla dashboard.
+// Il redirect si fa QUI, lato server, subito dopo la scrittura: farlo dal client
+// (router.push + router.refresh) non funzionava — il refresh ricarica la rotta
+// corrente e annullava la navigazione, lasciando l'utente fermo sul form.
 export async function completeClientProfile(
-  input: ProfileInput
+  input: ProfileInput,
+  redirectTo?: string
 ): Promise<{ ok: boolean; error?: string }> {
   const user = await getCurrentUser();
   if (!user || user.role !== "CLIENT" || !user.clientProfile) {
@@ -37,6 +44,10 @@ export async function completeClientProfile(
       profileCompleted: true,
     },
   });
+
+  revalidatePath("/client");
+  revalidatePath("/profile-setup");
+  if (redirectTo) redirect(redirectTo);
 
   return { ok: true };
 }
