@@ -42,6 +42,15 @@ export default async function TrainerDashboard() {
 
   const totalEarnings = earnings._sum.amount ?? 0;
 
+  // La dashboard è un colpo d'occhio: solo i clienti con l'attività più recente.
+  // L'elenco completo (con ricerca e non letti) è la pagina Clienti, dietro "Vedi tutti".
+  const recentClients = [...clients]
+    .sort(
+      (a, b) =>
+        (b.sessions[0]?.completedAt.getTime() ?? 0) - (a.sessions[0]?.completedAt.getTime() ?? 0)
+    )
+    .slice(0, 3);
+
   const stats = [
     { label: t("tr.activeClients"), value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
     { label: t("tr.unread"), value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
@@ -115,7 +124,7 @@ export default async function TrainerDashboard() {
                 </Link>
               </div>
             ) : (
-              clients.slice(0, 6).map((client) => {
+              recentClients.map((client) => {
                 const lastSession = client.sessions[0];
                 return (
                   <Link
