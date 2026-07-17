@@ -48,9 +48,18 @@ export default async function ClientsPage() {
   });
   const unreadByUser = new Map(unreadRows.map((r) => [r.senderId, r._count]));
 
+  // PT che hai portato in rete col link /join-trainer: non sono tuoi clienti
+  // (sono TrainerProfile con referredById), ma li vuoi vedere qui, etichettati.
+  const referredTrainers = await prisma.trainerProfile.findMany({
+    where: { referredById: trainer.id },
+    include: { user: true, _count: { select: { clients: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
   const clientRows: ClientRow[] = rawClients.map((c) => ({
     id: c.id,
     userId: c.userId,
+    kind: "client" as const,
     name: c.user.name || c.user.email,
     avatarUrl: c.user.avatarUrl,
     activePlanName: c.workoutPlans[0]?.name ?? null,
@@ -59,6 +68,21 @@ export default async function ClientsPage() {
     goals: c.goals,
     createdAt: c.createdAt.getTime(),
   }));
+  const trainerRows: ClientRow[] = referredTrainers.map((tr) => ({
+    id: tr.id,
+    userId: tr.userId,
+    kind: "trainer" as const,
+    name: tr.user.name || tr.user.email,
+    avatarUrl: tr.user.avatarUrl,
+    activePlanName: null,
+    lastSessionAt: null,
+    lastWeight: null,
+    goals: [],
+    createdAt: tr.createdAt.getTime(),
+    clientsCount: tr._count.clients,
+  }));
+  const rows = [...clientRows, ...trainerRows];
+
   const initialActivity = rawClients.map((c) => ({
     userId: c.userId,
     lastAt: lastAtByUser.get(c.userId) ?? null,
@@ -70,7 +94,10 @@ export default async function ClientsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{t("nav.clients")}</h1>
-          <p className="text-slate-500 mt-1">{t("cl.count", { n: rawClients.length })}</p>
+          <p className="text-slate-500 mt-1">
+            {t("cl.count", { n: rawClients.length })}
+            {trainerRows.length > 0 ? ` · ${t("cl.ptCount", { n: trainerRows.length })}` : ""}
+          </p>
         </div>
         <Button render={<Link href="/trainer/clients/new" />}>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -78,7 +105,7 @@ export default async function ClientsPage() {
         </Button>
       </div>
 
-      {rawClients.length === 0 ? (
+      {rows.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <p className="text-slate-400 text-sm">{t("tr.noClients")}</p>
@@ -88,7 +115,7 @@ export default async function ClientsPage() {
           </CardContent>
         </Card>
       ) : (
-        <ClientsList clients={clientRows} initialActivity={initialActivity} />
+        <ClientsList clients={rows} initialActivity={initialActivity} />
       )}
     </div>
   );

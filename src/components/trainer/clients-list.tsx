@@ -14,6 +14,8 @@ import { useT } from "@/lib/i18n/client";
 export type ClientRow = {
   id: string;
   userId: string;
+  // Da quale link è arrivata la persona: /join = cliente, /join-trainer = PT della rete
+  kind: "client" | "trainer";
   name: string;
   avatarUrl: string | null;
   activePlanName: string | null;
@@ -21,6 +23,7 @@ export type ClientRow = {
   lastWeight: number | null;
   goals: string[];
   createdAt: number;
+  clientsCount?: number; // solo per i PT della rete
 };
 
 type Activity = { userId: string; lastAt: number | null; unread: number };
@@ -70,9 +73,9 @@ export function ClientsList({
     <div className="grid gap-3">
       {sorted.map((client) => {
         const unread = activity[client.userId]?.unread ?? 0;
-        return (
-          <Link key={client.id} href={`/trainer/clients/${client.id}`}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        const isTrainer = client.kind === "trainer";
+        const card = (
+            <Card className={isTrainer ? "" : "hover:shadow-md transition-shadow cursor-pointer"}>
               <CardContent className="flex items-center gap-4 py-4">
                 <Avatar>
                   <AvatarImage src={client.avatarUrl ?? undefined} />
@@ -81,7 +84,15 @@ export function ClientsList({
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-slate-900">{client.name}</p>
+                    <p className="truncate font-semibold text-slate-900">{client.name}</p>
+                    {/* Chi è: cliente tuo, o PT che hai portato in rete */}
+                    <span
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                        isTrainer ? "bg-blue-500/10 text-blue-600" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {isTrainer ? t("cl.kindTrainer") : t("cl.kindClient")}
+                    </span>
                     {client.activePlanName && (
                       <Badge variant="secondary" className="text-xs">
                         {client.activePlanName}
@@ -89,15 +100,17 @@ export function ClientsList({
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {client.lastSessionAt
-                      ? t("cl.lastSession", {
-                          time: formatDistanceToNow(new Date(client.lastSessionAt), {
-                            locale: dateFnsLocale(locale),
-                            addSuffix: true,
-                          }),
-                        })
-                      : t("cl.noSession")}
-                    {client.lastWeight ? ` · ${client.lastWeight} kg` : ""}
+                    {isTrainer
+                      ? t("cl.count", { n: client.clientsCount ?? 0 })
+                      : (client.lastSessionAt
+                          ? t("cl.lastSession", {
+                              time: formatDistanceToNow(new Date(client.lastSessionAt), {
+                                locale: dateFnsLocale(locale),
+                                addSuffix: true,
+                              }),
+                            })
+                          : t("cl.noSession")) +
+                        (client.lastWeight ? ` · ${client.lastWeight} kg` : "")}
                   </p>
                 </div>
 
@@ -112,10 +125,17 @@ export function ClientsList({
                       {unread > 99 ? "99+" : unread}
                     </span>
                   )}
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
+                  {!isTrainer && <ChevronRight className="h-4 w-4 text-slate-400" />}
                 </div>
               </CardContent>
             </Card>
+        );
+        // Il profilo si apre solo per i clienti: un PT della rete non ha una scheda tua da vedere.
+        return isTrainer ? (
+          <div key={client.id}>{card}</div>
+        ) : (
+          <Link key={client.id} href={`/trainer/clients/${client.id}`}>
+            {card}
           </Link>
         );
       })}
