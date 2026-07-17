@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { ChevronUp } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { elapsedSec, fmtDuration, readActiveSession, type StoredSession } from "@/lib/session-store";
@@ -9,7 +8,7 @@ import { elapsedSec, fmtDuration, readActiveSession, type StoredSession } from "
 // Barra "allenamento in corso": compare in tutta l'app quando la tendina del
 // tracker è abbassata. Toccandola si rialza la tendina e si torna all'allenamento.
 // Il tempo mostrato è quello reale (dai timestamp), non un conteggio locale.
-export function ActiveSessionBar() {
+export function ActiveSessionBar({ onOpen }: { onOpen: () => void }) {
   const { t } = useT();
   const [session, setSession] = useState<StoredSession | null>(null);
   const [sec, setSec] = useState(0);
@@ -37,10 +36,10 @@ export function ActiveSessionBar() {
   const paused = session.runningSince == null;
 
   return (
-    <Link
+    <button
       data-session-bar
-      href={`/workout-session/${session.dayId}`}
-      className="fixed bottom-24 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-full bg-depth-dark px-4 py-3 text-white shadow-lg lg:bottom-4"
+      onClick={onOpen}
+      className="fixed bottom-24 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-full bg-depth-dark px-4 py-3 text-left text-white shadow-lg lg:bottom-4"
     >
       <span className="relative flex h-2.5 w-2.5 shrink-0">
         {!paused && (
@@ -64,6 +63,6 @@ export function ActiveSessionBar() {
 
       <span className="shrink-0 text-base font-bold tnum">{fmtDuration(sec)}</span>
       <ChevronUp className="h-4 w-4 shrink-0 text-white/40" />
-    </Link>
+    </button>
   );
 }

@@ -2,13 +2,14 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ActivityRing } from "@/components/client/activity-ring";
+import { StartWorkoutButton } from "@/components/shared/start-workout-button";
 import { WeekStrip } from "@/components/client/week-strip";
 import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDuration, getStreak } from "@/lib/workout";
 import { getT } from "@/lib/i18n/server";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
   Dumbbell, MessageSquare, ShoppingBag, Trophy,
-  Play, Flame, Timer, Check, ChevronRight,
+  Flame, Timer, Check, ChevronRight,
 } from "lucide-react";
 import { computeMedals } from "@/lib/medals";
 import Link from "next/link";
@@ -192,13 +193,12 @@ export default async function ClientDashboard() {
                 )}
               </div>
 
-              <Link
-                href={`/workout-session/${todayWorkout.id}`}
-                className="mt-5 flex h-[50px] items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
-              >
-                <Play className="h-5 w-5 fill-white" />
-                {doneToday ? t("dash.startAgain") : t("dash.start")}
-              </Link>
+              <StartWorkoutButton
+                dayId={todayWorkout.id}
+                dayName={todayWorkout.name}
+                label={doneToday ? t("dash.startAgain") : t("dash.start")}
+                className="mt-5 flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+              />
             </div>
           ) : (
             <div className="rounded-3xl glass p-8 text-center">

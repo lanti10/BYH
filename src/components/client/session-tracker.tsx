@@ -26,25 +26,29 @@ const MET_BY_TYPE: Record<PlanType, number> = {
   SWIMMING: 8, // nuoto
 };
 
-export function SessionTracker({
-  dayId,
-  dayName,
-  exercises,
-  weightKg,
-  planType = "WEIGHTS",
-  homeHref,
-  doneHref,
-  weightHistory,
-}: {
+// Dati del giorno da allenare (dall'API /api/workout-day/[dayId])
+export type SessionDay = {
   dayId: string;
   dayName: string;
-  exercises: Ex[];
+  planType: PlanType;
   weightKg: number;
-  planType?: PlanType;
-  homeHref: string; // dove torna abbassando la tendina (dipende dal ruolo)
-  doneHref: string; // dove va a fine allenamento
-  weightHistory?: Record<string, WeightEntry[]>; // pesi già registrati, per id esercizio
+  doneHref: string; // dove andare a fine allenamento (dipende dal ruolo)
+  exercises: Ex[];
+  weightHistory?: Record<string, WeightEntry[]>;
+};
+
+export function SessionTracker({
+  day,
+  expanded,
+  onMinimize,
+  onFinished,
+}: {
+  day: SessionDay;
+  expanded: boolean; // false = tendina abbassata: resta montato ma nascosto
+  onMinimize: () => void;
+  onFinished: () => void;
 }) {
+  const { dayId, dayName, exercises, weightKg, planType, doneHref, weightHistory } = day;
   const router = useRouter();
   const { t } = useT();
   const [elapsed, setElapsed] = useState(0);
@@ -79,8 +83,8 @@ export function SessionTracker({
     accumulatedMs: 0,
     runningSince: Date.now(),
   });
-  // Gli esercizi spuntati vanno persistiti come il cronometro: abbassando la tendina
-  // il tracker si smonta, e senza questo al riaperture le spunte sarebbero perse.
+  // Le spunte vanno persistite come il cronometro: sopravvivono a un ricaricamento
+  // dell'app o alla chiusura della scheda del browser.
   const doneRef = useRef<Set<string>>(new Set());
 
   const persist = useCallback(() => {
@@ -101,8 +105,8 @@ export function SessionTracker({
     return Math.max(0, Math.floor(ms / 1000));
   }, []);
 
-  // Ripristina (o avvia) la sessione al mount: vale sia alla prima apertura sia
-  // quando si rialza la tendina dopo aver navigato altrove.
+  // Ripristina (o avvia) la sessione al mount: serve quando l'app viene riaperta
+  // con un allenamento già in corso.
   useEffect(() => {
     const p = readSession(dayId);
     if (p) {
@@ -197,8 +201,8 @@ export function SessionTracker({
   }
 
   // ── Tendina ──
-  // Il tracker si smonta ma il cronometro NON si ferma (il tempo si calcola dai
-  // timestamp salvati). Si rialza dalla barra in fondo all'app.
+  // Ridurre non smonta niente e non naviga: nasconde soltanto questo overlay, con
+  // l'app già viva sotto. Il cronometro continua comunque (si calcola dai timestamp).
   // Il trascinamento segue il dito: la schermata scende e rimpicciolisce in modo
   // progressivo, poi o torna su di scatto o completa la chiusura.
   const DISMISS_PX = 110; // oltre questa trascinata, si chiude
@@ -206,8 +210,13 @@ export function SessionTracker({
   function minimize() {
     persist();
     setClosing(true);
-    // lascia partire l'animazione di uscita prima di cambiare pagina
-    setTimeout(() => router.push(homeHref), 220);
+    // Lascia finire l'animazione, poi nascondi. Nessuna navigazione: l'app è già
+    // sotto, quindi ricompare all'istante — niente schermo nero, niente attesa.
+    setTimeout(() => {
+      onMinimize();
+      setClosing(false);
+      setDragY(0);
+    }, 240);
   }
 
   function onDragStart(y: number) {
@@ -234,13 +243,13 @@ export function SessionTracker({
   }
 
   // Quanto la schermata è "scesa": 0 = piena, 1 = chiusa
-  const p = Math.min(dragY / 420, 1);
+  const dragP = Math.min(dragY / 420, 1);
   const sheetStyle: React.CSSProperties = closing
     ? { transform: "translateY(100%) scale(0.85)", opacity: 0, borderRadius: 28 }
     : {
-        transform: `translateY(${dragY}px) scale(${1 - p * 0.22})`,
+        transform: `translateY(${dragY}px) scale(${1 - dragP * 0.22})`,
         borderRadius: dragY > 0 ? Math.min(dragY / 3, 28) : 0,
-        opacity: 1 - p * 0.25,
+        opacity: 1 - dragP * 0.25,
       };
 
   async function end() {
@@ -268,6 +277,7 @@ export function SessionTracker({
         }),
       });
       clearSession(dayId);
+      onFinished();
       router.push(doneHref);
       router.refresh();
     } catch {
@@ -275,12 +285,21 @@ export function SessionTracker({
     }
   }
 
-  // Il fondo nero fisso è quello che si intravede attorno alla schermata
-  // mentre rimpicciolisce seguendo il dito.
+  // Ridotto: resta montato (fascia cardio e dati restano vivi) ma sparisce dalla vista.
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className={expanded || closing ? "" : "hidden"}>
+    {/* Velo scuro: si dissolve mentre trascini, così sotto riappare l'app da cui sei
+        partito. È l'app vera, non uno sfondo: non deve ricaricare nulla. */}
     <div
-      className="absolute inset-0 flex flex-col overflow-y-auto overflow-x-hidden bg-depth-dark text-white will-change-transform"
+      className="fixed inset-0 z-40 bg-black/50"
+      style={{
+        opacity: closing ? 0 : 1 - dragP,
+        transition: dragging ? "none" : "opacity .32s ease",
+        pointerEvents: "none",
+      }}
+    />
+    <div
+      className="fixed inset-0 z-50 flex flex-col overflow-y-auto overflow-x-hidden bg-depth-dark text-white will-change-transform"
       style={{
         ...sheetStyle,
         transformOrigin: "50% 50%",

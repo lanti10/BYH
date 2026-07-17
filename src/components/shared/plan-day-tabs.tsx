@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { Dumbbell, Play, ChevronRight, X, StickyNote, Timer, TrendingUp } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import {
@@ -10,6 +9,7 @@ import {
   WeightReadout,
   type WeightEntry,
 } from "./exercise-weight-editor";
+import { useWorkoutSession } from "./workout-session-provider";
 import { estimateDuration } from "@/lib/workout";
 import type { PlanType } from "@/components/trainer/plan-type-picker";
 
@@ -34,20 +34,21 @@ export type { WeightEntry };
 
 export function PlanDayTabs({
   days,
-  startHrefBase,
+  canStart = false,
   todayIndex,
   planType = "WEIGHTS",
   editableWeight = false,
   weightHistory,
 }: {
   days: PlanDay[];
-  startHrefBase?: string;
+  canStart?: boolean; // mostra "Inizia allenamento" (solo per chi si allena)
   todayIndex?: number; // giorno che tocca oggi (progressione): tab pre-selezionata + badge "Oggi"
   planType?: PlanType;
   editableWeight?: boolean; // il cliente può aggiornare il peso che usa davvero
   weightHistory?: Record<string, WeightEntry[]>; // per id esercizio, dal più recente
 }) {
   const { t } = useT();
+  const session = useWorkoutSession();
   const [active, setActive] = useState(
     todayIndex != null ? Math.min(todayIndex, Math.max(days.length - 1, 0)) : 0
   );
@@ -122,14 +123,14 @@ export function PlanDayTabs({
         </div>
       )}
 
-      {/* Inizia allenamento */}
-      {startHrefBase && day.exercises.length > 0 && (
-        <Link
-          href={`${startHrefBase}/${day.id}`}
-          className="mt-3 flex h-[50px] items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+      {/* Inizia allenamento: apre l'overlay, non una pagina, così l'app resta sotto */}
+      {canStart && session && day.exercises.length > 0 && (
+        <button
+          onClick={() => session.start(day.id, day.name)}
+          className="mt-3 flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
         >
           <Play className="h-5 w-5 fill-white" /> {t("dash.start")}
-        </Link>
+        </button>
       )}
 
       {/* Lista esercizi — list row dal design system (§04); tap = dettaglio */}

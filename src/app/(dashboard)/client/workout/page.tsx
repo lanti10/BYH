@@ -100,7 +100,7 @@ export default async function ClientWorkoutPage() {
       )}
       <PlanDayTabs
         days={days}
-        startHrefBase="/workout-session"
+        canStart
         todayIndex={scheduled?.restToday ? undefined : nextIndex}
         planType={plan.planType}
         editableWeight

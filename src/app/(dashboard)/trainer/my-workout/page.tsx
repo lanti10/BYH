@@ -173,7 +173,7 @@ export default async function MyWorkoutPage({
       <PlanDayTabs
         planType={activePlan.planType}
         todayIndex={todayIndex}
-        startHrefBase="/workout-session"
+        canStart
         editableWeight
         weightHistory={weightHistory}
         days={days.map((day) => ({
