@@ -155,7 +155,17 @@ export async function updateWorkoutPlan(
 
   const existing = await prisma.workoutPlan.findFirst({
     where: { id: planId, trainerId: trainer.id },
-    include: { workouts: { select: { id: true } } },
+    include: {
+      workouts: {
+        select: {
+          id: true,
+          _count: { select: { sessions: true } },
+          // I pesi registrati dal cliente sono anch'essi storico da NON perdere,
+          // anche se non ha ancora completato una sessione.
+          exercises: { select: { _count: { select: { weightLogs: true } } } },
+        },
+      },
+    },
   });
   if (!existing) return { ok: false, error: "Scheda non trovata." };
 
@@ -173,10 +183,50 @@ export async function updateWorkoutPlan(
   const workoutsCreate = await buildWorkoutsCreate(input.days, trainer.id, planType);
   if (!workoutsCreate) return { ok: false, error: "Aggiungi almeno un giorno con un esercizio." };
 
-  // Rimuovi i giorni precedenti (e le eventuali sessioni collegate)
-  const oldDayIds = existing.workouts.map((w) => w.id);
-  if (oldDayIds.length) {
-    await prisma.workoutSession.deleteMany({ where: { workoutDayId: { in: oldDayIds } } });
+  const { start, end } = computeDates(input.startDate, input.durationWeeks);
+
+  // La scheda ha già testimonianze del lavoro svolto? (allenamenti completati o pesi
+  // registrati). Se sì, NON si tocca nulla dello storico.
+  const hasHistory = existing.workouts.some(
+    (w) => w._count.sessions > 0 || w.exercises.some((e) => e._count.weightLogs > 0)
+  );
+
+  if (hasHistory) {
+    // Versionamento: la vecchia scheda (con i suoi giorni, sessioni e pesi) resta
+    // intatta come versione precedente; la modifica diventa una NUOVA scheda attiva.
+    // Così lo storico del cliente non sparisce mai.
+    if (clientId) {
+      await prisma.workoutPlan.updateMany({
+        where: { clientId, isActive: true },
+        data: { isActive: false },
+      });
+    }
+    const created = await prisma.workoutPlan.create({
+      data: {
+        trainerId: trainer.id,
+        clientId,
+        isTemplate,
+        isActive: !isTemplate,
+        name: input.name.trim(),
+        planType,
+        description: input.description?.trim() || null,
+        durationWeeks: input.durationWeeks ?? null,
+        startDate: start,
+        endDate: end,
+        workouts: { create: workoutsCreate },
+      },
+    });
+
+    revalidatePath("/trainer/workouts");
+    revalidatePath(`/trainer/workouts/${planId}`);
+    revalidatePath(`/trainer/workouts/${created.id}`);
+    if (clientId) revalidatePath(`/trainer/clients/${clientId}`);
+    return { ok: true, planId: created.id };
+  }
+
+  // Nessuno storico da proteggere → ricostruzione in-place (niente da perdere).
+  // I giorni vengono ricreati; le sessioni NON vengono mai cancellate (qui non ce ne sono).
+  if (existing.workouts.length) {
     await prisma.workoutDay.deleteMany({ where: { planId } });
   }
 
@@ -198,8 +248,8 @@ export async function updateWorkoutPlan(
       planType,
       description: input.description?.trim() || null,
       durationWeeks: input.durationWeeks ?? null,
-      startDate: computeDates(input.startDate, input.durationWeeks).start,
-      endDate: computeDates(input.startDate, input.durationWeeks).end,
+      startDate: start,
+      endDate: end,
       workouts: { create: workoutsCreate },
     },
   });
