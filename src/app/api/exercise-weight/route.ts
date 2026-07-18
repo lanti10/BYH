@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   // L'esercizio deve appartenere a una scheda di questo cliente
   const owned = await prisma.workoutExercise.findFirst({
     where: { id: workoutExerciseId, workoutDay: { plan: { clientId: me.clientProfile.id } } },
-    select: { id: true },
+    select: { id: true, exercise: { select: { name: true } } },
   });
   if (!owned) return NextResponse.json({ error: "Esercizio non valido" }, { status: 403 });
 
@@ -33,6 +33,8 @@ export async function POST(req: Request) {
     data: {
       clientId: me.clientProfile.id,
       workoutExerciseId,
+      // Snapshot del nome: lo storico si segue per nome e sopravvive alle modifiche di scheda.
+      exerciseName: owned.exercise.name,
       weight: Math.round(w * 100) / 100,
     },
     select: { weight: true, createdAt: true },

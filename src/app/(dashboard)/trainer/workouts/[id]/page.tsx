@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
-import { PlanDayTabs, type PlanDay, type WeightEntry } from "@/components/shared/plan-day-tabs";
+import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
+import { loadWeightHistory } from "@/lib/weight-history";
 import { PlanActions } from "@/components/trainer/plan-actions";
 import { AssignTemplate } from "@/components/trainer/assign-template";
 import { ArrowLeft, FileText, User, CalendarRange } from "lucide-react";
@@ -42,25 +43,13 @@ export default async function WorkoutDetailPage({
   const clients = clientProfiles.map((c) => ({ id: c.id, name: c.user.name || c.user.email }));
 
   // Pesi registrati dal cliente sugli esercizi di questa scheda: il trainer li vede
-  // in sola lettura aprendo l'esercizio (andamento dei carichi).
-  const wLogs = plan.clientId
-    ? await prisma.exerciseWeightLog.findMany({
-        where: {
-          clientId: plan.clientId,
-          workoutExerciseId: { in: plan.workouts.flatMap((w) => w.exercises.map((e) => e.id)) },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 500,
-        select: { workoutExerciseId: true, weight: true, createdAt: true },
-      })
-    : [];
-  const weightHistory: Record<string, WeightEntry[]> = {};
-  for (const l of wLogs) {
-    (weightHistory[l.workoutExerciseId] ??= []).push({
-      weight: l.weight,
-      date: l.createdAt.toISOString(),
-    });
-  }
+  // in sola lettura aprendo l'esercizio (andamento dei carichi), indicizzati per nome.
+  const weightHistory = plan.clientId
+    ? await loadWeightHistory(
+        plan.clientId,
+        plan.workouts.flatMap((w) => w.exercises.map((e) => e.exercise.name))
+      )
+    : {};
 
   const days: PlanDay[] = plan.workouts.map((w) => ({
     id: w.id,

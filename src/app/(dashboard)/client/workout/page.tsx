@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
-import { PlanDayTabs, type PlanDay, type WeightEntry } from "@/components/shared/plan-day-tabs";
+import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
+import { loadWeightHistory } from "@/lib/weight-history";
 import { getNextDayIndex, getScheduledTodayIndex } from "@/lib/workout";
 import { Dumbbell } from "lucide-react";
 
@@ -56,23 +57,11 @@ export default async function ClientWorkoutPage() {
     })),
   }));
 
-  // Pesi registrati dal cliente su ogni esercizio (storico, dal più recente)
-  const wLogs = await prisma.exerciseWeightLog.findMany({
-    where: {
-      clientId: client!.id,
-      workoutExerciseId: { in: plan.workouts.flatMap((w) => w.exercises.map((e) => e.id)) },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-    select: { workoutExerciseId: true, weight: true, createdAt: true },
-  });
-  const weightHistory: Record<string, WeightEntry[]> = {};
-  for (const l of wLogs) {
-    (weightHistory[l.workoutExerciseId] ??= []).push({
-      weight: l.weight,
-      date: l.createdAt.toISOString(),
-    });
-  }
+  // Pesi registrati dal cliente sugli esercizi di questa scheda (per nome esercizio)
+  const weightHistory = await loadWeightHistory(
+    client!.id,
+    plan.workouts.flatMap((w) => w.exercises.map((e) => e.exercise.name))
+  );
 
   // Progressione: apri direttamente il giorno che tocca oggi
   const sessions = await prisma.workoutSession.findMany({

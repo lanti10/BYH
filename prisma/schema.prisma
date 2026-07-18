@@ -215,21 +215,30 @@ model ExerciseWeightLog {
   id                String          @id @default(cuid())
   clientId          String
   client            ClientProfile   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  workoutExerciseId String
-  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  // Sganciato dall'esercizio: se la scheda viene modificata/eliminata il peso NON si
+  // perde (SetNull, non Cascade). Lo storico si segue per NOME esercizio, così un
+  // "Panca piana" mantiene i suoi pesi anche tra versioni diverse della scheda.
+  workoutExerciseId String?
+  workoutExercise   WorkoutExercise? @relation(fields: [workoutExerciseId], references: [id], onDelete: SetNull)
+  exerciseName      String? // nome esercizio, snapshot al momento del salvataggio (backfill sui vecchi)
 
   weight    Float // kg
   createdAt DateTime @default(now())
 
-  @@index([clientId, workoutExerciseId, createdAt])
+  @@index([clientId, exerciseName, createdAt])
 }
 
 model WorkoutSession {
   id           String     @id @default(cuid())
   clientId     String
   client       ClientProfile @relation(fields: [clientId], references: [id])
-  workoutDayId String
-  workoutDay   WorkoutDay @relation(fields: [workoutDayId], references: [id])
+  // Sganciata dal giorno: se la scheda viene modificata/eliminata la sessione resta
+  // (SetNull, non Cascade). Il link serve solo alla progressione finché il giorno esiste.
+  workoutDayId String?
+  workoutDay   WorkoutDay? @relation(fields: [workoutDayId], references: [id], onDelete: SetNull)
+  // Snapshot dell'allenamento svolto: nome giorno, tipo scheda ed esercizi come erano
+  // al momento. Così lo storico è autonomo e sopravvive a qualsiasi modifica di scheda.
+  snapshot     Json?
 
   completedAt  DateTime @default(now())
   durationMin  Int?

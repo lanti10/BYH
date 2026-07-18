@@ -45,7 +45,7 @@ export function PlanDayTabs({
   todayIndex?: number; // giorno che tocca oggi (progressione): tab pre-selezionata + badge "Oggi"
   planType?: PlanType;
   editableWeight?: boolean; // il cliente può aggiornare il peso che usa davvero
-  weightHistory?: Record<string, WeightEntry[]>; // per id esercizio, dal più recente
+  weightHistory?: Record<string, WeightEntry[]>; // per NOME esercizio, dal più recente
 }) {
   const { t } = useT();
   const session = useWorkoutSession();
@@ -67,7 +67,7 @@ export function PlanDayTabs({
 
   // Peso da mostrare: quello registrato dal cliente se c'è, altrimenti la prescrizione del trainer
   const currentWeight = (ex: PlanExercise) =>
-    (editableWeight ? logs[ex.id]?.[0]?.weight : undefined) ?? ex.weight;
+    (editableWeight ? logs[ex.name]?.[0]?.weight : undefined) ?? ex.weight;
 
   const detail = day.exercises.find((e) => e.id === detailId) ?? null;
 
@@ -157,7 +157,7 @@ export function PlanDayTabs({
                 </p>
               </div>
               {/* Il trainer vede a colpo d'occhio dove il cliente ha registrato un peso */}
-              {!editableWeight && showWeight && logs[ex.id]?.length ? (
+              {!editableWeight && showWeight && logs[ex.name]?.length ? (
                 <TrendingUp className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
               ) : null}
               {ex.notes?.trim() && (
@@ -181,9 +181,9 @@ export function PlanDayTabs({
           ex={detail}
           showWeight={showWeight}
           editable={editableWeight && showWeight}
-          history={logs[detail.id] ?? []}
+          history={logs[detail.name] ?? []}
           onSaved={(entry) =>
-            setLogs((m) => ({ ...m, [detail.id]: [entry, ...(m[detail.id] ?? [])] }))
+            setLogs((m) => ({ ...m, [detail.name]: [entry, ...(m[detail.name] ?? [])] }))
           }
           onClose={() => setDetailId(null)}
         />

@@ -2,7 +2,7 @@
 // I giorni sono ordinati (dayOfWeek = indice 0..N-1). Dopo l'ultimo si ricomincia dal primo.
 
 type DayRef = { id: string };
-type SessionRef = { workoutDayId: string; completedAt: Date };
+type SessionRef = { workoutDayId: string | null; completedAt: Date };
 
 export function getNextDayIndex(
   days: DayRef[],
@@ -12,7 +12,7 @@ export function getNextDayIndex(
 
   const dayIds = new Set(days.map((d) => d.id));
   const planSessions = sessions
-    .filter((s) => dayIds.has(s.workoutDayId))
+    .filter((s) => s.workoutDayId != null && dayIds.has(s.workoutDayId))
     .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 
   const last = planSessions[0];
@@ -59,7 +59,7 @@ export function getScheduledTodayIndex(
 }
 
 // True se in `sessions` esiste un allenamento del giorno `dayId` completato oggi
-export function isDayDoneToday(dayId: string, sessions: { workoutDayId: string; completedAt: Date }[]): boolean {
+export function isDayDoneToday(dayId: string, sessions: { workoutDayId: string | null; completedAt: Date }[]): boolean {
   const now = new Date();
   return sessions.some((s) => {
     if (s.workoutDayId !== dayId) return false;

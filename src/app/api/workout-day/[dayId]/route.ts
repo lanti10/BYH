@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { loadWeightHistory } from "@/lib/weight-history";
 import { NextResponse } from "next/server";
 
 // Dati di un giorno di scheda per l'allenamento in corso.
@@ -30,22 +31,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ dayId: 
     select: { weight: true },
   });
 
-  const wLogs = await prisma.exerciseWeightLog.findMany({
-    where: {
-      clientId: user.clientProfile.id,
-      workoutExerciseId: { in: day.exercises.map((e) => e.id) },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 300,
-    select: { workoutExerciseId: true, weight: true, createdAt: true },
-  });
-  const weightHistory: Record<string, { weight: number; date: string }[]> = {};
-  for (const l of wLogs) {
-    (weightHistory[l.workoutExerciseId] ??= []).push({
-      weight: l.weight,
-      date: l.createdAt.toISOString(),
-    });
-  }
+  const weightHistory = await loadWeightHistory(
+    user.clientProfile.id,
+    day.exercises.map((e) => e.exercise.name)
+  );
 
   return NextResponse.json({
     dayId: day.id,

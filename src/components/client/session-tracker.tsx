@@ -61,7 +61,7 @@ export function SessionTracker({
   const showWeight = planType === "WEIGHTS";
   const detail = exercises.find((e) => e.id === detailId) ?? null;
   // Peso da mostrare: quello aggiornato durante l'allenamento, se c'è
-  const currentWeight = (ex: Ex) => logs[ex.id]?.[0]?.weight ?? ex.weight;
+  const currentWeight = (ex: Ex) => logs[ex.name]?.[0]?.weight ?? ex.weight;
 
   // Battito (Web Bluetooth, se supportato)
   const [bpm, setBpm] = useState<number | null>(null);
@@ -525,10 +525,10 @@ export function SessionTracker({
               <ExerciseWeightEditor
                 exerciseId={detail.id}
                 coachWeight={detail.weight}
-                history={logs[detail.id] ?? []}
+                history={logs[detail.name] ?? []}
                 tone="dark"
                 onSaved={(entry) =>
-                  setLogs((m) => ({ ...m, [detail.id]: [entry, ...(m[detail.id] ?? [])] }))
+                  setLogs((m) => ({ ...m, [detail.name]: [entry, ...(m[detail.name] ?? [])] }))
                 }
               />
             )}

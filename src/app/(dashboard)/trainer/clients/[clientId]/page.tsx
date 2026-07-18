@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell } from "lucide-react";
 import Link from "next/link";
 import { SessionHistory, type HistSession } from "@/components/shared/session-history";
+import { toHistSession } from "@/lib/session-history";
 import { ChatButton } from "@/components/trainer/chat-button";
 
 export default async function ClientDetailPage({
@@ -73,23 +74,7 @@ export default async function ClientDetailPage({
 
   // Statistiche degli allenamenti del cliente, viste dal trainer (stesso formato
   // dello storico del PT: fiches per mese, tap = dettaglio della sessione).
-  const history: HistSession[] = client.sessions.map((s) => ({
-    id: s.id,
-    date: s.completedAt.toISOString(),
-    name: s.workoutDay?.name ?? "",
-    min: s.durationMin ?? 0,
-    cal: s.calories ?? 0,
-    hr: s.avgHeartRate ?? null,
-    planType: s.workoutDay?.plan?.planType ?? "WEIGHTS",
-    exercises: (s.workoutDay?.exercises ?? []).map((e) => ({
-      name: e.exercise.name,
-      sets: e.sets,
-      reps: e.reps,
-      weight: e.weight,
-      restSeconds: e.restSeconds,
-      notes: e.notes,
-    })),
-  }));
+  const history: HistSession[] = client.sessions.map(toHistSession);
   const totalMin = client.sessions.reduce((a, s) => a + (s.durationMin ?? 0), 0);
   const totalCal = client.sessions.reduce((a, s) => a + (s.calories ?? 0), 0);
 

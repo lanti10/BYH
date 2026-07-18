@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { ProgressView, type Sess } from "@/components/client/progress-view";
 import { SessionHistory, type HistSession } from "@/components/shared/session-history";
+import { toHistSession, sessionHistoryInclude } from "@/lib/session-history";
 import { MedalBadge } from "@/components/client/medal-badge";
 import { computeMedals } from "@/lib/medals";
 import { ChevronRight } from "lucide-react";
@@ -25,46 +26,20 @@ export default async function ClientProgressPage() {
   const rawSessions = await prisma.workoutSession.findMany({
     where: { clientId: client.id },
     orderBy: { completedAt: "desc" },
-    include: {
-      workoutDay: {
-        include: {
-          plan: { select: { planType: true } },
-          exercises: {
-            orderBy: { order: "asc" },
-            include: { exercise: { select: { name: true } } },
-          },
-        },
-      },
-    },
+    include: sessionHistoryInclude,
     take: 400,
   });
 
-  const sessions: Sess[] = rawSessions.map((s) => ({
-    id: s.id,
-    date: s.completedAt.toISOString(),
-    min: s.durationMin ?? 0,
-    cal: s.calories ?? 0,
-    hr: s.avgHeartRate,
-    name: s.workoutDay?.name || "Allenamento",
-  }));
-
   // Storico allenamenti (stesso layout della pagina Workout del PT, con i dati del cliente)
-  const history: HistSession[] = rawSessions.map((s) => ({
-    id: s.id,
-    date: s.completedAt.toISOString(),
-    name: s.workoutDay?.name ?? "",
-    min: s.durationMin ?? 0,
-    cal: s.calories ?? 0,
-    hr: s.avgHeartRate ?? null,
-    planType: s.workoutDay?.plan?.planType ?? "WEIGHTS",
-    exercises: (s.workoutDay?.exercises ?? []).map((e) => ({
-      name: e.exercise.name,
-      sets: e.sets,
-      reps: e.reps,
-      weight: e.weight,
-      restSeconds: e.restSeconds,
-      notes: e.notes,
-    })),
+  const history: HistSession[] = rawSessions.map(toHistSession);
+
+  const sessions: Sess[] = history.map((h) => ({
+    id: h.id,
+    date: h.date,
+    min: h.min,
+    cal: h.cal,
+    hr: h.hr,
+    name: h.name || "Allenamento",
   }));
 
   // Obiettivi anelli presi dalla scheda attiva (durata + calorie impostate dal trainer)

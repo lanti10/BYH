@@ -7,7 +7,8 @@ import { computeMedals } from "@/lib/medals";
 import { WorkoutCreator, type ClientOption } from "../workouts/new/workout-creator";
 import { WorkoutBuilder } from "../workouts/new/workout-builder";
 import type { DayInput } from "../workouts/actions";
-import { PlanDayTabs, type WeightEntry } from "@/components/shared/plan-day-tabs";
+import { PlanDayTabs } from "@/components/shared/plan-day-tabs";
+import { loadWeightHistory } from "@/lib/weight-history";
 import { WorkoutRings } from "@/components/trainer/workout-rings";
 import { Pencil, ArrowLeft, Dumbbell, Trophy, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -121,23 +122,11 @@ export default async function MyWorkoutPage({
   const planMin = activePlan.workouts.map((w) => w.durationMin).find((v) => v != null) ?? 45;
   const planCal = activePlan.workouts.map((w) => w.targetCalories).find((v) => v != null) ?? 400;
 
-  // Pesi che il PT registra sulla propria scheda (si allena come auto-cliente)
-  const wLogs = await prisma.exerciseWeightLog.findMany({
-    where: {
-      clientId: self.id,
-      workoutExerciseId: { in: days.flatMap((d) => d.exercises.map((e) => e.id)) },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-    select: { workoutExerciseId: true, weight: true, createdAt: true },
-  });
-  const weightHistory: Record<string, WeightEntry[]> = {};
-  for (const l of wLogs) {
-    (weightHistory[l.workoutExerciseId] ??= []).push({
-      weight: l.weight,
-      date: l.createdAt.toISOString(),
-    });
-  }
+  // Pesi che il PT registra sulla propria scheda (si allena come auto-cliente), per nome
+  const weightHistory = await loadWeightHistory(
+    self.id,
+    days.flatMap((d) => d.exercises.map((e) => e.exercise.name))
+  );
 
   // Dati sessioni per gli anelli (toggle Oggi/Settimana, settimana lun–dom)
   const ringSessions = sessions.map((s) => ({
