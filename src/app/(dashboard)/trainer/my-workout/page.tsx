@@ -9,7 +9,7 @@ import { WorkoutBuilder } from "../workouts/new/workout-builder";
 import type { DayInput } from "../workouts/actions";
 import { PlanDayTabs, type WeightEntry } from "@/components/shared/plan-day-tabs";
 import { WorkoutRings } from "@/components/trainer/workout-rings";
-import { Pencil, ArrowLeft, Flame, Timer, Dumbbell, Trophy, ChevronRight } from "lucide-react";
+import { Pencil, ArrowLeft, Dumbbell, Trophy, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 // "Il mio allenamento" del PT: crea la propria scheda e la segue come un cliente.
@@ -114,8 +114,6 @@ export default async function MyWorkoutPage({
 
   // Progressi + medaglie (come vede un cliente)
   const weeklyGoal = self.trainingDaysPerWeek ?? 3;
-  const totalMin = sessions.reduce((a, s) => a + (s.durationMin ?? 0), 0);
-  const totalCal = sessions.reduce((a, s) => a + (s.calories ?? 0), 0);
   const medals = computeMedals(sessions, weeklyGoal);
   const unlockedMedals = medals.filter((m) => m.unlocked);
 
@@ -148,10 +146,9 @@ export default async function MyWorkoutPage({
     cal: s.calories ?? 0,
   }));
 
+  // Solo i totali che NON ripetono gli anelli sopra (minuti/calorie sono già lì)
   const stats = [
-    { icon: Timer, tint: "text-blue-500 bg-blue-500/10", value: totalMin, label: t("dash.min"), href: undefined as string | undefined },
-    { icon: Flame, tint: "text-orange-500 bg-orange-500/10", value: totalCal, label: t("session.calories"), href: undefined },
-    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: "/trainer/my-workout/history" },
+    { icon: Dumbbell, tint: "text-brand bg-brand/10", value: sessions.length, label: t("cd.sessions"), href: "/trainer/my-workout/history" as string | undefined },
     { icon: Trophy, tint: "text-amber-500 bg-amber-500/10", value: unlockedMedals.length, label: t("nav.medals"), href: "/trainer/medals" },
   ];
 
@@ -202,7 +199,7 @@ export default async function MyWorkoutPage({
       />
 
       {/* Widget totali (l'ultimo, Medaglie, porta al medagliere) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {stats.map((s) => {
           const inner = (
             <>
