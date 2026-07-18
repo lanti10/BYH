@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Search, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
 import { GOAL_KEYS } from "@/lib/i18n/dict";
@@ -41,6 +41,7 @@ export function ClientsList({
   const [activity, setActivity] = useState<Record<string, Activity>>(() =>
     Object.fromEntries(initialActivity.map((a) => [a.userId, a]))
   );
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -62,7 +63,10 @@ export function ClientsList({
     };
   }, []);
 
-  const sorted = [...clients].sort((a, b) => {
+  const q = query.trim().toLowerCase();
+  const filtered = q ? clients.filter((c) => c.name.toLowerCase().includes(q)) : clients;
+
+  const sorted = [...filtered].sort((a, b) => {
     const ta = activity[a.userId]?.lastAt ?? 0;
     const tb = activity[b.userId]?.lastAt ?? 0;
     if (tb !== ta) return tb - ta; // ultimo messaggio più recente in cima
@@ -70,6 +74,32 @@ export function ClientsList({
   });
 
   return (
+    <>
+      {/* Ricerca per nome: utile quando i clienti sono tanti */}
+      <div className="relative mb-3">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("cl.searchPh")}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-10 text-base text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery("")}
+            aria-label={t("common.close")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {sorted.length === 0 && (
+        <p className="py-8 text-center text-sm text-slate-400">{t("cl.noMatch")}</p>
+      )}
+
     <div className="grid grid-cols-1 gap-3">
       {sorted.map((client) => {
         const unread = activity[client.userId]?.unread ?? 0;
@@ -140,5 +170,6 @@ export function ClientsList({
         );
       })}
     </div>
+    </>
   );
 }
