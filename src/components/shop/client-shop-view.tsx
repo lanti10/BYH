@@ -20,12 +20,14 @@ export function ClientShopView({
   trainerName,
   subtag,
   hasTrainer,
+  openProductId,
 }: {
   products: ShopProduct[];
   recommended: Record<string, string | null>; // productId -> nota del PT
   trainerName: string | null;
   subtag: string;
   hasTrainer: boolean;
+  openProductId?: string | null; // apre subito la scheda di questo prodotto
 }) {
   const { t, locale } = useT();
   const [query, setQuery] = useState("");
@@ -35,7 +37,9 @@ export function ClientShopView({
   );
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<0 | 1 | 2>(0); // 0=nessuno, 1=crescente, 2=decrescente
-  const [selected, setSelected] = useState<ShopProduct | null>(null);
+  const [selected, setSelected] = useState<ShopProduct | null>(
+    () => products.find((p) => p.id === openProductId) ?? null,
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

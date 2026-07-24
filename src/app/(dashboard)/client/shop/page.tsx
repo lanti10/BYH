@@ -3,7 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { ClientShopView } from "@/components/shop/client-shop-view";
 import type { ShopProduct } from "@/lib/products";
 
-export default async function Page() {
+// ?p=<productId> apre direttamente la scheda di quel prodotto (usato dal widget
+// "Consigliati dal trainer" in dashboard).
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ p?: string }>;
+}) {
+  const { p: openProductId } = await searchParams;
   const me = await getCurrentUser();
 
   const products = await prisma.product.findMany({
@@ -44,6 +51,7 @@ export default async function Page() {
       trainerName={trainerName}
       subtag={clientProfile ? `c${clientProfile.id}` : ""}
       hasTrainer={!!clientProfile}
+      openProductId={openProductId ?? null}
     />
   );
 }

@@ -327,7 +327,7 @@ export default async function ClientDashboard() {
                 {recommendations.map((rec) => (
                   <Link
                     key={rec.id}
-                    href={`/client/shop/${rec.product.id}`}
+                    href={`/client/shop?p=${rec.product.id}`}
                     className="flex items-center gap-3 rounded-2xl bg-white/70 p-3 hover:bg-white"
                   >
                     <div className="flex-1 min-w-0">
