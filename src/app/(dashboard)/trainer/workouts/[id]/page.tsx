@@ -32,7 +32,9 @@ export default async function WorkoutDetailPage({
       },
     }),
     prisma.clientProfile.findMany({
-      where: { trainerId: trainer.id },
+      // Esclude l'auto-cliente: il PT non deve comparire tra i clienti a cui
+      // assegnare una scheda (per la sua ha "Il mio allenamento")
+      where: { trainerId: trainer.id, userId: { not: user.id } },
       include: { user: true },
       orderBy: { createdAt: "desc" },
     }),
