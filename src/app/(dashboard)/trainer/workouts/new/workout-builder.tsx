@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWorkoutPlan, updateWorkoutPlan, type DayInput } from "../actions";
+import type { CreatePlanInput, CreatePlanResult } from "@/lib/workout-create";
 import { Plus, Trash2, ChevronUp, ChevronDown, AlertCircle, ArrowLeft, StickyNote } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { PlanTypePicker, typeUsesWeight, type PlanType } from "@/components/trainer/plan-type-picker";
@@ -64,6 +65,7 @@ export function WorkoutBuilder({
   onBack,
   hideClientSelect = false,
   redirectTo = "/trainer/workouts",
+  createAction,
 }: {
   clients: ClientOption[];
   planId?: string;
@@ -77,6 +79,9 @@ export function WorkoutBuilder({
   onBack?: () => void;
   hideClientSelect?: boolean; // nasconde il selettore cliente (es. scheda del PT per sé)
   redirectTo?: string; // dove tornare dopo il salvataggio
+  // Azione di creazione alternativa (es. il cliente che si crea la scheda da solo).
+  // Se assente si usa quella del trainer: i flussi esistenti restano identici.
+  createAction?: (input: CreatePlanInput) => Promise<CreatePlanResult>;
 }) {
   const router = useRouter();
   const { t } = useT();
@@ -197,7 +202,7 @@ export function WorkoutBuilder({
     };
     const res = isEdit
       ? await updateWorkoutPlan(planId!, payload)
-      : await createWorkoutPlan(payload);
+      : await (createAction ?? createWorkoutPlan)(payload);
     setSaving(false);
     if (res.ok) {
       router.push(redirectTo);

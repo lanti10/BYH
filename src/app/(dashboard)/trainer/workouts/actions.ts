@@ -4,98 +4,23 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-import type { PlanType } from "@prisma/client";
+import { buildWorkoutsCreate, computeDates } from "@/lib/workout-create";
 
-export type ExerciseInput = {
-  name: string;
-  sets: number;
-  reps: string;
-  weight?: number | null;
-  restSeconds: number;
-  notes?: string | null;
-};
+// Tipi e helper vivono in @/lib/workout-create, condivisi col cliente che si
+// crea la scheda da solo. Ri-esportati qui per non rompere gli import esistenti.
+export type {
+  ExerciseInput,
+  DayInput,
+  CreatePlanInput,
+  CreatePlanResult,
+} from "@/lib/workout-create";
 
-export type DayInput = {
-  name: string;
-  weekday?: number | null; // giorno della settimana fissato (1=Lun..7=Dom); null = non pianificato
-  durationMin?: number | null; // durata allenamento in minuti (impostata dal trainer); null = usa la stima
-  targetCalories?: number | null; // calorie da bruciare (impostate dal trainer); null = obiettivo di default
-  exercises: ExerciseInput[];
-};
-
-export type CreatePlanInput = {
-  clientId?: string | null; // null/vuoto = modello (nessun cliente)
-  name: string;
-  planType?: PlanType;
-  description?: string;
-  durationWeeks?: number | null;
-  startDate?: string | null; // ISO "yyyy-mm-dd"
-  days: DayInput[];
-};
-
-// Calcola inizio e fine dalla data di partenza + durata in settimane
-function computeDates(startDate?: string | null, durationWeeks?: number | null) {
-  const start = startDate ? new Date(startDate) : new Date();
-  const end =
-    durationWeeks && durationWeeks > 0
-      ? new Date(start.getTime() + durationWeeks * 7 * 24 * 60 * 60 * 1000)
-      : null;
-  return { start, end };
-}
-
-export type CreatePlanResult = { ok: boolean; error?: string; planId?: string };
+import type { CreatePlanInput, CreatePlanResult } from "@/lib/workout-create";
 
 async function getTrainer() {
   const user = await getCurrentUser();
   if (!user || user.role !== "TRAINER" || !user.trainerProfile) return null;
   return user.trainerProfile;
-}
-
-// Pulisce i giorni vuoti e mappa i nomi degli esercizi a id (find-or-create)
-async function buildWorkoutsCreate(days: DayInput[], trainerId: string, planType: PlanType) {
-  const validDays = days
-    .map((d) => ({ ...d, exercises: d.exercises.filter((e) => e.name.trim()) }))
-    .filter((d) => d.exercises.length > 0);
-
-  if (validDays.length === 0) return null;
-
-  // Categoria di default per gli esercizi appena creati, in base al tipo di scheda
-  const defaultCategory = planType === "SWIMMING" ? "CARDIO" : "STRENGTH";
-
-  const uniqueNames = [...new Set(validDays.flatMap((d) => d.exercises.map((e) => e.name.trim())))];
-  const exerciseIdByName = new Map<string, string>();
-  for (const name of uniqueNames) {
-    const existing = await prisma.exercise.findFirst({ where: { name } });
-    if (existing) {
-      exerciseIdByName.set(name, existing.id);
-    } else {
-      const created = await prisma.exercise.create({
-        data: { name, category: defaultCategory, isCustom: true, createdBy: trainerId },
-      });
-      exerciseIdByName.set(name, created.id);
-    }
-  }
-
-  return validDays.map((d, dayIndex) => ({
-    name: d.name.trim() || `Giorno ${dayIndex + 1}`,
-    dayOfWeek: dayIndex, // numero del giorno di allenamento (0-based)
-    scheduledWeekday: d.weekday != null && d.weekday >= 1 && d.weekday <= 7 ? d.weekday : null,
-    durationMin: d.durationMin != null && d.durationMin > 0 ? Math.round(d.durationMin) : null,
-    targetCalories: d.targetCalories != null && d.targetCalories > 0 ? Math.round(d.targetCalories) : null,
-    exercises: {
-      create: d.exercises.map((e, i) => ({
-        exerciseId: exerciseIdByName.get(e.name.trim())!,
-        sets: e.sets || 3,
-        reps: e.reps.trim() || "10",
-        // Il carico ha senso solo per le schede con pesi
-        weight:
-          planType === "WEIGHTS" && e.weight != null && !Number.isNaN(e.weight) ? e.weight : null,
-        restSeconds: e.restSeconds || 60,
-        notes: e.notes?.trim() || null,
-        order: i,
-      })),
-    },
-  }));
 }
 
 export async function createWorkoutPlan(input: CreatePlanInput): Promise<CreatePlanResult> {

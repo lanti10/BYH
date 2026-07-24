@@ -4,7 +4,8 @@ import { getT } from "@/lib/i18n/server";
 import { PlanDayTabs, type PlanDay } from "@/components/shared/plan-day-tabs";
 import { loadWeightHistory } from "@/lib/weight-history";
 import { getNextDayIndex, getScheduledTodayIndex } from "@/lib/workout";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Plus } from "lucide-react";
+import Link from "next/link";
 
 export default async function ClientWorkoutPage() {
   const user = await requireRole("CLIENT");
@@ -36,6 +37,12 @@ export default async function ClientWorkoutPage() {
           <p className="mt-1 text-sm text-slate-400">
             {t("myplan.noPlanSub")}
           </p>
+          <Link
+            href="/client/workout/new"
+            className="mt-5 inline-block rounded-full bg-brand px-6 py-3 text-sm font-medium text-white shadow-cta"
+          >
+            {t("own.cta")}
+          </Link>
         </div>
       </div>
     );
@@ -77,7 +84,16 @@ export default async function ClientWorkoutPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-900">{plan.name}</h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-2xl font-bold text-slate-900">{plan.name}</h1>
+        <Link
+          href="/client/workout/new"
+          className="mt-1 flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          {t("own.cta")}
+        </Link>
+      </div>
       <p className="text-slate-500 mt-1 mb-6 text-sm tnum">
         {plan.durationWeeks ? t("myplan.programWeeks", { n: plan.durationWeeks }) + " · " : ""}
         {t("myplan.todayIs", { n: nextIndex + 1 })}
