@@ -64,11 +64,12 @@ export type EarningsData = {
 
 const DEMO: EarningsData = {
   demo: true,
-  totalEarnings: 43.0, // somma dei mesi in trend (5,1+7,3+6,1+9,9+14,6)
+  totalEarnings: 27.6, // saldo totale = disponibile + in attesa (22,40 + 5,20)
   // DEMO impostato su INATTIVO per collaudare il caso "non attivo".
   // Rimetti active: true per tornare allo stato attivo (o usa il toggle in pagina).
   activity: { active: false, daysToRenew: 12, generatedCycle: 3.2, threshold: 5, withinFirst6Months: true },
-  balance: { month: 14.6, available: 9.4, pending: 5.2, vsPrevMonth: 3.1 },
+  // saldo totale (available + pending) = 27,60 · guadagno del mese = 14,60
+  balance: { month: 14.6, available: 22.4, pending: 5.2, vsPrevMonth: 3.1 },
   trend: [
     { label: "Mar", value: 0.35, total: 5.1, direct: 3.2, network: 1.9, clients: 4, sales: 6 },
     { label: "Apr", value: 0.5, total: 7.3, direct: 4.5, network: 2.8, clients: 6, sales: 10 },

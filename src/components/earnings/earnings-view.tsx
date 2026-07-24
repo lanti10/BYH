@@ -27,6 +27,7 @@ export function EarningsView({ data }: { data: EarningsData }) {
   const b = data.balance;
   const c = data.career;
   const active = data.demo ? previewActive : a.active;
+  const saldo = b.available + b.pending; // saldo totale = disponibile + in attesa
 
   const canWithdraw = active && data.payout.nextAvailableInDays === 0 && b.available > 0 && !withdrawn;
 
@@ -110,23 +111,62 @@ export function EarningsView({ data }: { data: EarningsData }) {
         </div>
       )}
 
-      {/* 1 · Saldo */}
-      <div className="mb-4 rounded-3xl bg-depth-dark p-5 text-white">
-        <p className="text-xs text-white/60">{t("earn.monthEarnings")}</p>
-        <p className="mb-3.5 mt-1 text-4xl font-semibold tracking-tight tnum">{eur(b.month)}</p>
-        <div className="flex gap-2.5">
-          <div className="flex-1 rounded-2xl bg-emerald-400/15 p-3">
-            <p className="flex items-center gap-1 text-[11px] text-emerald-300"><Check className="h-3 w-3" />{t("earn.available")}</p>
-            <p className="mt-0.5 text-lg font-medium tnum">{eur(b.available)}</p>
+      {/* 1 · Saldo — hero = saldo totale (available+pending), mese in secondario */}
+      {active ? (
+        <div className="mb-4 rounded-3xl bg-depth-dark p-5 text-white">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-white/60">{t("earn.balanceTotal")}</p>
+              <p className="mt-1 text-4xl font-semibold tracking-tight tnum">{eur(saldo)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-white/60">{t("earn.monthEarnings")}</p>
+              <p className="mt-1 text-lg font-medium tnum">{eur(b.month)}</p>
+            </div>
           </div>
-          <div className="flex-1 rounded-2xl bg-amber-400/15 p-3">
-            <p className="text-[11px] text-amber-300">{t("earn.pending")}</p>
-            <p className="mt-0.5 text-lg font-medium tnum">{eur(b.pending)}</p>
+          <div className="mt-4 flex gap-2.5">
+            <div className="flex-1 rounded-2xl bg-emerald-400/15 p-3">
+              <p className="flex items-center gap-1 text-[11px] text-emerald-300"><Check className="h-3 w-3" />{t("earn.available")}</p>
+              <p className="mt-0.5 text-lg font-medium tnum">{eur(b.available)}</p>
+            </div>
+            <div className="flex-1 rounded-2xl bg-amber-400/15 p-3">
+              <p className="text-[11px] text-amber-300">{t("earn.pending")}</p>
+              <p className="mt-0.5 text-lg font-medium tnum">{eur(b.pending)}</p>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mb-4 rounded-3xl bg-depth-dark p-5 text-white">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs text-white/60">{t("earn.balanceTotal")}</p>
+              <p className="mt-1 text-4xl font-semibold tracking-tight tnum text-white/50">{eur(saldo)}</p>
+            </div>
+            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/70">
+              <Lock className="h-3 w-3" />{t("earn.frozen")}
+            </span>
+          </div>
+          <p className="mt-3 rounded-2xl bg-white/5 px-3.5 py-3 text-[11px] leading-relaxed text-white/70">{t("earn.frozenNote")}</p>
+        </div>
+      )}
 
-      {/* 2 · Carriera */}
+      {/* 2 · Carriera — da inattivo il livello è in pausa (nessuna entrata dalla rete PT) */}
+      {!active ? (
+        <div className="mb-4 w-full rounded-3xl border border-slate-100 bg-white p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+              <Award className="h-6 w-6" />
+            </span>
+            <div className="flex-1">
+              <p className="text-[11px] text-slate-400">
+                {c.rankName}{c.stage != null ? ` · Stage ${c.stage}` : ""}
+              </p>
+              <p className="text-[17px] font-medium text-slate-900">{t("earn.levelPaused")}</p>
+            </div>
+          </div>
+          <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500">{t("earn.levelPausedNote")}</p>
+        </div>
+      ) : (
       <button onClick={() => setCareer(true)} className="mb-4 w-full rounded-3xl border border-slate-100 bg-white p-4 text-left">
         <div className="mb-3 flex items-center gap-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-700"><Award className="h-6 w-6" /></span>
@@ -155,6 +195,7 @@ export function EarningsView({ data }: { data: EarningsData }) {
           <p className="mt-2 text-[11px] text-slate-500">{t("earn.depthHint", { n: c.depthUnlocked })}</p>
         </div>
       </button>
+      )}
 
       {/* 3 · Andamento — cliccabile → statistiche mensili */}
       {data.trend.length > 0 && (
@@ -235,7 +276,9 @@ export function EarningsView({ data }: { data: EarningsData }) {
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Wallet className="h-5 w-5" /></span>
           <div className="flex-1">
             <p className="text-[11px] text-slate-400">{t("earn.withdrawAvailable")}</p>
-            <p className="text-xl font-semibold text-slate-900 tnum">{eur(b.available)}</p>
+            <p className={`text-xl font-semibold tnum ${active ? "text-slate-900" : "text-slate-400"}`}>
+              {active ? eur(b.available) : t("earn.frozen")}
+            </p>
           </div>
         </div>
         <button
