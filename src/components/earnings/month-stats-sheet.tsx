@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserCheck, Network, Package, ShoppingCart } from "lucide-react";
+import { UserCheck, Network, Users, ShoppingCart } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import { formatPrice } from "@/lib/products";
@@ -45,9 +45,9 @@ export function MonthStatsSheet({ months, onClose }: { months: Month[]; onClose:
       {/* Dettaglio */}
       <div className="grid grid-cols-2 gap-2.5">
         <Stat icon={<UserCheck className="h-4 w-4" />} tint="bg-brand/10 text-brand" label={t("earn.mDirect")} value={eur(m.direct)} />
-        <Stat icon={<Network className="h-4 w-4" />} tint="bg-indigo-50 text-indigo-600" label={t("earn.mNetwork")} value={eur(m.network)} />
-        <Stat icon={<Package className="h-4 w-4" />} tint="bg-emerald-50 text-emerald-600" label={t("earn.mProducts")} value={String(m.products)} />
-        <Stat icon={<ShoppingCart className="h-4 w-4" />} tint="bg-amber-50 text-amber-600" label={t("earn.mSales")} value={String(m.sales)} />
+        <Stat icon={<Network className="h-4 w-4" />} tint="bg-indigo-500/10 text-indigo-500" label={t("earn.mNetwork")} value={eur(m.network)} />
+        <Stat icon={<Users className="h-4 w-4" />} tint="bg-emerald-500/10 text-emerald-600" label={t("earn.mClients")} value={String(m.clients)} />
+        <Stat icon={<ShoppingCart className="h-4 w-4" />} tint="bg-amber-500/10 text-amber-600" label={t("earn.mSales")} value={String(m.sales)} />
       </div>
     </BottomSheet>
   );
