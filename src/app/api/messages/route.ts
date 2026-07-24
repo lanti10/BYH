@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { sendPushToUser } from "@/lib/push";
+import { buildAmazonLink } from "@/lib/products";
 
 type Me = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
@@ -42,6 +43,7 @@ export async function GET(req: Request) {
     },
     orderBy: { createdAt: "asc" },
     take: 300,
+    include: { recommendation: { include: { product: true } } },
   });
 
   // Segna come letti i messaggi ricevuti
@@ -52,12 +54,29 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     meId: me.id,
-    messages: messages.map((m) => ({
-      id: m.id,
-      senderId: m.senderId,
-      content: m.content,
-      createdAt: m.createdAt,
-    })),
+    messages: messages.map((m) => {
+      const rec = m.recommendation;
+      // Il link d'acquisto porta il subtag del CLIENTE destinatario, così la
+      // vendita è attribuita al suo PT (e alla rete) a prescindere da chi guarda.
+      const product = rec?.product
+        ? {
+            name: rec.product.name,
+            imageUrl: rec.product.imageUrl,
+            category: rec.product.category,
+            price: rec.product.salePrice,
+            note: rec.trainerNote,
+            buyUrl: buildAmazonLink(rec.product.amazonUrl, `c${rec.clientId}`),
+          }
+        : null;
+      return {
+        id: m.id,
+        senderId: m.senderId,
+        content: m.content,
+        createdAt: m.createdAt,
+        type: m.type,
+        product,
+      };
+    }),
   });
 }
 

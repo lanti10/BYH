@@ -101,6 +101,7 @@ model TrainerProfile {
   clients         ClientProfile[]
   workoutPlans    WorkoutPlan[]
   recommendations ProductRecommendation[]
+  productPicks    TrainerProductPick[]
   earnings        TrainerEarning[]
 
   createdAt DateTime @default(now())
@@ -308,6 +309,10 @@ model Product {
   category    String
   ingredients String?
 
+  // Amazon affiliate: link deep del prodotto (con tag affiliato BYH).
+  // Il prezzo mostrato è salePrice, sincronizzato da Amazon.
+  amazonUrl String?
+
   // Pricing
   costPrice  Float // from white-label supplier
   salePrice  Float // shown to client
@@ -318,9 +323,26 @@ model Product {
 
   recommendations ProductRecommendation[]
   orderItems      OrderItem[]
+  trainerPicks    TrainerProductPick[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Lista "consigliati" curata dal PT: i prodotti che sceglie dal catalogo
+// e che i suoi clienti vedono nel segmento "Consigliati dal tuo PT".
+// Diverso da ProductRecommendation (che è la condivisione mirata a un cliente).
+model TrainerProductPick {
+  id        String         @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([trainerId, productId])
 }
 
 model ProductRecommendation {
