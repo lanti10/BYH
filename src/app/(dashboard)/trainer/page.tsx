@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, MessageCircle, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
+import { UserMinus, Dumbbell, ClipboardList, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
@@ -13,21 +13,31 @@ export default async function TrainerDashboard() {
   const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
-  const [clients, recentMessages, earnings] = await Promise.all([
+  // Inizio della settimana corrente (lunedì), per il conteggio degli allenamenti
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+  weekStart.setHours(0, 0, 0, 0);
+
+  // Un cliente è "fermo" se non si allena da almeno 7 giorni
+  const idleSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  // I clienti del trainer, sempre senza l'auto-cliente (la sua scheda personale)
+  const clientScope = { trainerId: trainer.id, userId: { not: user.id } };
+
+  const [clients, weekSessions, noPlanCount, earnings] = await Promise.all([
     prisma.clientProfile.findMany({
-      // Esclude l'auto-cliente del PT (la sua scheda personale)
-      where: { trainerId: trainer.id, userId: { not: user.id } },
+      where: clientScope,
       include: {
         user: true,
         progressLogs: { orderBy: { date: "desc" }, take: 1 },
         sessions: { orderBy: { completedAt: "desc" }, take: 1 },
       },
     }),
-    prisma.message.findMany({
-      where: { receiverId: user.id, readAt: null },
-      include: { sender: true },
-      orderBy: { createdAt: "desc" },
-      take: 5,
+    prisma.workoutSession.count({
+      where: { client: clientScope, completedAt: { gte: weekStart } },
+    }),
+    prisma.clientProfile.count({
+      where: { ...clientScope, workoutPlans: { none: { isActive: true } } },
     }),
     prisma.trainerEarning.aggregate({
       where: { trainerId: trainer.id },
@@ -36,6 +46,13 @@ export default async function TrainerDashboard() {
   ]);
 
   const totalEarnings = earnings._sum.amount ?? 0;
+
+  // Fermi = ultima sessione più vecchia di 7 giorni. Chi non si è mai allenato
+  // conta solo se è iscritto da più di 7 giorni, così i nuovi non risultano fermi.
+  const idleClients = clients.filter((c) => {
+    const last = c.sessions[0]?.completedAt;
+    return last ? last < idleSince : c.createdAt < idleSince;
+  }).length;
 
   // La dashboard è un colpo d'occhio: solo i clienti con l'attività più recente.
   // L'elenco completo (con ricerca e non letti) è la pagina Clienti, dietro "Vedi tutti".
@@ -47,8 +64,9 @@ export default async function TrainerDashboard() {
     .slice(0, 3);
 
   const stats = [
-    { label: t("tr.activeClients"), value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
-    { label: t("tr.unread"), value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
+    { label: t("tr.idleClients"), value: idleClients, icon: UserMinus, tint: "bg-amber-500/10 text-amber-600" },
+    { label: t("tr.weekSessions"), value: weekSessions, icon: Dumbbell, tint: "bg-emerald-500/10 text-emerald-600" },
+    { label: t("tr.noPlan"), value: noPlanCount, icon: ClipboardList, tint: "bg-blue-500/10 text-blue-600" },
     { label: t("tr.earnings"), value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand" },
   ];
 
