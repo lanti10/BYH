@@ -17,10 +17,10 @@ export function ShareProductSheet({
   product: ShopProduct;
   clients: ShareClient[];
   onClose: () => void;
-  onShared: () => void;
+  onShared: (sent: number) => void;
 }) {
   const { t } = useT();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -31,12 +31,26 @@ export function ShareProductSheet({
     };
   }, []);
 
+  function toggle(userId: string) {
+    setSelected((cur) => {
+      const next = new Set(cur);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }
+
+  // Comodo quando il consiglio vale per tutti
+  function toggleAll() {
+    setSelected((cur) => (cur.size === clients.length ? new Set() : new Set(clients.map((c) => c.userId))));
+  }
+
   async function submit() {
-    if (!selected || sending) return;
+    if (selected.size === 0 || sending) return;
     setSending(true);
     try {
-      await shareProductInChat(product.id, selected, note);
-      onShared();
+      const res = await shareProductInChat(product.id, [...selected], note);
+      onShared(res.sent);
     } catch {
       setSending(false);
     }
@@ -57,19 +71,28 @@ export function ShareProductSheet({
         </button>
 
         <h2 className="text-base font-semibold text-slate-900">{t("shop.shareTitle", { name: product.name })}</h2>
-        <p className="mb-3 mt-0.5 text-xs text-slate-500">{t("shop.shareSub")}</p>
+        <p className="mb-3 mt-0.5 text-xs text-slate-500">{t("shop.shareSubMulti")}</p>
 
         {clients.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-400">{t("shop.shareNoClients")}</p>
         ) : (
           <>
+            <div className="mb-2 flex items-center justify-between px-1">
+              <span className="text-[11px] text-slate-400">
+                {selected.size > 0 ? t("shop.selectedN", { n: selected.size }) : t("shop.shareSub")}
+              </span>
+              <button onClick={toggleAll} className="text-[11px] font-medium text-brand">
+                {selected.size === clients.length ? t("shop.selectNone") : t("shop.selectAll")}
+              </button>
+            </div>
+
             <div className="mb-3 max-h-56 space-y-1.5 overflow-y-auto">
               {clients.map((c) => {
-                const active = selected === c.userId;
+                const active = selected.has(c.userId);
                 return (
                   <button
                     key={c.userId}
-                    onClick={() => setSelected(c.userId)}
+                    onClick={() => toggle(c.userId)}
                     className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors ${
                       active ? "bg-brand/5" : "bg-slate-50"
                     }`}
@@ -99,11 +122,15 @@ export function ShareProductSheet({
 
             <button
               onClick={submit}
-              disabled={!selected || sending}
+              disabled={selected.size === 0 || sending}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3.5 text-[15px] font-medium text-white shadow-cta transition-colors hover:bg-brand-hover disabled:opacity-40"
             >
               <Send className="h-4 w-4" />
-              {sending ? t("shop.sharing") : t("shop.shareCta")}
+              {sending
+                ? t("shop.sharing")
+                : selected.size > 1
+                  ? t("shop.shareCtaN", { n: selected.size })
+                  : t("shop.shareCta")}
             </button>
           </>
         )}

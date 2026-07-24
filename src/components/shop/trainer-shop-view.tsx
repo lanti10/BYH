@@ -198,9 +198,9 @@ export function TrainerShopView({
           product={share}
           clients={clients}
           onClose={() => setShare(null)}
-          onShared={() => {
+          onShared={(sent) => {
             setShare(null);
-            setToast(t("shop.shared"));
+            setToast(sent > 1 ? t("shop.sharedN", { n: sent }) : t("shop.shared"));
             setTimeout(() => setToast(null), 2500);
           }}
         />

@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, MessageCircle, ShoppingBag, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
+import { Users, MessageCircle, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
@@ -13,7 +13,7 @@ export default async function TrainerDashboard() {
   const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
-  const [clients, recentMessages, pendingRecs, earnings] = await Promise.all([
+  const [clients, recentMessages, earnings] = await Promise.all([
     prisma.clientProfile.findMany({
       // Esclude l'auto-cliente del PT (la sua scheda personale)
       where: { trainerId: trainer.id, userId: { not: user.id } },
@@ -27,11 +27,6 @@ export default async function TrainerDashboard() {
       where: { receiverId: user.id, readAt: null },
       include: { sender: true },
       orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.productRecommendation.findMany({
-      where: { trainerId: trainer.id, approvedAt: null, dismissedAt: null },
-      include: { product: true, client: { include: { user: true } } },
       take: 5,
     }),
     prisma.trainerEarning.aggregate({
@@ -54,7 +49,6 @@ export default async function TrainerDashboard() {
   const stats = [
     { label: t("tr.activeClients"), value: clients.length, icon: Users, tint: "bg-emerald-500/10 text-emerald-600" },
     { label: t("tr.unread"), value: recentMessages.length, icon: MessageCircle, tint: "bg-blue-500/10 text-blue-600" },
-    { label: t("tr.toValidate"), value: pendingRecs.length, icon: ShoppingBag, tint: "bg-amber-500/10 text-amber-600" },
     { label: t("tr.earnings"), value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand" },
   ];
 
@@ -148,41 +142,6 @@ export default async function TrainerDashboard() {
                   </Link>
                 );
               })
-            )}
-          </div>
-        </div>
-
-        {/* Pending recommendations */}
-        <div className="rounded-3xl glass p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-900">{t("tr.recs")}</h2>
-            <Link href="/trainer/products" className="text-sm font-medium text-brand hover:underline">
-              {t("tr.seeAll")}
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {pendingRecs.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-8">
-                {t("tr.noRecs")}
-              </p>
-            ) : (
-              pendingRecs.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 border border-amber-100"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{rec.product.name}</p>
-                    <p className="text-xs text-slate-500">per {rec.client.user.name}</p>
-                  </div>
-                  <Link
-                    href={`/trainer/products/recommendations/${rec.id}`}
-                    className="text-xs font-semibold text-amber-700 hover:underline shrink-0"
-                  >
-                    {t("tr.validate")} →
-                  </Link>
-                </div>
-              ))
             )}
           </div>
         </div>

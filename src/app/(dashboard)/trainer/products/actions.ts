@@ -27,59 +27,64 @@ export async function togglePick(productId: string): Promise<{ picked: boolean }
   return { picked: true };
 }
 
-// Condivide un prodotto in chat privata con un cliente, con una nota personale.
-// Crea la raccomandazione (per l'attribuzione) + un messaggio di tipo prodotto.
+// Condivide un prodotto in chat privata con uno o più clienti, con la stessa
+// nota personale. Per ciascuno crea la raccomandazione (per l'attribuzione)
+// + un messaggio di tipo prodotto.
 export async function shareProductInChat(
   productId: string,
-  clientUserId: string,
+  clientUserIds: string[],
   note: string,
-): Promise<{ ok: true }> {
+): Promise<{ ok: boolean; sent: number }> {
   const me = await getCurrentUser();
   if (!me?.trainerProfile) throw new Error("Forbidden");
+  if (clientUserIds.length === 0) return { ok: false, sent: 0 };
 
-  // Verifica che sia davvero un cliente di questo PT
-  const client = await prisma.clientProfile.findFirst({
-    where: { userId: clientUserId, trainerId: me.trainerProfile.id },
+  // Tiene solo quelli che sono davvero clienti di questo PT
+  const clients = await prisma.clientProfile.findMany({
+    where: { userId: { in: clientUserIds }, trainerId: me.trainerProfile.id },
+    select: { id: true, userId: true },
   });
-  if (!client) throw new Error("Forbidden");
+  if (clients.length === 0) throw new Error("Forbidden");
 
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) throw new Error("Not found");
 
   const trimmed = note.trim();
 
-  const recommendation = await prisma.productRecommendation.create({
-    data: {
-      trainerId: me.trainerProfile.id,
-      clientId: client.id,
-      productId,
-      trainerNote: trimmed || null,
-      approvedAt: new Date(),
-    },
-  });
-
-  await prisma.message.create({
-    data: {
-      senderId: me.id,
-      receiverId: clientUserId,
-      type: "PRODUCT_RECOMMENDATION",
-      content: trimmed || product.name,
-      recommendationId: recommendation.id,
-    },
-  });
-
-  // Push best-effort (non deve mai far fallire la condivisione)
-  try {
-    await sendPushToUser(clientUserId, {
-      title: me.name || "BYH",
-      body: `${product.name}${trimmed ? ` — ${trimmed}` : ""}`,
-      icon: me.avatarUrl || "/icon-192.png",
-      url: "/client/messages",
-      tag: `chat-${me.id}`,
+  for (const client of clients) {
+    const recommendation = await prisma.productRecommendation.create({
+      data: {
+        trainerId: me.trainerProfile.id,
+        clientId: client.id,
+        productId,
+        trainerNote: trimmed || null,
+        approvedAt: new Date(),
+      },
     });
-  } catch {
-    /* best-effort */
+
+    await prisma.message.create({
+      data: {
+        senderId: me.id,
+        receiverId: client.userId,
+        type: "PRODUCT_RECOMMENDATION",
+        content: trimmed || product.name,
+        recommendationId: recommendation.id,
+      },
+    });
+
+    // Push best-effort (non deve mai far fallire la condivisione)
+    try {
+      await sendPushToUser(client.userId, {
+        title: me.name || "BYH",
+        body: `${product.name}${trimmed ? ` — ${trimmed}` : ""}`,
+        icon: me.avatarUrl || "/icon-192.png",
+        url: "/client/messages",
+        tag: `chat-${me.id}`,
+      });
+    } catch {
+      /* best-effort */
+    }
   }
 
-  return { ok: true };
+  return { ok: true, sent: clients.length };
 }
