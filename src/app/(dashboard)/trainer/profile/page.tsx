@@ -9,7 +9,10 @@ export default async function TrainerProfilePage() {
   const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
-  const clientCount = await prisma.clientProfile.count({ where: { trainerId: trainer.id } });
+  // Esclude l'auto-cliente del PT (è cliente di sé stesso per la sua scheda personale)
+  const clientCount = await prisma.clientProfile.count({
+    where: { trainerId: trainer.id, userId: { not: user.id } },
+  });
   const memberSince = user.createdAt.toLocaleDateString(DATE_LOCALE[locale], {
     day: "numeric",
     month: "long",

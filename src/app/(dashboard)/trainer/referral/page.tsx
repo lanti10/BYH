@@ -13,7 +13,9 @@ export default async function ReferralPage() {
   const code = await ensureFriendlyReferralCode(trainer.id, trainer.referralCode);
 
   const [clientCount, trainerReferrals] = await Promise.all([
-    prisma.clientProfile.count({ where: { trainerId: trainer.id } }),
+    // Esclude l'auto-cliente del PT (è cliente di sé stesso per la sua scheda
+    // personale): non è un cliente collegato e non va conteggiato.
+    prisma.clientProfile.count({ where: { trainerId: trainer.id, userId: { not: user.id } } }),
     prisma.trainerProfile.count({ where: { referredById: trainer.id } }),
   ]);
 
