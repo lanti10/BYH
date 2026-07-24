@@ -27,6 +27,7 @@ export type LadderRank = {
 
 export type EarningsData = {
   demo: boolean;
+  totalEarnings: number; // guadagno totale di sempre (tessera "Guadagni totali" in dashboard)
   activity: {
     active: boolean;
     daysToRenew: number;
@@ -63,6 +64,7 @@ export type EarningsData = {
 
 const DEMO: EarningsData = {
   demo: true,
+  totalEarnings: 43.0, // somma dei mesi in trend (5,1+7,3+6,1+9,9+14,6)
   activity: { active: true, daysToRenew: 12, generatedCycle: 3.2, threshold: 5, withinFirst6Months: true },
   balance: { month: 14.6, available: 9.4, pending: 5.2, vsPrevMonth: 3.1 },
   trend: [
@@ -145,6 +147,7 @@ const DEMO: EarningsData = {
 
 const EMPTY: EarningsData = {
   demo: false,
+  totalEarnings: 0,
   activity: { active: false, daysToRenew: 30, generatedCycle: 0, threshold: 5, withinFirst6Months: true },
   balance: { month: 0, available: 0, pending: 0, vsPrevMonth: 0 },
   trend: [],

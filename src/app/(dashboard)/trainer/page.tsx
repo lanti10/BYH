@@ -7,6 +7,9 @@ import { DashboardStats, type MiniClient } from "@/components/trainer/dashboard-
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
+import { DATE_LOCALE } from "@/lib/i18n/dict";
+import { formatPrice } from "@/lib/products";
+import { getEarningsData } from "@/lib/earnings-demo";
 import { InstallPrompt } from "@/components/shared/install-prompt";
 
 export default async function TrainerDashboard() {
@@ -20,7 +23,7 @@ export default async function TrainerDashboard() {
   // I clienti del trainer, sempre senza l'auto-cliente (la sua scheda personale)
   const clientScope = { trainerId: trainer.id, userId: { not: user.id } };
 
-  const [clients, pickedProducts, earnings] = await Promise.all([
+  const [clients, pickedProducts] = await Promise.all([
     prisma.clientProfile.findMany({
       where: clientScope,
       include: {
@@ -31,13 +34,11 @@ export default async function TrainerDashboard() {
       },
     }),
     prisma.trainerProductPick.count({ where: { trainerId: trainer.id } }),
-    prisma.trainerEarning.aggregate({
-      where: { trainerId: trainer.id },
-      _sum: { amount: true },
-    }),
   ]);
 
-  const totalEarnings = earnings._sum.amount ?? 0;
+  // Guadagno totale dalla STESSA sorgente della pagina Guadagni (oggi dati demo,
+  // vedi src/lib/earnings-demo.ts) → la tessera resta sincronizzata con la pagina.
+  const totalEarnings = getEarningsData().totalEarnings;
 
   const nameOf = (c: (typeof clients)[number]) => c.user.name || c.user.email;
   const since = (d: Date) => formatDistanceToNow(d, { addSuffix: true, locale: dateFnsLocale(locale) });
@@ -114,7 +115,7 @@ export default async function TrainerDashboard() {
         idle={idleList}
         noPlan={noPlanList}
         pickedProducts={pickedProducts}
-        earnings={`€${totalEarnings.toFixed(2)}`}
+        earnings={formatPrice(totalEarnings, DATE_LOCALE[locale])}
       />
 
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
