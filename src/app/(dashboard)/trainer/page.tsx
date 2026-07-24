@@ -2,7 +2,8 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserMinus, ShoppingBag, ClipboardList, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
+import { UserPlus, ChevronRight } from "lucide-react";
+import { DashboardStats, type MiniClient } from "@/components/trainer/dashboard-stats";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
@@ -19,19 +20,17 @@ export default async function TrainerDashboard() {
   // I clienti del trainer, sempre senza l'auto-cliente (la sua scheda personale)
   const clientScope = { trainerId: trainer.id, userId: { not: user.id } };
 
-  const [clients, pickedProducts, noPlanCount, earnings] = await Promise.all([
+  const [clients, pickedProducts, earnings] = await Promise.all([
     prisma.clientProfile.findMany({
       where: clientScope,
       include: {
         user: true,
         progressLogs: { orderBy: { date: "desc" }, take: 1 },
         sessions: { orderBy: { completedAt: "desc" }, take: 1 },
+        workoutPlans: { where: { isActive: true }, take: 1, select: { id: true } },
       },
     }),
     prisma.trainerProductPick.count({ where: { trainerId: trainer.id } }),
-    prisma.clientProfile.count({
-      where: { ...clientScope, workoutPlans: { none: { isActive: true } } },
-    }),
     prisma.trainerEarning.aggregate({
       where: { trainerId: trainer.id },
       _sum: { amount: true },
@@ -40,12 +39,33 @@ export default async function TrainerDashboard() {
 
   const totalEarnings = earnings._sum.amount ?? 0;
 
+  const nameOf = (c: (typeof clients)[number]) => c.user.name || c.user.email;
+  const since = (d: Date) => formatDistanceToNow(d, { addSuffix: true, locale: dateFnsLocale(locale) });
+
   // Fermi = ultima sessione più vecchia di 7 giorni. Chi non si è mai allenato
   // conta solo se è iscritto da più di 7 giorni, così i nuovi non risultano fermi.
-  const idleClients = clients.filter((c) => {
-    const last = c.sessions[0]?.completedAt;
-    return last ? last < idleSince : c.createdAt < idleSince;
-  }).length;
+  const idleList: MiniClient[] = clients
+    .filter((c) => {
+      const last = c.sessions[0]?.completedAt;
+      return last ? last < idleSince : c.createdAt < idleSince;
+    })
+    .map((c) => ({
+      id: c.id,
+      name: nameOf(c),
+      avatarUrl: c.user.avatarUrl,
+      subtitle: c.sessions[0]
+        ? t("cl.lastSession", { time: since(c.sessions[0].completedAt) })
+        : t("cl.noSession"),
+    }));
+
+  const noPlanList: MiniClient[] = clients
+    .filter((c) => c.workoutPlans.length === 0)
+    .map((c) => ({
+      id: c.id,
+      name: nameOf(c),
+      avatarUrl: c.user.avatarUrl,
+      subtitle: t("dash.noPlan"),
+    }));
 
   // La dashboard è un colpo d'occhio: solo i clienti con l'attività più recente.
   // L'elenco completo (con ricerca e non letti) è la pagina Clienti, dietro "Vedi tutti".
@@ -56,13 +76,6 @@ export default async function TrainerDashboard() {
     )
     .slice(0, 3);
 
-  // Ogni tessera porta dove si agisce: le due sui clienti aprono la lista già filtrata.
-  const stats = [
-    { label: t("tr.idleClients"), value: idleClients, icon: UserMinus, tint: "bg-amber-500/10 text-amber-600", href: "/trainer/clients?f=idle" },
-    { label: t("tr.pickedProducts"), value: pickedProducts, icon: ShoppingBag, tint: "bg-emerald-500/10 text-emerald-600", href: "/trainer/products" },
-    { label: t("tr.noPlan"), value: noPlanCount, icon: ClipboardList, tint: "bg-blue-500/10 text-blue-600", href: "/trainer/clients?f=noplan" },
-    { label: t("tr.earnings"), value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand", href: "/trainer/earnings" },
-  ];
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -97,17 +110,12 @@ export default async function TrainerDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map(({ label, value, icon: Icon, tint, href }) => (
-          <Link key={label} href={href} className="rounded-2xl glass p-4 sm:p-5 transition-transform active:scale-[0.98]">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tint} mb-3`}>
-              <Icon className="h-5 w-5" />
-            </div>
-            <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-none">{value}</p>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{label}</p>
-          </Link>
-        ))}
-      </div>
+      <DashboardStats
+        idle={idleList}
+        noPlan={noPlanList}
+        pickedProducts={pickedProducts}
+        earnings={`€${totalEarnings.toFixed(2)}`}
+      />
 
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Client list */}
