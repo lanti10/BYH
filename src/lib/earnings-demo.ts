@@ -35,7 +35,8 @@ export type EarningsData = {
     withinFirst6Months: boolean;
   };
   balance: { month: number; available: number; pending: number; vsPrevMonth: number };
-  trend: { label: string; value: number }[]; // 0..1 (altezza barra) per mese
+  // Statistiche per mese (l'ultimo = mese corrente). value = altezza barra 0..1
+  trend: { label: string; value: number; total: number; direct: number; network: number; products: number; sales: number }[];
   origin: {
     direct: { amount: number; products: number; clients: number };
     network: {
@@ -64,11 +65,11 @@ const DEMO: EarningsData = {
   activity: { active: true, daysToRenew: 12, generatedCycle: 3.2, threshold: 5, withinFirst6Months: true },
   balance: { month: 14.6, available: 9.4, pending: 5.2, vsPrevMonth: 3.1 },
   trend: [
-    { label: "Mar", value: 0.35 },
-    { label: "Apr", value: 0.5 },
-    { label: "Mag", value: 0.42 },
-    { label: "Giu", value: 0.68 },
-    { label: "Lug", value: 1 },
+    { label: "Mar", value: 0.35, total: 5.1, direct: 3.2, network: 1.9, products: 6, sales: 6 },
+    { label: "Apr", value: 0.5, total: 7.3, direct: 4.5, network: 2.8, products: 9, sales: 10 },
+    { label: "Mag", value: 0.42, total: 6.1, direct: 3.9, network: 2.2, products: 8, sales: 9 },
+    { label: "Giu", value: 0.68, total: 9.9, direct: 6.1, network: 3.8, products: 12, sales: 14 },
+    { label: "Lug", value: 1, total: 14.6, direct: 8.4, network: 6.2, products: 14, sales: 17 },
   ],
   origin: {
     direct: { amount: 8.4, products: 14, clients: 6 },
@@ -113,7 +114,7 @@ const DEMO: EarningsData = {
     { name: "Creatina Monoidrata 500g", qty: 4, amount: 0.8 },
     { name: "Foam Roller in EVA", qty: 3, amount: 0.72 },
   ],
-  payout: { nextAmount: 9.4, nextAvailableInDays: 4 },
+  payout: { nextAmount: 9.4, nextAvailableInDays: 0 },
   movements: [
     {
       id: "m1", kind: "direct", title: "Proteine Whey Isolate 1kg", subtitle: "Giulia Rossi",
