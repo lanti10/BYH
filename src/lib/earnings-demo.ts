@@ -177,9 +177,10 @@ const EMPTY: EarningsData = {
   movements: [],
 };
 
-// Cambia in `return EMPTY;` per azzerare l'area Guadagni dopo il collaudo.
+// AZZERATO dopo il collaudo: tutto a zero (profilo inattivo, nessun movimento).
+// Per rivedere la demo popolata: `return DEMO;`.
 export function getEarningsData(): EarningsData {
-  return DEMO;
+  return EMPTY;
 }
 
 export { EMPTY };
