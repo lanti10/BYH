@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Send, ExternalLink, ImageIcon } from "lucide-react";
+import Link from "next/link";
+import { Send, ExternalLink, ImageIcon, ClipboardCheck, ChevronRight } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import { CATEGORY_KEYS, formatPrice } from "@/lib/products";
@@ -15,6 +16,8 @@ type ChatProduct = {
   buyUrl: string;
 };
 
+type PlanApproval = { name: string; pending: boolean; url: string | null };
+
 type Msg = {
   id: string;
   senderId: string;
@@ -22,6 +25,7 @@ type Msg = {
   createdAt: string;
   type?: string;
   product?: ChatProduct | null;
+  planApproval?: PlanApproval | null;
 };
 
 export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
@@ -88,6 +92,43 @@ export function Chat({ meId, otherId }: { meId: string; otherId: string }) {
         )}
         {messages.map((m) => {
           const mine = m.senderId === meId;
+
+          // Scheda creata dal cliente: card cliccabile che porta il trainer
+          // alla pagina dove la approva.
+          if (m.type === "PLAN_APPROVAL" && m.planApproval) {
+            const pa = m.planApproval;
+            const Inner = (
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                  <ClipboardCheck className="h-5 w-5 text-amber-700" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-amber-900">
+                    {pa.pending ? t("appr.chatTitle") : t("appr.chatDone")}
+                  </p>
+                  <p className="truncate text-xs text-amber-700">{pa.name}</p>
+                </div>
+                {pa.url && pa.pending && <ChevronRight className="h-4 w-4 shrink-0 text-amber-700" />}
+              </div>
+            );
+            return (
+              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div className="max-w-[82%] rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                  {pa.url && pa.pending ? (
+                    <Link href={pa.url}>{Inner}</Link>
+                  ) : (
+                    Inner
+                  )}
+                  <p className="mt-1 text-right text-[10px] text-amber-600">
+                    {new Date(m.createdAt).toLocaleTimeString(DATE_LOCALE[locale], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            );
+          }
 
           // Messaggio-prodotto condiviso dal PT: card con nota e acquisto su Amazon
           if (m.type === "PRODUCT_RECOMMENDATION" && m.product) {

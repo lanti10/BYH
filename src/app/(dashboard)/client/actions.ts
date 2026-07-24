@@ -3,6 +3,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendPushToUser } from "@/lib/push";
 import { buildWorkoutsCreate, computeDates } from "@/lib/workout-create";
 import type { CreatePlanInput, CreatePlanResult } from "@/lib/workout-create";
 
@@ -40,11 +41,21 @@ export async function createOwnWorkoutPlan(input: CreatePlanInput): Promise<Crea
   const workoutsCreate = await buildWorkoutsCreate(input.days, trainerId, planType);
   if (!workoutsCreate) return { ok: false, error: "Aggiungi almeno un giorno con un esercizio." };
 
-  // Una sola scheda attiva alla volta, come per le schede assegnate dal trainer
-  await prisma.workoutPlan.updateMany({
+  // La scheda del trainer NON va scavalcata: se ce n'è una attiva assegnata da lui,
+  // la nuova resta in attesa di approvazione. Se non c'è (o l'attiva se l'era fatta
+  // il cliente stesso) parte subito attiva.
+  const active = await prisma.workoutPlan.findFirst({
     where: { clientId, isActive: true },
-    data: { isActive: false },
+    select: { id: true, createdByClient: true },
   });
+  const needsApproval = !!active && !active.createdByClient;
+
+  if (!needsApproval && active) {
+    await prisma.workoutPlan.updateMany({
+      where: { clientId, isActive: true },
+      data: { isActive: false },
+    });
+  }
 
   const { start, end } = computeDates(input.startDate, input.durationWeeks);
 
@@ -53,7 +64,9 @@ export async function createOwnWorkoutPlan(input: CreatePlanInput): Promise<Crea
       trainerId,
       clientId,
       isTemplate: false,
-      isActive: true,
+      isActive: !needsApproval,
+      createdByClient: true,
+      pendingApproval: needsApproval,
       name: input.name.trim(),
       planType,
       description: input.description?.trim() || null,
@@ -63,6 +76,37 @@ export async function createOwnWorkoutPlan(input: CreatePlanInput): Promise<Crea
       workouts: { create: workoutsCreate },
     },
   });
+
+  // Avvisa il trainer: messaggio in chat che porta alla pagina di approvazione
+  if (needsApproval) {
+    const trainer = await prisma.trainerProfile.findUnique({
+      where: { id: trainerId },
+      select: { userId: true },
+    });
+    if (trainer) {
+      await prisma.message.create({
+        data: {
+          senderId: user.id,
+          receiverId: trainer.userId,
+          type: "PLAN_APPROVAL",
+          content: plan.name,
+          planId: plan.id,
+        },
+      });
+      try {
+        await sendPushToUser(trainer.userId, {
+          title: user.name || "BYH",
+          body: `Ha creato una scheda da approvare: ${plan.name}`,
+          icon: user.avatarUrl || "/icon-192.png",
+          url: `/trainer/clients/${clientId}`,
+          tag: `plan-approval-${plan.id}`,
+        });
+      } catch {
+        /* la push è best-effort */
+      }
+    }
+    revalidatePath(`/trainer/clients/${clientId}`);
+  }
 
   revalidatePath("/client");
   revalidatePath("/client/workout");

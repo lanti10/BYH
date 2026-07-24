@@ -233,3 +233,53 @@ export async function assignTemplateToClient(
   revalidatePath(`/trainer/clients/${clientId}`);
   return { ok: true, planId: newPlan.id };
 }
+
+// ─── Approvazione delle schede create dal cliente ────────────────────────────
+// Il cliente può crearsi una scheda, ma non scavalca quella del trainer:
+// resta in attesa finché il trainer non la approva da qui.
+
+export async function approveClientPlan(planId: string): Promise<{ ok: boolean; error?: string }> {
+  const trainer = await getTrainer();
+  if (!trainer) return { ok: false, error: "Non autorizzato." };
+
+  const plan = await prisma.workoutPlan.findFirst({
+    where: { id: planId, trainerId: trainer.id, pendingApproval: true },
+    select: { id: true, clientId: true },
+  });
+  if (!plan || !plan.clientId) return { ok: false, error: "Scheda non trovata." };
+
+  // Diventa la scheda attiva: disattiva le precedenti
+  await prisma.workoutPlan.updateMany({
+    where: { clientId: plan.clientId, isActive: true },
+    data: { isActive: false },
+  });
+  await prisma.workoutPlan.update({
+    where: { id: plan.id },
+    data: { isActive: true, pendingApproval: false },
+  });
+
+  revalidatePath(`/trainer/clients/${plan.clientId}`);
+  revalidatePath("/trainer/workouts");
+  return { ok: true };
+}
+
+export async function rejectClientPlan(planId: string): Promise<{ ok: boolean; error?: string }> {
+  const trainer = await getTrainer();
+  if (!trainer) return { ok: false, error: "Non autorizzato." };
+
+  const plan = await prisma.workoutPlan.findFirst({
+    where: { id: planId, trainerId: trainer.id, pendingApproval: true },
+    select: { id: true, clientId: true },
+  });
+  if (!plan) return { ok: false, error: "Scheda non trovata." };
+
+  // Non la cancello: resta salvata come scheda non attiva, solo non più in attesa
+  await prisma.workoutPlan.update({
+    where: { id: plan.id },
+    data: { pendingApproval: false, isActive: false },
+  });
+
+  revalidatePath(`/trainer/clients/${plan.clientId}`);
+  revalidatePath("/trainer/workouts");
+  return { ok: true };
+}

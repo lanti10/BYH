@@ -25,6 +25,15 @@ export default async function ClientWorkoutPage() {
       })
     : null;
 
+  // Scheda che il cliente ha creato e che il trainer deve ancora approvare
+  const pendingPlan = client
+    ? await prisma.workoutPlan.findFirst({
+        where: { clientId: client.id, pendingApproval: true },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, name: true },
+      })
+    : null;
+
   if (!plan) {
     return (
       <div className="p-4 sm:p-8 max-w-3xl mx-auto">
@@ -84,6 +93,12 @@ export default async function ClientWorkoutPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto">
+      {pendingPlan && (
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-medium text-amber-900">{t("appr.waiting")}</p>
+          <p className="mt-0.5 text-xs text-amber-700">{pendingPlan.name}</p>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <h1 className="text-2xl font-bold text-slate-900">{plan.name}</h1>
         <Link

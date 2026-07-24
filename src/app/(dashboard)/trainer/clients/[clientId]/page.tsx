@@ -1,3 +1,4 @@
+import { PendingPlanCard } from "@/components/trainer/pending-plan-card";
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
@@ -81,8 +82,24 @@ export default async function ClientDetailPage({
   // La scheda corrente del cliente: la apre il tasto "Scheda" in alto.
   const activePlan = client.workoutPlans[0] ?? null;
 
+  // Scheda creata dal cliente e in attesa di approvazione (non scavalca la tua)
+  const pendingPlan = await prisma.workoutPlan.findFirst({
+    where: { clientId: client.id, pendingApproval: true },
+    orderBy: { createdAt: "desc" },
+    include: { workouts: { include: { _count: { select: { exercises: true } } } } },
+  });
+
   return (
     <div className="p-4 sm:p-8 space-y-6">
+      {pendingPlan && (
+        <PendingPlanCard
+          planId={pendingPlan.id}
+          planName={pendingPlan.name}
+          daysCount={pendingPlan.workouts.length}
+          exercisesCount={pendingPlan.workouts.reduce((a, w) => a + w._count.exercises, 0)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
         <div className="flex items-start gap-4 flex-1 min-w-0">

@@ -25,6 +25,7 @@ enum OrderStatus {
 enum MessageType {
   TEXT
   PRODUCT_RECOMMENDATION
+  PLAN_APPROVAL // scheda creata dal cliente, in attesa di approvazione del trainer
 }
 
 enum ExerciseCategory {
@@ -170,7 +171,14 @@ model WorkoutPlan {
   startDate     DateTime @default(now())
   endDate       DateTime?
 
+  // Scheda creata dal cliente stesso (non dal trainer).
+  createdByClient Boolean @default(false)
+  // In attesa di approvazione del trainer: non diventa attiva finché non approva,
+  // così non scavalca la scheda assegnata dal trainer.
+  pendingApproval Boolean @default(false)
+
   workouts WorkoutDay[]
+  messages Message[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -297,6 +305,10 @@ model Message {
   // If type is PRODUCT_RECOMMENDATION, link to it
   recommendationId String?
   recommendation   ProductRecommendation? @relation(fields: [recommendationId], references: [id])
+
+  // Se type è PLAN_APPROVAL: la scheda da approvare (il messaggio porta il trainer lì)
+  planId String?
+  plan   WorkoutPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 // ─── PRODUCTS ─────────────────────────────────────────────────────────────────

@@ -43,7 +43,10 @@ export async function GET(req: Request) {
     },
     orderBy: { createdAt: "asc" },
     take: 300,
-    include: { recommendation: { include: { product: true } } },
+    include: {
+      recommendation: { include: { product: true } },
+      plan: { select: { id: true, name: true, clientId: true, pendingApproval: true } },
+    },
   });
 
   // Segna come letti i messaggi ricevuti
@@ -68,6 +71,16 @@ export async function GET(req: Request) {
             buyUrl: buildAmazonLink(rec.product.amazonUrl, `c${rec.clientId}`),
           }
         : null;
+      // Scheda creata dal cliente in attesa di approvazione: al trainer il
+      // messaggio è cliccabile e porta alla pagina del cliente, dove approva.
+      const planApproval = m.plan
+        ? {
+            name: m.plan.name,
+            pending: m.plan.pendingApproval,
+            url: me.role === "TRAINER" ? `/trainer/clients/${m.plan.clientId}` : null,
+          }
+        : null;
+
       return {
         id: m.id,
         senderId: m.senderId,
@@ -75,6 +88,7 @@ export async function GET(req: Request) {
         createdAt: m.createdAt,
         type: m.type,
         product,
+        planApproval,
       };
     }),
   });
