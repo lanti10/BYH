@@ -82,18 +82,13 @@ export function MovementsSheet({ movements, onClose }: { movements: Movement[]; 
               <Row label={t("earn.lessCosts")} value={`− ${eur(selected.detail.costs)}`} />
               <Row label={t("earn.pvMargin")} value={eur(selected.detail.pv)} strong />
               <Row label={t("earn.yourCut")} value={`${selected.detail.pct}%`} muted />
-              <div className="mt-2 flex items-center justify-between rounded-2xl bg-brand/[0.06] px-4 py-3">
-                <span className="text-sm font-medium text-slate-900">{t("earn.yourEarning")}</span>
-                <span className="text-xl font-semibold text-brand tnum">{eur(selected.amount)}</span>
-              </div>
+              <EarningBox status={selected.status} amount={selected.amount} eur={eur} />
             </div>
           ) : (
             <div className="rounded-2xl border border-slate-100 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm text-slate-500">{selected.subtitle} · {selected.date}</span>
-                <span className="text-xl font-semibold text-brand tnum">{eur(selected.amount)}</span>
-              </div>
-              <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] leading-relaxed text-slate-500">
+              <p className="mb-3 text-sm text-slate-500">{selected.subtitle} · {selected.date}</p>
+              <EarningBox status={selected.status} amount={selected.amount} eur={eur} />
+              <p className="mt-3 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] leading-relaxed text-slate-500">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 {t("earn.networkMovementNote")}
               </p>
@@ -102,6 +97,36 @@ export function MovementsSheet({ movements, onClose }: { movements: Movement[]; 
         </>
       )}
     </BottomSheet>
+  );
+}
+
+// Il guadagno finale cambia in base allo stato: annullato → €0 stornato,
+// in attesa → mostrato ma non ancora confermato, confermato → guadagno pieno.
+function EarningBox({ status, amount, eur }: { status: MovementStatus; amount: number; eur: (n: number) => string }) {
+  const { t } = useT();
+  if (status === "cancelled") {
+    return (
+      <div className="mt-2 rounded-2xl bg-slate-50 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-900">{t("earn.yourEarning")}</span>
+          <span className="tnum">
+            <s className="mr-1.5 text-slate-300">{eur(amount)}</s>
+            <span className="text-xl font-semibold text-slate-400">{eur(0)}</span>
+          </span>
+        </div>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-rose-500">{t("earn.cancelledNote")}</p>
+      </div>
+    );
+  }
+  const pending = status === "pending";
+  return (
+    <div className={`mt-2 rounded-2xl px-4 py-3 ${pending ? "bg-amber-500/10" : "bg-brand/[0.06]"}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-slate-900">{t("earn.yourEarning")}</span>
+        <span className={`text-xl font-semibold tnum ${pending ? "text-amber-600" : "text-brand"}`}>{eur(amount)}</span>
+      </div>
+      {pending && <p className="mt-1.5 text-[11px] leading-relaxed text-amber-600">{t("earn.pendingNote")}</p>}
+    </div>
   );
 }
 

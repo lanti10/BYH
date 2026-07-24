@@ -67,7 +67,7 @@ export function CareerPathSheet({
           const tint = RANK_TINT[r.name] ?? "bg-slate-100 text-slate-600";
           if (r.state === "current") {
             return (
-              <div key={r.name} className="rounded-2xl bg-slate-900 p-3 text-white">
+              <div key={r.name} className="rounded-2xl bg-depth-dark p-3 text-white">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/20 text-brand">
                     <Award className="h-5 w-5" />

@@ -50,17 +50,28 @@ export function EarningsView({ data }: { data: EarningsData }) {
       {/* 0 · Stato attività (gate) */}
       {active ? (
         <div className="mb-4 rounded-3xl border border-slate-100 bg-white p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <div className="mb-3 flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
               <Zap className="h-5 w-5" />
             </span>
             <div className="flex-1">
               <p className="text-[15px] font-medium text-slate-900">{t("earn.active")}</p>
               <p className="text-[11px] text-slate-400">{t("earn.renewIn", { n: a.daysToRenew })}</p>
             </div>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600">{t("earn.activePill")}</span>
+            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600">{t("earn.activePill")}</span>
           </div>
-          <p className="mt-3 px-1 text-[11px] leading-relaxed text-slate-400">{t("earn.activeNote", { amt: eur(a.threshold) })}</p>
+          {/* Ha il ciclo (30 gg) per generare la soglia con le vendite ed essere attivo il mese dopo */}
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <div className="mb-1.5 flex items-center justify-between text-xs">
+              <span className="font-medium text-slate-900">{t("earn.generatedCycle")}</span>
+              <span className="text-slate-400 tnum">{eur(a.generatedCycle)} / {eur(a.threshold)}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(100, (a.generatedCycle / a.threshold) * 100)}%` }} />
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{t("earn.activityHint", { amt: eur(a.threshold) })}</p>
+          </div>
+          <p className="mt-2.5 px-1 text-[10px] text-slate-400">{t("earn.thresholdNote")}</p>
         </div>
       ) : (
         <div className="mb-4 rounded-3xl border border-brand/30 bg-white p-4">
@@ -180,7 +191,7 @@ export function EarningsView({ data }: { data: EarningsData }) {
         </div>
         <div className="my-3 h-px bg-slate-100" />
         <div className="mb-2.5 flex items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Network className="h-[18px] w-[18px]" /></span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500"><Network className="h-[18px] w-[18px]" /></span>
           <div className="flex-1">
             <p className="text-[13px] text-slate-900">{t("earn.network")}</p>
             <p className="text-[11px] text-slate-400">{t("earn.networkAggNote")}</p>
@@ -189,13 +200,15 @@ export function EarningsView({ data }: { data: EarningsData }) {
         </div>
         <div className="space-y-1.5">
           {data.origin.network.levels.map((lv) => (
-            <div key={lv.level} className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs ${lv.unlocked ? "bg-indigo-50/60" : "bg-slate-50 opacity-60"}`}>
-              <span className="flex items-center gap-1.5 text-slate-600">
-                {!lv.unlocked && <Lock className="h-3 w-3 text-slate-400" />}
+            <div key={lv.level} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs">
+              <span className={`flex items-center gap-1.5 ${lv.unlocked ? "text-slate-600" : "text-slate-400"}`}>
+                {!lv.unlocked && <Lock className="h-3 w-3" />}
                 {t("earn.level", { n: lv.level })} · {lv.pct}%
                 {lv.unlocked && <span className="text-slate-400">· {t("earn.ptCount", { n: lv.count })}</span>}
               </span>
-              <span className="font-medium text-slate-900 tnum">{lv.unlocked ? eur(lv.amount) : t("earn.locked")}</span>
+              <span className={`font-medium tnum ${lv.unlocked ? "text-slate-900" : "text-slate-400"}`}>
+                {lv.unlocked ? eur(lv.amount) : t("earn.locked")}
+              </span>
             </div>
           ))}
         </div>
