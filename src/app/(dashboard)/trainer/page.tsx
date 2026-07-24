@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getT } from "@/lib/i18n/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserMinus, Dumbbell, ClipboardList, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
+import { UserMinus, ShoppingBag, ClipboardList, TrendingUp, UserPlus, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { dateFnsLocale } from "@/lib/i18n/datefns";
@@ -13,18 +13,13 @@ export default async function TrainerDashboard() {
   const { t, locale } = await getT();
   const trainer = user.trainerProfile!;
 
-  // Inizio della settimana corrente (lunedì), per il conteggio degli allenamenti
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
-  weekStart.setHours(0, 0, 0, 0);
-
   // Un cliente è "fermo" se non si allena da almeno 7 giorni
   const idleSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   // I clienti del trainer, sempre senza l'auto-cliente (la sua scheda personale)
   const clientScope = { trainerId: trainer.id, userId: { not: user.id } };
 
-  const [clients, weekSessions, noPlanCount, earnings] = await Promise.all([
+  const [clients, pickedProducts, noPlanCount, earnings] = await Promise.all([
     prisma.clientProfile.findMany({
       where: clientScope,
       include: {
@@ -33,9 +28,7 @@ export default async function TrainerDashboard() {
         sessions: { orderBy: { completedAt: "desc" }, take: 1 },
       },
     }),
-    prisma.workoutSession.count({
-      where: { client: clientScope, completedAt: { gte: weekStart } },
-    }),
+    prisma.trainerProductPick.count({ where: { trainerId: trainer.id } }),
     prisma.clientProfile.count({
       where: { ...clientScope, workoutPlans: { none: { isActive: true } } },
     }),
@@ -63,11 +56,12 @@ export default async function TrainerDashboard() {
     )
     .slice(0, 3);
 
+  // Ogni tessera porta dove si agisce: le due sui clienti aprono la lista già filtrata.
   const stats = [
-    { label: t("tr.idleClients"), value: idleClients, icon: UserMinus, tint: "bg-amber-500/10 text-amber-600" },
-    { label: t("tr.weekSessions"), value: weekSessions, icon: Dumbbell, tint: "bg-emerald-500/10 text-emerald-600" },
-    { label: t("tr.noPlan"), value: noPlanCount, icon: ClipboardList, tint: "bg-blue-500/10 text-blue-600" },
-    { label: t("tr.earnings"), value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand" },
+    { label: t("tr.idleClients"), value: idleClients, icon: UserMinus, tint: "bg-amber-500/10 text-amber-600", href: "/trainer/clients?f=idle" },
+    { label: t("tr.pickedProducts"), value: pickedProducts, icon: ShoppingBag, tint: "bg-emerald-500/10 text-emerald-600", href: "/trainer/products" },
+    { label: t("tr.noPlan"), value: noPlanCount, icon: ClipboardList, tint: "bg-blue-500/10 text-blue-600", href: "/trainer/clients?f=noplan" },
+    { label: t("tr.earnings"), value: `€${totalEarnings.toFixed(2)}`, icon: TrendingUp, tint: "bg-brand/10 text-brand", href: "/trainer/earnings" },
   ];
 
   return (
@@ -104,14 +98,14 @@ export default async function TrainerDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map(({ label, value, icon: Icon, tint }) => (
-          <div key={label} className="rounded-2xl glass p-4 sm:p-5">
+        {stats.map(({ label, value, icon: Icon, tint, href }) => (
+          <Link key={label} href={href} className="rounded-2xl glass p-4 sm:p-5 transition-transform active:scale-[0.98]">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tint} mb-3`}>
               <Icon className="h-5 w-5" />
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-none">{value}</p>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{label}</p>
-          </div>
+          </Link>
         ))}
       </div>
 

@@ -7,7 +7,15 @@ import { UserPlus } from "lucide-react";
 import Link from "next/link";
 import { ClientsList, type ClientRow } from "@/components/trainer/clients-list";
 
-export default async function ClientsPage() {
+// ?f=idle  → solo i clienti fermi da 7+ giorni
+// ?f=noplan → solo i clienti senza scheda attiva
+// (ci arrivi dalle tessere della dashboard)
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ f?: string }>;
+}) {
+  const { f: filter } = await searchParams;
   const user = await requireRole("TRAINER");
   const { t } = await getT();
   const trainer = user.trainerProfile!;
@@ -81,7 +89,17 @@ export default async function ClientsPage() {
     createdAt: tr.createdAt.getTime(),
     clientsCount: tr._count.clients,
   }));
-  const rows = [...clientRows, ...trainerRows];
+  // Filtro dalla dashboard: restringe ai soli clienti da sistemare
+  const idleSince = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const allRows = [...clientRows, ...trainerRows];
+  const rows =
+    filter === "idle"
+      ? clientRows.filter((r) => (r.lastSessionAt ? r.lastSessionAt < idleSince : r.createdAt < idleSince))
+      : filter === "noplan"
+        ? clientRows.filter((r) => !r.activePlanName)
+        : allRows;
+  const filterLabel =
+    filter === "idle" ? t("tr.idleClients") : filter === "noplan" ? t("tr.noPlan") : null;
 
   const initialActivity = rawClients.map((c) => ({
     userId: c.userId,
@@ -95,8 +113,10 @@ export default async function ClientsPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-slate-900">{t("nav.clients")}</h1>
           <p className="text-slate-500 mt-1">
-            {t("cl.count", { n: rawClients.length })}
-            {trainerRows.length > 0 ? ` · ${t("cl.ptCount", { n: trainerRows.length })}` : ""}
+            {filterLabel
+              ? t("cl.count", { n: rows.length })
+              : t("cl.count", { n: rawClients.length }) +
+                (trainerRows.length > 0 ? ` · ${t("cl.ptCount", { n: trainerRows.length })}` : "")}
           </p>
         </div>
         <Button className="shrink-0" render={<Link href="/trainer/clients/new" />}>
@@ -104,6 +124,17 @@ export default async function ClientsPage() {
           {t("tr.addClient")}
         </Button>
       </div>
+
+      {filterLabel && (
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-brand px-3 py-1.5 text-[13px] font-medium text-white">
+            {filterLabel}
+          </span>
+          <Link href="/trainer/clients" className="text-[13px] font-medium text-slate-500 hover:underline">
+            {t("cl.showAll")}
+          </Link>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <Card>
