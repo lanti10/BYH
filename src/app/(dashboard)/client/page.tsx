@@ -18,8 +18,23 @@ import { InstallPrompt } from "@/components/shared/install-prompt";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
-  const client = user.clientProfile!;
   const { t, locale } = await getT();
+
+  // Cliente senza profilo (ha saltato il codice del trainer in onboarding: nessun
+  // trainer collegato). Mostra la schermata d'attesa invece di crashare (era 404/500).
+  // Un trainer potrà aggiungerlo via email, oppure può reinserire il codice.
+  if (!user.clientProfile) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center p-4 sm:p-8">
+        <div className="max-w-sm space-y-3 text-center">
+          <p className="text-xl font-semibold text-slate-700">{t("dash.waiting")}</p>
+          <p className="text-sm text-slate-400">{t("dash.waitingSub")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const client = user.clientProfile;
 
   const [profile, recommendations, medalSessions] = await Promise.all([
     prisma.clientProfile.findUnique({
