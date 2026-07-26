@@ -71,9 +71,11 @@ export default async function ClientProgressPage() {
       .map((s) => s.completedAt.getDate())
   );
   const monthSessions = [...trainedDays].length;
-  const monthMinutes = rawSessions
-    .filter((s) => s.completedAt.getFullYear() === now.getFullYear() && s.completedAt.getMonth() === now.getMonth())
-    .reduce((sum, s) => sum + (s.durationMin ?? 0), 0);
+  const thisMonth = rawSessions.filter(
+    (s) => s.completedAt.getFullYear() === now.getFullYear() && s.completedAt.getMonth() === now.getMonth()
+  );
+  const monthMinutes = thisMonth.reduce((sum, s) => sum + (s.durationMin ?? 0), 0);
+  const monthCalories = thisMonth.reduce((sum, s) => sum + (s.calories ?? 0), 0);
 
   const monthInput: ShareInput = {
     url: "byh.today",
@@ -81,7 +83,7 @@ export default async function ClientProgressPage() {
     monthDays: Array.from({ length: daysInMonth }, (_, i) => trainedDays.has(i + 1)),
     monthSessions,
     monthHours: Math.round(monthMinutes / 60),
-    monthTons: 0,
+    monthCalories,
   };
 
   return (

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ActivityRing } from "@/components/client/activity-ring";
 import { StartWorkoutButton } from "@/components/shared/start-workout-button";
 import { WeekStrip } from "@/components/client/week-strip";
-import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDuration, getStreak, sessionVolumeKg } from "@/lib/workout";
+import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDuration, getStreak } from "@/lib/workout";
 import { getT } from "@/lib/i18n/server";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
@@ -113,7 +113,7 @@ export default async function ClientDashboard() {
     streakDays: shareStreak,
     durationMin: lastSession?.durationMin ?? estMin,
     exerciseCount: todayWorkout?.exercises.length,
-    volumeTons: todayWorkout ? sessionVolumeKg(todayWorkout.exercises) / 1000 : 0,
+    calories: lastSession?.calories ?? 0,
   };
   const shareText =
     shareStreak > 1

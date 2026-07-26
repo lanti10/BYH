@@ -67,6 +67,28 @@ model User {
 
   // Notifiche push (Web Push): un utente può avere più device iscritti
   pushSubscriptions PushSubscription[]
+
+  // Card condivise sui social
+  shareEvents ShareEvent[]
+}
+
+// Una card effettivamente condivisa (o salvata, dove il telefono non sa condividere
+// file). Serve a capire se il passaparola funziona: quanti condividono, quale taglio
+// gira di più, e se i PT usano il proprio link di rete.
+model ShareEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  variant   String // photo | rings | record | month | medal | coach
+  role      Role // chi ha condiviso: un cliente o un PT
+  // false = il telefono non supporta la condivisione di file, la card è stata
+  // scaricata. Distinguerlo evita di scambiare un salvataggio per una condivisione.
+  shared    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([variant])
 }
 
 // Iscrizione Web Push di un device (browser/PWA) a cui inviare le notifiche.

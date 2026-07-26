@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeMedals } from "@/lib/medals";
-import { getStreak, sessionVolumeKg } from "@/lib/workout";
+import { getStreak } from "@/lib/workout";
 import { NextResponse } from "next/server";
 
 /**
@@ -143,9 +143,7 @@ export async function POST(req: Request) {
       totalSessions: after.length,
       durationMin: Math.round(sec / 60),
       exerciseCount: day.exercises.length,
-      volumeKg: sessionVolumeKg(
-        day.exercises.map((e) => ({ sets: e.sets, reps: e.reps, weight: e.weight }))
-      ),
+      calories: session.calories ?? 0,
       medal: newMedal
         ? { id: newMedal.id, icon: newMedal.icon, color: newMedal.color, title: newMedal.title, target: newMedal.target }
         : null,

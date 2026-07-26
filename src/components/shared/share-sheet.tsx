@@ -22,6 +22,17 @@ import {
 /** Tutto tranne le etichette, che il foglio traduce da sé. */
 export type ShareInput = Omit<ShareCardData, "labels" | "variant" | "photo">;
 
+// Registra la condivisione senza far aspettare l'utente: se fallisce, pazienza —
+// è una statistica, non deve mai rompere la condivisione.
+function track(variant: ShareVariant, shared: boolean) {
+  void fetch("/api/share", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variant, shared }),
+    keepalive: true, // l'app può passare in background subito dopo
+  }).catch(() => {});
+}
+
 export function ShareSheet({
   input,
   variants,
@@ -52,7 +63,7 @@ export function ShareSheet({
     daysInARow: t("share.daysInARow"),
     min: t("dash.min"),
     exercises: t("session.exercises").toLowerCase(),
-    tons: t("share.tons"),
+    kcal: t("share.kcal"),
     newRecord: t("share.newRecord"),
     previous: t("share.previous"),
     medalUnlocked: t("share.medalUnlocked"),
@@ -94,7 +105,9 @@ export function ShareSheet({
       // canShare({files}) è l'unico controllo affidabile: su desktop share esiste
       // ma rifiuta i file.
       if (navigator.canShare?.(payload)) {
+        // share() rifiuta se l'utente annulla: contiamo solo ciò che è partito.
         await navigator.share(payload);
+        track(variant, true);
       } else {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -102,6 +115,7 @@ export function ShareSheet({
         a.click();
         URL.revokeObjectURL(a.href);
         await navigator.clipboard?.writeText(shareText).catch(() => {});
+        track(variant, false); // scaricata, non condivisa dal menu di sistema
         setSaved(true);
         setTimeout(() => setSaved(false), 2600);
       }

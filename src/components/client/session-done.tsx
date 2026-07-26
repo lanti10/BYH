@@ -16,7 +16,7 @@ export type SessionSummary = {
   totalSessions: number;
   durationMin: number;
   exerciseCount: number;
-  volumeKg: number;
+  calories: number;
   medal: { id: string; icon: string; color: string; title: string; target: number } | null;
   record: { exercise: string; weight: number; delta: number; previous: number } | null;
 };
@@ -39,7 +39,7 @@ export function SessionDone({
     streakDays: summary.streakDays,
     durationMin: summary.durationMin,
     exerciseCount: summary.exerciseCount,
-    volumeTons: summary.volumeKg / 1000,
+    calories: summary.calories,
     medalIcon: summary.medal?.icon,
     medalColor: summary.medal?.color,
     medalTitle: summary.medal ? t(summary.medal.title) : undefined,

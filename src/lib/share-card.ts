@@ -26,7 +26,7 @@ export type ShareCardData = {
   streakDays?: number;
   durationMin?: number;
   exerciseCount?: number;
-  volumeTons?: number;
+  calories?: number;
   /** Foto appena scattata, già decodificata. Solo variante "photo". */
   photo?: CanvasImageSource;
   // Record
@@ -38,7 +38,7 @@ export type ShareCardData = {
   monthDays?: boolean[];
   monthSessions?: number;
   monthHours?: number;
-  monthTons?: number;
+  monthCalories?: number;
   // Medaglia
   medalIcon?: string;
   medalColor?: string;
@@ -59,7 +59,7 @@ export type ShareLabels = {
   daysInARow: string; // "GIORNI DI FILA"
   min: string;
   exercises: string;
-  tons: string;
+  kcal: string;
   newRecord: string; // "NUOVO RECORD"
   previous: string; // "precedente"
   medalUnlocked: string; // "MEDAGLIA SBLOCCATA"
@@ -201,11 +201,11 @@ function drawRings(ctx: Ctx, d: ShareCardData) {
   glow(ctx, 100, 149, 116, RED, 0.2);
   brand(ctx);
 
-  // Tre anelli concentrici: durata, volume, costanza. Le frazioni sono indicative
+  // Tre anelli concentrici: durata, calorie, costanza. Le frazioni sono indicative
   // del "quanto" — la card racconta, non certifica.
   const rings: [number, string, number][] = [
     [54, RED, Math.min(1, (d.durationMin ?? 0) / 60)],
-    [40, "#30D158", Math.min(1, (d.volumeTons ?? 0) / 5)],
+    [40, "#30D158", Math.min(1, (d.calories ?? 0) / 500)],
     [26, "#5AC8FA", Math.min(1, (d.streakDays ?? 0) / 14)],
   ];
   for (const [r, color, frac] of rings) {
@@ -229,7 +229,7 @@ function drawRings(ctx: Ctx, d: ShareCardData) {
 
   const rows: [string, string][] = [
     [RED, `${d.durationMin ?? 0} ${d.labels.min}`],
-    ["#30D158", `${fmtTons(d.volumeTons)} ${d.labels.tons}`],
+    ["#30D158", `${d.calories ?? 0} ${d.labels.kcal}`],
     ["#5AC8FA", `${d.streakDays ?? 0} ${d.labels.daysInARow.toLowerCase()}`],
   ];
   rows.forEach(([color, label], i) => {
@@ -285,7 +285,7 @@ function drawMonth(ctx: Ctx, d: ShareCardData) {
   text(ctx, n, 20, 250, 46, { weight: 700, spacing: -2 });
   text(ctx, d.labels.workouts, 20, 268, 10, { alpha: 0.75, spacing: 1.2 });
   text(ctx, `${d.monthHours ?? 0} ${d.labels.hours}`, 112, 250, 10, { alpha: 0.6 });
-  text(ctx, `${fmtTons(d.monthTons)} ${d.labels.tons}`, 112, 264, 10, { alpha: 0.6 });
+  text(ctx, `${fmtNum(d.monthCalories)} ${d.labels.kcal}`, 112, 264, 10, { alpha: 0.6 });
 
   footer(ctx, d, 320);
 }
@@ -355,7 +355,8 @@ function drawHeroStat(ctx: Ctx, d: ShareCardData, ly: number, labelY: number) {
   // Dati di contorno in colonna a destra, così non toccano mai il numero grande.
   const side: string[] = [];
   if (hasStreak && d.durationMin != null) side.push(`${d.durationMin} ${d.labels.min}`);
-  if (d.exerciseCount != null) side.push(`${d.exerciseCount} ${d.labels.exercises}`);
+  if (d.calories) side.push(`${fmtNum(d.calories)} ${d.labels.kcal}`);
+  if (side.length < 2 && d.exerciseCount != null) side.push(`${d.exerciseCount} ${d.labels.exercises}`);
   side.slice(0, 2).forEach((s, i) => text(ctx, s, 112, ly + i * 14, 10, { alpha: 0.6 }));
 }
 
@@ -473,9 +474,9 @@ function coverImage(ctx: Ctx, img: CanvasImageSource, logicalH = 356) {
   ctx.drawImage(img, (CARD_W - w) / 2, (targetH - h) / 2, w, h);
 }
 
-function fmtTons(t?: number) {
-  if (t == null) return "0";
-  return t >= 10 ? String(Math.round(t)) : t.toFixed(1);
+/** Migliaia separate da un punto sottile: "12.400" si legge, "12400" no. */
+function fmtNum(n?: number) {
+  return String(Math.round(n ?? 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 const DRAW: Record<ShareVariant, (ctx: Ctx, d: ShareCardData) => void> = {
