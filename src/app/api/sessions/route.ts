@@ -1,6 +1,45 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { computeMedals } from "@/lib/medals";
+import { getStreak, sessionVolumeKg } from "@/lib/workout";
 import { NextResponse } from "next/server";
+
+/**
+ * Nuovo massimale segnato in questo allenamento: per ogni esercizio del giorno
+ * confronta il carico registrato oggi con il massimo di tutte le volte precedenti.
+ * Restituisce il salto più significativo, o null se oggi non si è battuto nulla.
+ */
+async function findNewRecord(clientId: string, exerciseNames: string[], completedAt: Date) {
+  const names = [...new Set(exerciseNames.filter(Boolean))];
+  if (names.length === 0) return null;
+
+  const logs = await prisma.exerciseWeightLog.findMany({
+    where: { clientId, exerciseName: { in: names } },
+    orderBy: { createdAt: "desc" },
+    take: 1000,
+    select: { exerciseName: true, weight: true, createdAt: true },
+  });
+
+  // "Oggi" = registrato entro le 6 ore precedenti la fine dell'allenamento: i carichi
+  // si annotano durante la sessione, non dopo.
+  const cutoff = new Date(completedAt.getTime() - 6 * 60 * 60 * 1000);
+
+  let best: { exercise: string; weight: number; delta: number; previous: number } | null = null;
+  for (const name of names) {
+    const forEx = logs.filter((l) => l.exerciseName === name);
+    const today = forEx.filter((l) => l.createdAt >= cutoff);
+    const older = forEx.filter((l) => l.createdAt < cutoff);
+    if (today.length === 0 || older.length === 0) continue; // senza storico non è un record
+
+    const todayMax = Math.max(...today.map((l) => l.weight));
+    const prevMax = Math.max(...older.map((l) => l.weight));
+    if (todayMax <= prevMax) continue;
+
+    const delta = Math.round((todayMax - prevMax) * 10) / 10;
+    if (!best || delta > best.delta) best = { exercise: name, weight: todayMax, delta, previous: prevMax };
+  }
+  return best;
+}
 
 export async function POST(req: Request) {
   const me = await getCurrentUser();
@@ -53,6 +92,21 @@ export async function POST(req: Request) {
     })),
   };
 
+  // Medaglie PRIMA di registrare: il confronto col dopo dice se questa sessione
+  // ne ha sbloccata una, che è ciò che rende la card da condividere una notizia.
+  const weeklyGoal = me.clientProfile.trainingDaysPerWeek ?? 3;
+  const before = await prisma.workoutSession.findMany({
+    where: { clientId: me.clientProfile.id },
+    orderBy: { completedAt: "desc" },
+    take: 400,
+    select: { completedAt: true },
+  });
+  const unlockedBefore = new Set(
+    computeMedals(before, weeklyGoal)
+      .filter((m) => m.unlocked)
+      .map((m) => m.id)
+  );
+
   const session = await prisma.workoutSession.create({
     data: {
       clientId: me.clientProfile.id,
@@ -68,5 +122,34 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, id: session.id });
+  // Riepilogo per la card da condividere a fine allenamento.
+  const after = [{ completedAt: session.completedAt }, ...before];
+  const newMedal = computeMedals(after, weeklyGoal).find((m) => m.unlocked && !unlockedBefore.has(m.id)) ?? null;
+
+  // Massimale battuto oggi: fra i carichi registrati durante questo allenamento,
+  // cerchiamo quello che supera il record storico dello stesso esercizio.
+  const record = await findNewRecord(
+    me.clientProfile.id,
+    day.exercises.map((e) => e.exercise.name),
+    session.completedAt
+  );
+
+  return NextResponse.json({
+    ok: true,
+    id: session.id,
+    summary: {
+      dayName: day.name,
+      streakDays: getStreak(after),
+      totalSessions: after.length,
+      durationMin: Math.round(sec / 60),
+      exerciseCount: day.exercises.length,
+      volumeKg: sessionVolumeKg(
+        day.exercises.map((e) => ({ sets: e.sets, reps: e.reps, weight: e.weight }))
+      ),
+      medal: newMedal
+        ? { id: newMedal.id, icon: newMedal.icon, color: newMedal.color, title: newMedal.title, target: newMedal.target }
+        : null,
+      record,
+    },
+  });
 }

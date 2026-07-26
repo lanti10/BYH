@@ -11,6 +11,8 @@ import { DATE_LOCALE } from "@/lib/i18n/dict";
 import { formatPrice } from "@/lib/products";
 import { getEarningsData } from "@/lib/earnings-demo";
 import { InstallPrompt } from "@/components/shared/install-prompt";
+import { ShareProgressButton } from "@/components/shared/share-progress-button";
+import type { ShareInput } from "@/components/shared/share-sheet";
 
 export default async function TrainerDashboard() {
   const user = await requireRole("TRAINER");
@@ -39,6 +41,21 @@ export default async function TrainerDashboard() {
   // Guadagno totale dalla STESSA sorgente della pagina Guadagni (oggi dati demo,
   // vedi src/lib/earnings-demo.ts) → la tessera resta sincronizzata con la pagina.
   const totalEarnings = getEarningsData().totalEarnings;
+
+  // Card "coach": il PT si presenta. Il link porta chi la vede nella sua rete.
+  const coachUrl = `byh.today/join-trainer/${trainer.referralCode}`;
+  const totalSessions = await prisma.workoutSession.count({
+    where: { client: { trainerId: trainer.id, userId: { not: user.id } } },
+  });
+  const coachInput: ShareInput = {
+    url: coachUrl,
+    coachName: user.name,
+    coachRole: t("share.coachRole"),
+    coachClients: clients.length,
+    coachSessions: totalSessions,
+    coachCta: t("share.coachCta"),
+  };
+  const coachText = `${t("share.coachText")} ${coachUrl}`;
 
   const nameOf = (c: (typeof clients)[number]) => c.user.name || c.user.email;
   const since = (d: Date) => formatDistanceToNow(d, { addSuffix: true, locale: dateFnsLocale(locale) });
@@ -102,12 +119,22 @@ export default async function TrainerDashboard() {
             <UserPlus className="h-4 w-4" /> {t("tr.addClient")}
           </Link>
         </div>
-        <Link
-          href="/trainer/clients/new"
-          className="sm:hidden mt-4 flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur"
-        >
-          <UserPlus className="h-4 w-4" /> {t("tr.addClient")}
-        </Link>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Link
+            href="/trainer/clients/new"
+            className="sm:hidden flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur"
+          >
+            <UserPlus className="h-4 w-4" /> {t("tr.addClient")}
+          </Link>
+          {/* Biglietto da visita del PT: chi la vede atterra nella SUA rete. */}
+          <ShareProgressButton
+            input={coachInput}
+            variants={["coach"]}
+            shareText={coachText}
+            label={t("share.coachTitle")}
+            className="flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors hover:bg-white/25"
+          />
+        </div>
       </div>
 
       {/* Stats */}

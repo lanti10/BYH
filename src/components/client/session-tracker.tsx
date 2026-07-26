@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n/client";
 import type { PlanType } from "@/components/trainer/plan-type-picker";
 import { clearSession, fmtDuration as fmt, readSession, writeSession } from "@/lib/session-store";
 import { ExerciseWeightEditor, type WeightEntry } from "@/components/shared/exercise-weight-editor";
+import { SessionDone, type SessionSummary } from "@/components/client/session-done";
 
 type Ex = {
   id: string;
@@ -33,6 +34,7 @@ export type SessionDay = {
   planType: PlanType;
   weightKg: number;
   doneHref: string; // dove andare a fine allenamento (dipende dal ruolo)
+  shareUrl?: string; // link stampato sulla card da condividere (per il PT è la sua rete)
   exercises: Ex[];
   weightHistory?: Record<string, WeightEntry[]>;
 };
@@ -48,7 +50,7 @@ export function SessionTracker({
   onMinimize: () => void;
   onFinished: () => void;
 }) {
-  const { dayId, dayName, exercises, weightKg, planType, doneHref, weightHistory } = day;
+  const { dayId, dayName, exercises, weightKg, planType, doneHref, shareUrl, weightHistory } = day;
   const router = useRouter();
   const { t } = useT();
   const [elapsed, setElapsed] = useState(0);
@@ -56,6 +58,7 @@ export function SessionTracker({
   const [done, setDone] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [logs, setLogs] = useState<Record<string, WeightEntry[]>>(weightHistory ?? {});
   const showWeight = planType === "WEIGHTS";
@@ -265,7 +268,7 @@ export function SessionTracker({
     setRunning(false);
     const st = hrStats.current;
     try {
-      await fetch("/api/sessions", {
+      const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -277,12 +280,35 @@ export function SessionTracker({
         }),
       });
       clearSession(dayId);
-      onFinished();
-      router.push(doneHref);
-      router.refresh();
+      // L'allenamento è salvato: da qui non si torna indietro. Invece di chiudere
+      // subito mostriamo il riepilogo, da cui si condivide.
+      const json = (await res.json().catch(() => null)) as { summary?: SessionSummary } | null;
+      if (json?.summary) {
+        setSummary(json.summary);
+        setSaving(false);
+      } else {
+        closeAll();
+      }
     } catch {
       setSaving(false);
     }
+  }
+
+  // Chiusura definitiva: smonta il tracker e porta dove si andava prima.
+  function closeAll() {
+    onFinished();
+    router.push(doneHref);
+    router.refresh();
+  }
+
+  // Allenamento salvato: al posto del tracker resta il riepilogo, da cui si condivide.
+  // Non è più trascinabile né riducibile — la sessione non è più in corso.
+  if (summary) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-depth-dark text-white">
+        <SessionDone summary={summary} shareUrl={shareUrl ?? "byh.today"} onClose={closeAll} />
+      </div>
+    );
   }
 
   // Ridotto: resta montato (fascia cardio e dati restano vivi) ma sparisce dalla vista.

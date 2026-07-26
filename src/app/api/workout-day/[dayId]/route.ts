@@ -42,6 +42,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ dayId: 
     planType: day.plan.planType,
     weightKg: lastLog?.weight ?? user.clientProfile.startWeight ?? 70,
     doneHref: user.role === "TRAINER" ? "/trainer/my-workout" : "/client/progress",
+    // Link stampato sulla card da condividere: il PT porta chi lo guarda nella
+    // PROPRIA rete, il cliente sul sito.
+    shareUrl:
+      user.role === "TRAINER" && user.trainerProfile
+        ? `byh.today/join-trainer/${user.trainerProfile.referralCode}`
+        : "byh.today",
     exercises: day.exercises.map((e) => ({
       id: e.id,
       name: e.exercise.name,

@@ -8,10 +8,13 @@ import { MedalBadge } from "@/components/client/medal-badge";
 import { computeMedals } from "@/lib/medals";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { DATE_LOCALE } from "@/lib/i18n/dict";
+import { ShareProgressButton } from "@/components/shared/share-progress-button";
+import type { ShareInput } from "@/components/shared/share-sheet";
 
 export default async function ClientProgressPage() {
   const user = await requireRole("CLIENT");
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const client = user.clientProfile;
 
   if (!client) {
@@ -58,6 +61,29 @@ export default async function ClientProgressPage() {
   const unlocked = medals.filter((m) => m.unlocked);
   const medalPreview = [...unlocked, ...medals.filter((m) => !m.unlocked)].slice(0, 4);
 
+  // Card "il mese": una casella per giorno, accesa se ci si è allenati. È il colpo
+  // d'occhio della costanza, e si può condividere anche nei giorni di riposo.
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const trainedDays = new Set(
+    rawSessions
+      .filter((s) => s.completedAt.getFullYear() === now.getFullYear() && s.completedAt.getMonth() === now.getMonth())
+      .map((s) => s.completedAt.getDate())
+  );
+  const monthSessions = [...trainedDays].length;
+  const monthMinutes = rawSessions
+    .filter((s) => s.completedAt.getFullYear() === now.getFullYear() && s.completedAt.getMonth() === now.getMonth())
+    .reduce((sum, s) => sum + (s.durationMin ?? 0), 0);
+
+  const monthInput: ShareInput = {
+    url: "byh.today",
+    eyebrow: new Intl.DateTimeFormat(DATE_LOCALE[locale], { month: "long" }).format(now),
+    monthDays: Array.from({ length: daysInMonth }, (_, i) => trainedDays.has(i + 1)),
+    monthSessions,
+    monthHours: Math.round(monthMinutes / 60),
+    monthTons: 0,
+  };
+
   return (
     <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-4">
       <div className="flex items-baseline justify-between">
@@ -66,6 +92,18 @@ export default async function ClientProgressPage() {
       </div>
 
       <ProgressView sessions={sessions} weeklyGoal={weeklyGoal} planMin={planMin} planCal={planCal} />
+
+      {/* Il mese in una griglia: si condivide anche quando non ci si allena da qualche
+          giorno, quindi porta visibilità nei momenti in cui le altre card tacciono. */}
+      {monthSessions > 0 && (
+        <ShareProgressButton
+          input={monthInput}
+          variants={["month"]}
+          shareText={`${t("share.text")} byh.today`}
+          label={t("share.cta")}
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-full glass font-semibold text-slate-900 transition-shadow hover:shadow-md"
+        />
+      )}
 
       {/* Storico allenamenti: fiches per mese, tap = dettaglio (come nel Workout del PT) */}
       <section className="pt-1">

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ActivityRing } from "@/components/client/activity-ring";
 import { StartWorkoutButton } from "@/components/shared/start-workout-button";
 import { WeekStrip } from "@/components/client/week-strip";
-import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDuration, getStreak } from "@/lib/workout";
+import { getNextDayIndex, getScheduledTodayIndex, isDayDoneToday, estimateDuration, getStreak, sessionVolumeKg } from "@/lib/workout";
 import { getT } from "@/lib/i18n/server";
 import { DATE_LOCALE } from "@/lib/i18n/dict";
 import {
@@ -15,6 +15,8 @@ import { computeMedals } from "@/lib/medals";
 import Link from "next/link";
 import { WeightWidget } from "@/components/client/weight-widget";
 import { InstallPrompt } from "@/components/shared/install-prompt";
+import { ShareProgressButton } from "@/components/shared/share-progress-button";
+import type { ShareInput } from "@/components/shared/share-sheet";
 
 export default async function ClientDashboard() {
   const user = await requireRole("CLIENT");
@@ -101,6 +103,22 @@ export default async function ClientDashboard() {
     ? todayWorkout != null && isDayDoneToday(todayWorkout.id, sessions)
     : cyclic.doneToday;
   const estMin = todayWorkout ? (todayWorkout.durationMin ?? estimateDuration(todayWorkout.exercises)) : 0;
+
+  // Dati della card da condividere quando l'allenamento di oggi è già fatto.
+  const lastSession = sessions[0];
+  const shareStreak = getStreak(sessions);
+  const shareInput: ShareInput = {
+    url: "byh.today",
+    eyebrow: todayWorkout?.name ?? undefined,
+    streakDays: shareStreak,
+    durationMin: lastSession?.durationMin ?? estMin,
+    exerciseCount: todayWorkout?.exercises.length,
+    volumeTons: todayWorkout ? sessionVolumeKg(todayWorkout.exercises) / 1000 : 0,
+  };
+  const shareText =
+    shareStreak > 1
+      ? `${t("share.textStreak", { n: shareStreak })} byh.today`
+      : `${t("share.text")} byh.today`;
 
   // ── Statistiche settimana corrente (lun–dom) ──
   const now = new Date();
@@ -208,12 +226,24 @@ export default async function ClientDashboard() {
                 )}
               </div>
 
-              <StartWorkoutButton
-                dayId={todayWorkout.id}
-                dayName={todayWorkout.name}
-                label={doneToday ? t("dash.startAgain") : t("dash.start")}
-                className="mt-5 flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
-              />
+              {/* Allenamento del giorno già fatto: non si riparte da capo, si racconta.
+                  È il momento in cui il cliente porta visibilità al brand. */}
+              {doneToday ? (
+                <ShareProgressButton
+                  input={shareInput}
+                  variants={["rings", "photo"]}
+                  shareText={shareText}
+                  label={t("share.cta")}
+                  className="mt-5 flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+                />
+              ) : (
+                <StartWorkoutButton
+                  dayId={todayWorkout.id}
+                  dayName={todayWorkout.name}
+                  label={t("dash.start")}
+                  className="mt-5 flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+                />
+              )}
             </div>
           ) : (
             <div className="rounded-3xl glass p-8 text-center">

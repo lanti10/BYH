@@ -76,6 +76,19 @@ export function estimateDuration(
   return Math.max(5, Math.round(sec / 60));
 }
 
+// Volume sollevato: serie × ripetizioni × carico. Le ripetizioni sono testo libero
+// ("8", "8-12", "max"): prendiamo il primo numero, e in mancanza non contiamo nulla.
+export function sessionVolumeKg(
+  exercises: { sets: number; reps: string; weight: number | null }[]
+): number {
+  let kg = 0;
+  for (const e of exercises) {
+    const reps = Number(String(e.reps).match(/\d+/)?.[0] ?? 0);
+    if (e.weight && reps) kg += e.sets * reps * e.weight;
+  }
+  return Math.round(kg);
+}
+
 // Streak: giorni consecutivi con allenamento, contando da oggi (o ieri) all'indietro
 export function getStreak(sessions: { completedAt: Date }[]): number {
   if (sessions.length === 0) return 0;
