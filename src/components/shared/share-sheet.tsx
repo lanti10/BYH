@@ -99,7 +99,10 @@ export function ShareSheet({
     const img = new Image();
     img.onload = () => {
       setPhoto(img);
-      setVariant("photo");
+      // Si passa al taglio "foto" solo se esiste fra quelli disponibili. La card
+      // coach ha già un suo posto per la foto: cambiarle taglio la butterebbe via
+      // insieme a nome e numeri del PT.
+      if (variants.includes("photo")) setVariant("photo");
       URL.revokeObjectURL(img.src);
     };
     img.src = URL.createObjectURL(file);

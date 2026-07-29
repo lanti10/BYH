@@ -307,22 +307,26 @@ function drawMedal(ctx: Ctx, d: ShareCardData) {
 
 function drawCoach(ctx: Ctx, d: ShareCardData) {
   rect(ctx, 0, 0, 200, 356, INK);
+  // La foto scende più in basso di dove finisce visivamente: la sfumatura diventa
+  // nero pieno prima del taglio, così non si vede alcuna linea di stacco.
+  const PHOTO_END = 215;
   if (d.photo) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0, 0, CARD_W, x(188));
+    ctx.rect(0, 0, CARD_W, x(PHOTO_END));
     ctx.clip();
-    coverImage(ctx, d.photo, 188);
+    coverImage(ctx, d.photo, PHOTO_END);
     ctx.restore();
   } else {
-    rect(ctx, 0, 0, 200, 188, "#232327");
+    rect(ctx, 0, 0, 200, PHOTO_END, "#232327");
   }
   // Sfumatura sotto la foto: il nome deve staccare sempre.
-  const g = ctx.createLinearGradient(0, x(120), 0, x(196));
+  const g = ctx.createLinearGradient(0, x(112), 0, x(205));
   g.addColorStop(0, "rgba(10,10,11,0)");
+  g.addColorStop(0.55, "rgba(10,10,11,0.82)");
   g.addColorStop(1, "rgba(10,10,11,1)");
   ctx.fillStyle = g;
-  ctx.fillRect(0, x(120), CARD_W, x(76));
+  ctx.fillRect(0, x(112), CARD_W, x(103));
 
   brand(ctx);
   if (d.coachName) text(ctx, d.coachName, 20, 176, 17, { weight: 700, spacing: -0.3 });
