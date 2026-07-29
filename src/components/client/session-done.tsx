@@ -7,7 +7,8 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
-import { ShareSheet, type ShareInput } from "@/components/shared/share-sheet";
+import { ShareSheet, useShareLabels, type ShareInput } from "@/components/shared/share-sheet";
+import { ShareCardPicker } from "@/components/shared/share-card-picker";
 import type { ShareVariant } from "@/lib/share-card";
 
 export type SessionSummary = {
@@ -31,7 +32,9 @@ export function SessionDone({
   onClose: () => void;
 }) {
   const { t } = useT();
-  const [sharing, setSharing] = useState(false);
+  const labels = useShareLabels();
+  // null = nessuna anteprima ancora toccata: il foglio non è aperto.
+  const [chosen, setChosen] = useState<ShareVariant | null>(null);
 
   const input: ShareInput = {
     url: shareUrl,
@@ -96,9 +99,20 @@ export function SessionDone({
           </div>
         )}
 
+        {/* Le card possibili, tutte visibili: si sceglie come raccontarlo. */}
+        <div className="mt-9 w-full max-w-md">
+          <ShareCardPicker
+            input={input}
+            variants={variants}
+            labels={labels}
+            selected={chosen}
+            onSelect={setChosen}
+          />
+        </div>
+
         <button
-          onClick={() => setSharing(true)}
-          className="mt-10 flex h-[50px] w-full max-w-xs items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
+          onClick={() => setChosen(chosen ?? variants[0])}
+          className="mt-7 flex h-[50px] w-full max-w-xs items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white shadow-cta transition-colors hover:bg-brand-hover"
         >
           {t("share.cta")}
         </button>
@@ -107,8 +121,14 @@ export function SessionDone({
         </button>
       </div>
 
-      {sharing && (
-        <ShareSheet input={input} variants={variants} shareText={shareText} onClose={() => setSharing(false)} />
+      {chosen && (
+        <ShareSheet
+          input={input}
+          variants={variants}
+          initialVariant={chosen}
+          shareText={shareText}
+          onClose={() => setChosen(null)}
+        />
       )}
     </>
   );

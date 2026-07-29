@@ -180,7 +180,9 @@ const EMPTY: EarningsData = {
 // AZZERATO dopo il collaudo: tutto a zero (profilo inattivo, nessun movimento).
 // Per rivedere la demo popolata: `return DEMO;`.
 export function getEarningsData(): EarningsData {
-  return EMPTY;
+  // In simulazione: dati finti per vedere la pagina popolata.
+  // Per azzerare di nuovo → `return EMPTY;`
+  return DEMO;
 }
 
 export { EMPTY };

@@ -488,14 +488,22 @@ const DRAW: Record<ShareVariant, (ctx: Ctx, d: ShareCardData) => void> = {
   coach: drawCoach,
 };
 
-/** Disegna la card sul canvas passato. Il canvas deve essere 1080×1920. */
-export function drawShareCard(canvas: HTMLCanvasElement, data: ShareCardData) {
-  canvas.width = CARD_W;
-  canvas.height = CARD_H;
+/**
+ * Disegna la card sul canvas passato, a piena risoluzione (1080×1920) o ridotta.
+ * `width` serve alle anteprime: disegnarne quattro a piena risoluzione costerebbe
+ * 8 megapixel di memoria per mostrarle grandi un pollice.
+ */
+export function drawShareCard(canvas: HTMLCanvasElement, data: ShareCardData, width = CARD_W) {
+  const scale = width / CARD_W;
+  canvas.width = Math.round(CARD_W * scale);
+  canvas.height = Math.round(CARD_H * scale);
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  ctx.clearRect(0, 0, CARD_W, CARD_H);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.scale(scale, scale);
   DRAW[data.variant](ctx, data);
+  ctx.restore();
 }
 
 export function cardToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {

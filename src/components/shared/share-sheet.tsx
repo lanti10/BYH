@@ -7,7 +7,7 @@
 // caricata da nessuna parte.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Download, Share2, X, Check } from "lucide-react";
+import { Camera, Download, Image as ImageIcon, Share2, X, Check } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import {
   CARD_H,
@@ -33,32 +33,10 @@ function track(variant: ShareVariant, shared: boolean) {
   }).catch(() => {});
 }
 
-export function ShareSheet({
-  input,
-  variants,
-  shareText,
-  onClose,
-}: {
-  input: ShareInput;
-  /** Tagli disponibili, nell'ordine in cui compaiono. Il primo è quello aperto. */
-  variants: ShareVariant[];
-  shareText: string;
-  onClose: () => void;
-}) {
+/** Etichette della card nella lingua dell'utente. Le usa anche il selettore. */
+export function useShareLabels(): ShareLabels {
   const { t } = useT();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [variant, setVariant] = useState<ShareVariant>(variants[0]);
-  const [photo, setPhoto] = useState<HTMLImageElement | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [saved, setSaved] = useState(false);
-  // navigator non esiste durante il render sul server: si legge solo dopo il mount.
-  const [canShareFiles, setCanShareFiles] = useState(false);
-  useEffect(() => {
-    setCanShareFiles(typeof navigator !== "undefined" && typeof navigator.canShare === "function");
-  }, []);
-
-  const labels: ShareLabels = {
+  return {
     joinUs: t("share.joinUs"),
     daysInARow: t("share.daysInARow"),
     min: t("dash.min"),
@@ -71,6 +49,40 @@ export function ShareSheet({
     hours: t("share.hours"),
     athletes: t("share.athletes"),
   };
+}
+
+export function ShareSheet({
+  input,
+  variants,
+  initialVariant,
+  shareText,
+  onClose,
+}: {
+  input: ShareInput;
+  /** Tagli disponibili, nell'ordine in cui compaiono. */
+  variants: ShareVariant[];
+  /** Taglio aperto all'avvio: quello scelto dall'anteprima. Default: il primo. */
+  initialVariant?: ShareVariant;
+  shareText: string;
+  onClose: () => void;
+}) {
+  const { t } = useT();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Due input distinti: `capture` apre la fotocamera, senza apre la galleria.
+  // Non è un attributo che si può cambiare al volo in modo affidabile.
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const [variant, setVariant] = useState<ShareVariant>(initialVariant ?? variants[0]);
+  const [photo, setPhoto] = useState<HTMLImageElement | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  // navigator non esiste durante il render sul server: si legge solo dopo il mount.
+  const [canShareFiles, setCanShareFiles] = useState(false);
+  useEffect(() => {
+    setCanShareFiles(typeof navigator !== "undefined" && typeof navigator.canShare === "function");
+  }, []);
+
+  const labels = useShareLabels();
 
   const data: ShareCardData = { ...input, variant, photo: photo ?? undefined, labels };
 
@@ -166,12 +178,21 @@ export function ShareSheet({
       )}
 
       <div className="flex items-center gap-3 px-5 pb-8 pt-4">
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPick} className="hidden" />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={onPick} className="hidden" />
+        <input ref={galleryRef} type="file" accept="image/*" onChange={onPick} className="hidden" />
         <button
-          onClick={() => fileRef.current?.click()}
-          className="flex h-[50px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white/10 text-sm font-semibold text-white"
+          onClick={() => cameraRef.current?.click()}
+          aria-label={t("share.takePhoto")}
+          className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
         >
-          <Camera className="h-5 w-5 shrink-0" /> {photo ? t("share.retake") : t("share.takePhoto")}
+          <Camera className="h-5 w-5" />
+        </button>
+        <button
+          onClick={() => galleryRef.current?.click()}
+          aria-label={t("share.fromGallery")}
+          className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
+        >
+          <ImageIcon className="h-5 w-5" />
         </button>
         <button
           onClick={share}
