@@ -1,15 +1,16 @@
-// Promuove un utente ad ADMIN (o lo riporta al ruolo precedente).
+// Concede (o revoca) l'accesso al pannello admin.
 //
-// Il ruolo ADMIN non si assegna da nessuna parte nell'app — di proposito: chi entra
-// dall'onboarding può essere solo TRAINER o CLIENT. Questo script è l'unico modo per
-// creare il primo admin, e va eseguito a mano.
+// L'admin è un PERMESSO che si somma al ruolo, non un ruolo alternativo: chi ce
+// l'ha continua a usare BYH da trainer o da cliente e in più entra nel pannello.
+// Non è concedibile da dentro l'app, di proposito — dall'onboarding si esce solo
+// TRAINER o CLIENT — quindi il primo admin va creato da qui.
 //
-//   node --env-file=.env.local prisma/promote-admin.mjs mario@example.com
 //   node --env-file=.env.local prisma/promote-admin.mjs "Mario Rossi"
-//   node --env-file=.env.local prisma/promote-admin.mjs mario@example.com TRAINER   ← per revocare
+//   node --env-file=.env.local prisma/promote-admin.mjs mario@example.com
+//   node --env-file=.env.local prisma/promote-admin.mjs mario@example.com off   ← revoca
 //
 // Accetta email o nome: alcuni account hanno l'email vuota (arrivano da Clerk senza
-// che il webhook l'abbia salvata), e per email non si troverebbero.
+// che il webhook l'abbia salvata) e per email non si troverebbero.
 // Nota: l'utente deve essersi già registrato almeno una volta nell'app.
 
 import { PrismaClient } from "@prisma/client";
@@ -23,27 +24,28 @@ const pool = new Pool({
 });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
-const [who, role = "ADMIN"] = process.argv.slice(2);
+const [who, mode = "on"] = process.argv.slice(2);
 
 if (!who) {
-  console.error("Uso: node --env-file=.env.local prisma/promote-admin.mjs <email o nome> [ADMIN|TRAINER|CLIENT]");
+  console.error('Uso: node --env-file=.env.local prisma/promote-admin.mjs "<email o nome>" [on|off]');
   process.exit(1);
 }
-if (!["ADMIN", "TRAINER", "CLIENT"].includes(role)) {
-  console.error(`Ruolo non valido: ${role}. Ammessi: ADMIN, TRAINER, CLIENT.`);
+if (!["on", "off"].includes(mode)) {
+  console.error(`Modo non valido: ${mode}. Ammessi: on, off.`);
   process.exit(1);
 }
+const isAdmin = mode === "on";
 
 const matches = await prisma.user.findMany({
   where: { OR: [{ email: who }, { name: who }] },
-  select: { id: true, name: true, email: true, role: true },
+  select: { id: true, name: true, email: true, role: true, isAdmin: true },
 });
 
 if (matches.length === 0) {
   console.error(`Nessun utente trovato per "${who}". Deve prima registrarsi nell'app.`);
   process.exit(1);
 }
-// Meglio fermarsi che promuovere l'omonimo sbagliato.
+// Meglio fermarsi che dare i poteri all'omonimo sbagliato.
 if (matches.length > 1) {
   console.error(`"${who}" corrisponde a ${matches.length} utenti. Usa l'email esatta:`);
   for (const m of matches) console.error(`  ${m.role.padEnd(8)} ${m.email || "(email vuota)"} · ${m.name}`);
@@ -51,12 +53,21 @@ if (matches.length > 1) {
 }
 const user = matches[0];
 
-if (user.role === role) {
-  console.log(`${user.email} è già ${role}. Niente da fare.`);
+if (user.isAdmin === isAdmin) {
+  console.log(`${user.name || user.email}: accesso admin già ${isAdmin ? "attivo" : "revocato"}. Niente da fare.`);
   process.exit(0);
 }
 
-await prisma.user.update({ where: { id: user.id }, data: { role } });
-console.log(`${user.name || user.email}: ${user.role} → ${role}`);
+// Un vecchio account con role ADMIN torna al ruolo che usa davvero: il pannello
+// ora è un permesso, e restare ADMIN significherebbe non vedere l'app da trainer.
+const data = { isAdmin };
+if (isAdmin && user.role === "ADMIN") data.role = "TRAINER";
+
+await prisma.user.update({ where: { id: user.id }, data });
+
+const role = data.role ?? user.role;
+console.log(
+  `${user.name || user.email}: accesso admin ${isAdmin ? "ATTIVO" : "revocato"} · usa l'app come ${role}`
+);
 
 await prisma.$disconnect();

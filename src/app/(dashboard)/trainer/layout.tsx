@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth";
+import { canAdmin, requireRole } from "@/lib/auth";
 import { DashboardShell } from "@/components/shared/dashboard-shell";
 
 export default async function TrainerLayout({
@@ -6,7 +6,11 @@ export default async function TrainerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireRole("TRAINER");
+  const user = await requireRole("TRAINER");
 
-  return <DashboardShell role="trainer">{children}</DashboardShell>;
+  return (
+    <DashboardShell role="trainer" canAdmin={canAdmin(user)}>
+      {children}
+    </DashboardShell>
+  );
 }

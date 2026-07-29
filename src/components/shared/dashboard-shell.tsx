@@ -11,9 +11,12 @@ import { WorkoutSessionProvider } from "./workout-session-provider";
 
 export function DashboardShell({
   role,
+  canAdmin = false,
   children,
 }: {
   role: "trainer" | "client" | "admin";
+  /** Ha il permesso di admin: aggiunge la voce per entrare nel pannello. */
+  canAdmin?: boolean;
   children: React.ReactNode;
 }) {
   // Chiuso di default (mobile-first); su desktop si apre dopo il mount
@@ -61,7 +64,7 @@ export function DashboardShell({
           </button>
         )}
 
-        <SidebarNav role={role} open={open} onClose={() => setOpen(false)} />
+        <SidebarNav role={role} canAdmin={canAdmin} open={open} onClose={() => setOpen(false)} />
 
         <main
           className={cn(
@@ -75,7 +78,7 @@ export function DashboardShell({
         </main>
 
         {/* Tab bar mobile (design Pulse) */}
-        <TabBar role={role} />
+        <TabBar role={role} canAdmin={canAdmin} />
       </div>
     </div>
   );

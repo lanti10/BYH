@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, Dumbbell, BarChart3, MessageSquare, Users, Trophy, ShoppingBag,
-  User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X, Activity,
+  User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X, Activity, ShieldCheck,
 } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 
@@ -61,10 +61,23 @@ function isActive(pathname: string, item: Item): boolean {
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function TabBar({ role }: { role: "trainer" | "client" | "admin" }) {
+export function TabBar({
+  role,
+  canAdmin = false,
+}: {
+  role: "trainer" | "client" | "admin";
+  canAdmin?: boolean;
+}) {
   const pathname = usePathname();
   const { t } = useT();
-  const { primary, more } = NAV[role];
+  const nav = NAV[role];
+  const primary = nav.primary;
+  // Il pannello sta in "Altro": le quattro voci principali restano quelle del
+  // mestiere di ogni giorno, l'admin è uno strumento che si apre quando serve.
+  const more =
+    canAdmin && role !== "admin"
+      ? [...nav.more, { href: "/admin", label: "adm.panel", icon: ShieldCheck }]
+      : nav.more;
   const [sheet, setSheet] = useState(false);
   const [unread, setUnread] = useState(0);
 

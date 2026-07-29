@@ -32,8 +32,19 @@ export async function getCurrentUser() {
 export async function requireRole(role: Role) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
+  // L'admin è un permesso che si somma al ruolo: chi ce l'ha usa l'app come
+  // trainer (o cliente) e in più entra nel pannello, senza dover scegliere.
+  if (role === "ADMIN") {
+    if (!canAdmin(user)) redirect("/dashboard");
+    return user;
+  }
   if (user.role !== role) redirect("/dashboard");
   return user;
+}
+
+/** Può entrare nel pannello: per permesso, o perché è un account di sola amministrazione. */
+export function canAdmin(user: { role: string; isAdmin: boolean }) {
+  return user.isAdmin || user.role === "ADMIN";
 }
 
 export async function requireAuth() {

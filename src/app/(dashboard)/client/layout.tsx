@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth";
+import { canAdmin, requireRole } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/shared/dashboard-shell";
 
@@ -14,5 +14,9 @@ export default async function ClientLayout({
     redirect("/profile-setup");
   }
 
-  return <DashboardShell role="client">{children}</DashboardShell>;
+  return (
+    <DashboardShell role="client" canAdmin={canAdmin(user)}>
+      {children}
+    </DashboardShell>
+  );
 }

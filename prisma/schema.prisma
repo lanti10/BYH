@@ -52,6 +52,10 @@ model User {
   name      String
   avatarUrl String?
   role      Role
+  // Accesso all'admin come PERMESSO, non come ruolo: chi ce l'ha continua a usare
+  // l'app da trainer o da cliente e in più entra nel pannello. Il ruolo ADMIN puro
+  // resta possibile per un account di sola amministrazione.
+  isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
