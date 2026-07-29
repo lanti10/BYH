@@ -80,7 +80,8 @@ export default async function ClientProgressPage() {
   const monthInput: ShareInput = {
     url: "byh.today",
     eyebrow: new Intl.DateTimeFormat(DATE_LOCALE[locale], { month: "long" }).format(now),
-    monthDays: Array.from({ length: daysInMonth }, (_, i) => trainedDays.has(i + 1)),
+    // Per il cliente la casella è solo accesa o spenta: o si è allenato o no.
+    monthDays: Array.from({ length: daysInMonth }, (_, i) => (trainedDays.has(i + 1) ? 3 : 0)),
     monthSessions,
     monthHours: Math.round(monthMinutes / 60),
     monthCalories,

@@ -48,6 +48,9 @@ export function useShareLabels(): ShareLabels {
     workouts: t("share.workouts"),
     hours: t("share.hours"),
     athletes: t("share.athletes"),
+    activeAthletes: t("share.activeAthletes"),
+    newAthletes: t("share.newAthletes"),
+    joinMe: t("share.joinMe"),
   };
 }
 

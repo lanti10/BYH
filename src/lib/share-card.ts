@@ -9,12 +9,13 @@
 // tentativi con margini proporzionali si erano già sovrapposti.
 
 import { GRAD, HEX_PATH, HEX_INNER_PATH, glyphFor, type Prim } from "@/lib/medal-art";
+import type { DayLevel } from "@/lib/month-grid";
 
 export const CARD_W = 1080;
 export const CARD_H = 1920;
 const S = 5.4; // 200 unità logiche = 1080 px
 
-export type ShareVariant = "photo" | "rings" | "record" | "month" | "medal" | "coach";
+export type ShareVariant = "photo" | "rings" | "record" | "month" | "monthCoach" | "medal" | "coach";
 
 export type ShareCardData = {
   variant: ShareVariant;
@@ -35,10 +36,17 @@ export type ShareCardData = {
   recordDeltaKg?: number;
   recordPrevious?: string;
   // Mese
-  monthDays?: boolean[];
+  /**
+   * Una casella per giorno. Per il cliente è acceso/spento (0 o 3); per il PT è
+   * l'intensità della squadra (0-3), calcolata da dayLevels() in month-grid.ts.
+   */
+  monthDays?: DayLevel[];
   monthSessions?: number;
   monthHours?: number;
   monthCalories?: number;
+  // Mese del coach
+  coachActive?: number; // atleti che si sono allenati nel mese
+  coachNew?: number; // atleti entrati nel mese
   // Medaglia
   medalIcon?: string;
   medalColor?: string;
@@ -66,6 +74,10 @@ export type ShareLabels = {
   workouts: string; // "ALLENAMENTI"
   hours: string;
   athletes: string; // "atleti seguiti"
+  activeAthletes: string; // "atleti attivi"
+  newAthletes: string; // "nuovi"
+  /** Invito in prima persona: sulle card del PT è lui a parlare. */
+  joinMe: string; // "allenati con me"
 };
 
 const RED = "#FF3B30";
@@ -172,7 +184,10 @@ function footer(ctx: Ctx, data: ShareCardData, ly: number, withRule = true) {
   const domain = data.url.replace(/^https?:\/\//, "").split("/")[0];
   text(ctx, domain, 20, ly, 11, { weight: 700, color: RED });
   const dw = textW(ctx, domain, 11, 700);
-  text(ctx, data.labels.joinUs, 20 + dw + 8, ly, 9, { alpha: 0.55 });
+  // Sulle card del PT è lui a parlare in prima persona: "allenati con me".
+  const isCoachCard = data.variant === "coach" || data.variant === "monthCoach";
+  const invite = isCoachCard ? data.labels.joinMe : data.labels.joinUs;
+  text(ctx, invite, 20 + dw + 8, ly, 9, { alpha: 0.55 });
 }
 
 // ── varianti ──
@@ -273,13 +288,7 @@ function drawMonth(ctx: Ctx, d: ShareCardData) {
   brand(ctx);
   if (d.eyebrow) text(ctx, d.eyebrow.toUpperCase(), 20, 76, 9, { alpha: 0.45, spacing: 1.6 });
 
-  // Griglia del mese: 7 colonne, una casella per giorno. È il colpo d'occhio della card.
-  const days = d.monthDays ?? [];
-  days.forEach((on, i) => {
-    const col = i % 7;
-    const row = Math.floor(i / 7);
-    rect(ctx, 20 + col * 23, 94 + row * 23, 18, 18, on ? RED : white(0.09), 4);
-  });
+  drawMonthGrid(ctx, d.monthDays ?? []);
 
   const n = String(d.monthSessions ?? 0);
   text(ctx, n, 20, 250, 46, { weight: 700, spacing: -2 });
@@ -288,6 +297,51 @@ function drawMonth(ctx: Ctx, d: ShareCardData) {
   text(ctx, `${fmtNum(d.monthCalories)} ${d.labels.kcal}`, 112, 264, 10, { alpha: 0.6 });
 
   footer(ctx, d, 320);
+}
+
+/** Il mese del coach: quanto si muove la sua squadra, non quanto si allena lui. */
+function drawMonthCoach(ctx: Ctx, d: ShareCardData) {
+  rect(ctx, 0, 0, 200, 356, INK);
+  brand(ctx);
+  if (d.eyebrow) text(ctx, d.eyebrow.toUpperCase(), 20, 76, 9, { alpha: 0.45, spacing: 1.6 });
+
+  drawMonthGrid(ctx, d.monthDays ?? []);
+
+  text(ctx, String(d.monthSessions ?? 0), 20, 248, 46, { weight: 700, spacing: -2 });
+  text(ctx, d.labels.workouts, 20, 266, 10, { alpha: 0.75, spacing: 1.2 });
+
+  // Colonna a destra: gli atleti entrati nel mese sono il numero che convince chi
+  // sta valutando il PT — dice che sta crescendo, non solo che lavora.
+  text(ctx, `${d.coachActive ?? 0} ${d.labels.activeAthletes}`, 112, 243, 10, { alpha: 0.6 });
+  text(ctx, `${d.coachNew ?? 0} ${d.labels.newAthletes}`, 112, 257, 10, { alpha: 0.6 });
+  text(ctx, `${d.monthHours ?? 0} ${d.labels.hours}`, 112, 271, 10, { alpha: 0.6 });
+
+  // Il nome serve: questa card può essere ripostata da altri, e senza non
+  // porterebbe nessuno da lui.
+  if (d.coachName) {
+    // Niente toLowerCase: manderebbe in minuscolo anche il marchio ("su byh").
+    const role = d.coachRole ? ` · ${d.coachRole}` : "";
+    text(ctx, `${d.coachName}${role}`, 20, 298, 10, { alpha: 0.5 });
+  }
+
+  footer(ctx, d, 332);
+}
+
+/** 7 colonne, una casella per giorno. L'intensità arriva già calcolata. */
+function drawMonthGrid(ctx: Ctx, days: DayLevel[]) {
+  // Il livello più basso deve restare leggibile su nero: una squadra regolare sta
+  // tutta lì, e la sua griglia non deve sembrare spenta.
+  const FILL: Record<DayLevel, string> = {
+    0: white(0.09),
+    1: hexA(RED, 0.42),
+    2: hexA(RED, 0.7),
+    3: RED,
+  };
+  days.forEach((level, i) => {
+    const col = i % 7;
+    const row = Math.floor(i / 7);
+    rect(ctx, 20 + col * 23, 94 + row * 23, 18, 18, FILL[level] ?? FILL[0], 4);
+  });
 }
 
 function drawMedal(ctx: Ctx, d: ShareCardData) {
@@ -488,6 +542,7 @@ const DRAW: Record<ShareVariant, (ctx: Ctx, d: ShareCardData) => void> = {
   rings: drawRings,
   record: drawRecord,
   month: drawMonth,
+  monthCoach: drawMonthCoach,
   medal: drawMedal,
   coach: drawCoach,
 };

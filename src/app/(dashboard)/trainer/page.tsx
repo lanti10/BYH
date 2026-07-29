@@ -13,6 +13,7 @@ import { getEarningsData } from "@/lib/earnings-demo";
 import { InstallPrompt } from "@/components/shared/install-prompt";
 import { ShareProgressButton } from "@/components/shared/share-progress-button";
 import type { ShareInput } from "@/components/shared/share-sheet";
+import { dayLevels } from "@/lib/month-grid";
 
 export default async function TrainerDashboard() {
   const user = await requireRole("TRAINER");
@@ -56,6 +57,37 @@ export default async function TrainerDashboard() {
     coachCta: t("share.coachCta"),
   };
   const coachText = `${t("share.coachText")} ${coachUrl}`;
+
+  // Card "il mese della squadra": quanto si è mossa la gente che allena.
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  const monthSessions = await prisma.workoutSession.findMany({
+    where: {
+      client: { trainerId: trainer.id, userId: { not: user.id } },
+      completedAt: { gte: monthStart },
+    },
+    select: { completedAt: true, durationMin: true, clientId: true },
+  });
+
+  // Quanti allenamenti per ciascun giorno del mese → intensità della griglia.
+  const perDay = new Array(daysInMonth).fill(0) as number[];
+  for (const s of monthSessions) perDay[s.completedAt.getDate() - 1]++;
+
+  const teamInput: ShareInput = {
+    url: coachUrl,
+    eyebrow: `${new Intl.DateTimeFormat(DATE_LOCALE[locale], { month: "long" }).format(now)} · ${t("share.teamMonth")}`,
+    monthDays: dayLevels(perDay),
+    monthSessions: monthSessions.length,
+    monthHours: Math.round(monthSessions.reduce((sum, s) => sum + (s.durationMin ?? 0), 0) / 60),
+    coachActive: new Set(monthSessions.map((s) => s.clientId)).size,
+    coachNew: clients.filter((c) => c.createdAt >= monthStart).length,
+    coachName: user.name,
+    // Ruolo breve: qui sta in coda al nome, "Personal trainer su BYH" sforerebbe.
+    coachRole: t("share.coachRoleShort"),
+  };
+  const teamText = `${t("share.teamText")} ${coachUrl}`;
 
   const nameOf = (c: (typeof clients)[number]) => c.user.name || c.user.email;
   const since = (d: Date) => formatDistanceToNow(d, { addSuffix: true, locale: dateFnsLocale(locale) });
@@ -134,6 +166,17 @@ export default async function TrainerDashboard() {
             label={t("share.coachTitle")}
             className="flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors hover:bg-white/25"
           />
+          {/* Il mese della squadra: prova sociale, non vanto personale.
+              Senza allenamenti la griglia sarebbe vuota e non direbbe nulla. */}
+          {monthSessions.length > 0 && (
+            <ShareProgressButton
+              input={teamInput}
+              variants={["monthCoach"]}
+              shareText={teamText}
+              label={t("share.teamMonth")}
+              className="flex items-center justify-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-semibold backdrop-blur transition-colors hover:bg-white/25"
+            />
+          )}
         </div>
       </div>
 
