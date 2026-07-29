@@ -1,85 +1,83 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ShoppingBag, TrendingUp, Package } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
+import Link from "next/link";
+import { Users, Network, Activity, TrendingUp, Package, Settings, ChevronRight } from "lucide-react";
+
+// Polso della piattaforma. Per ora: i numeri che si ottengono con quattro conteggi,
+// più la mappa delle aree. Gli allarmi veri (PT senza clienti, clienti fermi,
+// ritenzione) arrivano quando svilupperemo questa zona.
+
+const AREAS = [
+  { href: "/admin/users", label: "adm.people", sub: "adm.peopleSub", icon: Users },
+  { href: "/admin/network", label: "adm.network", sub: "adm.networkSub", icon: Network },
+  { href: "/admin/activity", label: "adm.activity", sub: "adm.activitySub", icon: Activity },
+  { href: "/admin/sales", label: "adm.commerce", sub: "adm.commerceSub", icon: TrendingUp },
+  { href: "/admin/products", label: "adm.catalog", sub: "adm.catalogSub", icon: Package },
+  { href: "/admin/settings", label: "adm.system", sub: "adm.systemSub", icon: Settings },
+];
 
 export default async function AdminDashboard() {
   await requireRole("ADMIN");
+  const { t } = await getT();
 
-  const [trainerCount, clientCount, productCount, orderStats] = await Promise.all([
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const [trainers, clients, sessionsToday, newThisWeek] = await Promise.all([
     prisma.trainerProfile.count(),
     prisma.clientProfile.count(),
-    prisma.product.count({ where: { isActive: true } }),
-    prisma.order.aggregate({
-      _sum: { totalAmount: true },
-      _count: { id: true },
-    }),
+    prisma.workoutSession.count({ where: { completedAt: { gte: startOfToday } } }),
+    prisma.user.count({ where: { createdAt: { gte: weekAgo } } }),
   ]);
 
   const stats = [
-    { label: "Trainer attivi", value: trainerCount, icon: Users, color: "text-blue-600" },
-    { label: "Clienti totali", value: clientCount, icon: Users, color: "text-violet-600" },
-    { label: "Prodotti attivi", value: productCount, icon: Package, color: "text-orange-600" },
-    {
-      label: "Fatturato totale",
-      value: `€${(orderStats._sum.totalAmount ?? 0).toFixed(2)}`,
-      icon: TrendingUp,
-      color: "text-emerald-600",
-    },
+    { label: t("adm.trainers"), value: trainers },
+    { label: t("adm.clients"), value: clients },
+    { label: t("adm.sessionsToday"), value: sessionsToday },
+    { label: t("adm.newThisWeek"), value: newThisWeek },
   ];
 
   return (
-    <div className="p-4 sm:p-8 space-y-8">
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Pannello Admin</h1>
-        <p className="text-slate-500 mt-1">Panoramica della piattaforma BYH</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-slate-900">{t("adm.pulse")}</h1>
+        <p className="mt-1 text-slate-500">{t("adm.pulseSub")}</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">{stat.label}</CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {stats.map((s) => (
+          <div key={s.label} className="rounded-3xl glass p-5">
+            <p className="text-[32px] font-bold leading-none text-slate-900 tnum">{s.value}</p>
+            <p className="mt-2 text-xs text-slate-400">{s.label}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
-              Ordini recenti
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-400 text-center py-6">
-              {orderStats._count.id} ordini totali
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Crescita rete
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-400 text-center py-6">
-              {trainerCount} trainer nella rete
-            </p>
-          </CardContent>
-        </Card>
+      <div>
+        <h2 className="mb-3 px-1 font-semibold text-slate-900">{t("adm.areas")}</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {AREAS.map((a) => {
+            const Icon = a.icon;
+            return (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="flex items-center gap-4 rounded-3xl glass p-5 transition-shadow hover:shadow-md"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
+                  <Icon className="h-5 w-5 text-slate-600" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-slate-900">{t(a.label)}</span>
+                  <span className="block truncate text-sm text-slate-400">{t(a.sub)}</span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

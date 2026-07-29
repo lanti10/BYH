@@ -44,14 +44,15 @@ const NAV: Record<"trainer" | "client" | "admin", { primary: Item[]; more: Item[
   },
   admin: {
     primary: [
-      { href: "/admin", label: "dash.today", icon: Home, exact: true },
-      { href: "/admin/users", label: "nav.users", icon: Users },
-      { href: "/admin/products", label: "nav.catalog", icon: Package },
-      { href: "/admin/sales", label: "nav.sales", icon: TrendingUp },
+      { href: "/admin", label: "adm.pulse", icon: Home, exact: true },
+      { href: "/admin/users", label: "adm.people", icon: Users },
+      { href: "/admin/activity", label: "adm.activity", icon: Activity },
+      { href: "/admin/network", label: "adm.network", icon: Network },
     ],
     more: [
-      { href: "/admin/network", label: "nav.trainerNetwork", icon: Network },
-      { href: "/admin/settings", label: "nav.settings", icon: Settings },
+      { href: "/admin/sales", label: "adm.commerce", icon: TrendingUp },
+      { href: "/admin/products", label: "adm.catalog", icon: Package },
+      { href: "/admin/settings", label: "adm.system", icon: Settings },
     ],
   },
 };

@@ -36,12 +36,13 @@ const navConfig: Record<"trainer" | "client" | "admin", NavItem[]> = {
     { href: "/client/profile", label: "nav.profile", icon: UserCog },
   ],
   admin: [
-    { href: "/admin", label: "nav.dashboard", icon: LayoutDashboard },
-    { href: "/admin/products", label: "nav.catalog", icon: Package },
-    { href: "/admin/users", label: "nav.users", icon: Users },
-    { href: "/admin/network", label: "nav.trainerNetwork", icon: Network },
-    { href: "/admin/sales", label: "nav.sales", icon: TrendingUp },
-    { href: "/admin/settings", label: "nav.settings", icon: Settings },
+    { href: "/admin", label: "adm.pulse", icon: LayoutDashboard },
+    { href: "/admin/users", label: "adm.people", icon: Users },
+    { href: "/admin/network", label: "adm.network", icon: Network },
+    { href: "/admin/activity", label: "adm.activity", icon: Activity },
+    { href: "/admin/sales", label: "adm.commerce", icon: TrendingUp },
+    { href: "/admin/products", label: "adm.catalog", icon: Package },
+    { href: "/admin/settings", label: "adm.system", icon: Settings },
   ],
 };
 

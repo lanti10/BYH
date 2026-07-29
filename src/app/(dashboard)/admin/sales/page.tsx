@@ -1,5 +1,16 @@
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { AreaStub } from "@/components/admin/area-stub";
 
 export default function Page() {
-  return <ComingSoon title="Vendite" description="Report vendite e ordini della piattaforma." />;
+  return (
+    <AreaStub
+      title="adm.commerce"
+      intro="adm.commerceSub"
+      points={[
+        "adm.commerce.p1",
+        "adm.commerce.p2",
+        "adm.commerce.p3",
+        "adm.commerce.p4",
+      ]}
+    />
+  );
 }
