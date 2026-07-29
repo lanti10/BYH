@@ -55,7 +55,11 @@ export async function POST(req: Request) {
 TIPO DI SCHEDA: ${planTypeInstruction}
 
 Parametri:
-- Tipo di allenamento/obiettivo: ${body.trainingType || "ipertrofia"}
+- Tipo di allenamento/obiettivo: ${body.trainingType || "ipertrofia"}${
+    body.trainingType?.includes(" + ")
+      ? " (più obiettivi insieme: bilanciali nella stessa scheda invece di seguirne uno solo)"
+      : ""
+  }
 - Frequenza: ${frequency} allenamenti a settimana
 - Sesso: ${body.sex || "non specificato"}
 - Età: ${body.age || "non specificata"}

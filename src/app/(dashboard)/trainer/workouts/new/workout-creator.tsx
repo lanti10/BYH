@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { WorkoutBuilder } from "./workout-builder";
 import type { DayInput } from "../actions";
-import { Sparkles, PencilLine, AlertCircle, Loader2, Upload } from "lucide-react";
+import { Sparkles, PencilLine, AlertCircle, Loader2, Upload, Check } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { PlanTypePicker, type PlanType } from "@/components/trainer/plan-type-picker";
 
@@ -55,7 +55,9 @@ export function WorkoutCreator({
       ? initialClientId
       : clients[0]?.id ?? ""
   );
-  const [trainingType, setTrainingType] = useState(TRAINING_TYPES[0].value);
+  // Più tipi insieme: un allenamento reale è quasi sempre un misto (massa + forza,
+  // dimagrimento + tonificazione). Il primo scelto guida il nome suggerito.
+  const [trainingTypes, setTrainingTypes] = useState<string[]>([TRAINING_TYPES[0].value]);
   const [frequency, setFrequency] = useState(3);
   const [sex, setSex] = useState("");
   const [age, setAge] = useState<string>("");
@@ -85,8 +87,15 @@ export function WorkoutCreator({
     }
   }
 
-  const ttKey = TRAINING_TYPES.find((x) => x.value === trainingType)?.key;
-  const suggestedName = t("wk.nameSuggestion", { type: t(ttKey ?? trainingType), n: frequency });
+  // Togliere l'ultimo tipo lascerebbe la scheda senza indirizzo: almeno uno resta.
+  function toggleTrainingType(v: string) {
+    setTrainingTypes((ts) =>
+      ts.includes(v) ? (ts.length === 1 ? ts : ts.filter((x) => x !== v)) : [...ts, v]
+    );
+  }
+
+  const ttKey = TRAINING_TYPES.find((x) => x.value === trainingTypes[0])?.key;
+  const suggestedName = t("wk.nameSuggestion", { type: t(ttKey ?? trainingTypes[0]), n: frequency });
 
   async function generate() {
     setLoading(true);
@@ -97,7 +106,7 @@ export function WorkoutCreator({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planType,
-          trainingType,
+          trainingType: trainingTypes.join(" + "),
           frequency,
           sex,
           age: age ? Number(age) : undefined,
@@ -181,21 +190,25 @@ export function WorkoutCreator({
 
       {/* Tipo di allenamento */}
       <div className="rounded-3xl glass p-5 sm:p-6">
-        <h2 className="font-semibold text-slate-800 mb-3">{t("wk.type")}</h2>
+        <h2 className="font-semibold text-slate-800 mb-1">{t("wk.type")}</h2>
+        <p className="text-xs text-slate-400 mb-3">{t("wk.typeHint")}</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {TRAINING_TYPES.map((tt) => (
-            <button
-              key={tt.value}
-              onClick={() => setTrainingType(tt.value)}
-              className={`rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${
-                trainingType === tt.value
-                  ? "bg-brand text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {t(tt.key)}
-            </button>
-          ))}
+          {TRAINING_TYPES.map((tt) => {
+            const on = trainingTypes.includes(tt.value);
+            return (
+              <button
+                key={tt.value}
+                onClick={() => toggleTrainingType(tt.value)}
+                aria-pressed={on}
+                className={`rounded-2xl px-3 py-3 text-sm font-medium transition-colors ${
+                  on ? "bg-brand text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {on && <Check className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />}
+                {t(tt.key)}
+              </button>
+            );
+          })}
         </div>
       </div>
 
