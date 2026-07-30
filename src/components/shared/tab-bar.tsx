@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, Dumbbell, BarChart3, MessageSquare, Users, Trophy, ShoppingBag,
-  User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X, Activity,
+  User, UserCog, TrendingUp, Gift, Package, Network, Settings, LayoutGrid, X, Activity, ShieldCheck,
 } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 
@@ -72,8 +72,12 @@ export function TabBar({
   const { t } = useT();
   const nav = NAV[role];
   const primary = nav.primary;
-  // Niente voce "Admin" in nav: chi ci deve entrare ci arriva dall'URL diretta.
-  const more = nav.more;
+  // Il pannello sta in "Altro": le quattro voci principali restano quelle del
+  // mestiere di ogni giorno, l'admin è uno strumento che si apre quando serve.
+  const more =
+    canAdmin && role !== "admin"
+      ? [...nav.more, { href: "/admin", label: "adm.panel", icon: ShieldCheck }]
+      : nav.more;
   const [sheet, setSheet] = useState(false);
   const [unread, setUnread] = useState(0);
 

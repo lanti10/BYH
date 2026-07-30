@@ -9,7 +9,7 @@ import { UserButton } from "@clerk/nextjs";
 import { useT } from "@/lib/i18n/client";
 import {
   LayoutDashboard, Users, Dumbbell, MessageSquare,
-  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy, Activity,
+  ShoppingBag, TrendingUp, Gift, Package, Network, Settings, X, UserCog, Trophy, Activity, ShieldCheck,
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; badge?: boolean };
@@ -65,8 +65,12 @@ export function SidebarNav({
 }) {
   const pathname = usePathname();
   const { t } = useT();
-  // Niente voce "Admin" in nav: chi ci deve entrare ci arriva dall'URL diretta.
-  const items = navConfig[role];
+  // Il pannello è un permesso in più, non un ruolo alternativo: chi ce l'ha lo
+  // trova in fondo alla propria navigazione, senza smettere di essere trainer.
+  const items =
+    canAdmin && role !== "admin"
+      ? [...navConfig[role], { href: "/admin", label: "adm.panel", icon: ShieldCheck }]
+      : navConfig[role];
   const [unread, setUnread] = useState(0);
 
   // Polling messaggi non letti — solo per il badge.
