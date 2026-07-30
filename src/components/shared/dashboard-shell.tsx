@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Menu } from "lucide-react";
+import Link from "next/link";
+import { Menu, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/client";
 import { SidebarNav } from "./sidebar-nav";
 import { HeaderActions } from "./header-actions";
 import { TabBar } from "./tab-bar";
@@ -21,6 +23,7 @@ export function DashboardShell({
 }) {
   // Chiuso di default (mobile-first); su desktop si apre dopo il mount
   const [open, setOpen] = useState(false);
+  const { t } = useT();
 
   useEffect(() => {
     if (window.innerWidth >= 1024) setOpen(true);
@@ -73,6 +76,17 @@ export function DashboardShell({
           )}
         >
           <div data-app-main className="pb-28 lg:pb-0">
+            {role === "admin" && (
+              <div className="px-4 pt-4 lg:px-6 lg:pt-6">
+                <Link
+                  href="/trainer"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-ink hover:bg-black/5"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {t("adm.backToTrainer")}
+                </Link>
+              </div>
+            )}
             <WorkoutSessionProvider>{children}</WorkoutSessionProvider>
           </div>
         </main>
