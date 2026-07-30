@@ -13,6 +13,7 @@ type TrainerNode = {
   referralLevel: number;
   ownClients: number;
   ownSessions: number;
+  clientList: { id: string; userId: string; name: string }[];
   children: TrainerNode[];
   branchClients: number;
   branchSessions: number;
@@ -25,7 +26,7 @@ export default async function NetworkPage() {
   const trainers = await prisma.trainerProfile.findMany({
     include: {
       user: { select: { id: true, name: true } },
-      clients: { select: { id: true } },
+      clients: { select: { id: true, user: { select: { id: true, name: true } } } },
     },
     orderBy: { createdAt: "asc" },
   });
@@ -47,6 +48,7 @@ export default async function NetworkPage() {
       referralLevel: tr.referralLevel,
       ownClients: tr.clients.length,
       ownSessions,
+      clientList: tr.clients.map((c) => ({ id: c.id, userId: c.user.id, name: c.user.name })),
       children: [],
       branchClients: 0,
       branchSessions: 0,
@@ -108,6 +110,20 @@ export default async function NetworkPage() {
               </>
             )}
           </p>
+          {node.clientList.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-1.5">
+              {node.clientList.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/admin/users/${c.userId}`}
+                    className="inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-200"
+                  >
+                    {c.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="mt-3">
             <ReassignForm trainerId={node.id} currentParentId={node.referredById} options={options} />
           </div>
