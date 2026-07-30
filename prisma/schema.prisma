@@ -56,6 +56,9 @@ model User {
   // l'app da trainer o da cliente e in più entra nel pannello. Il ruolo ADMIN puro
   // resta possibile per un account di sola amministrazione.
   isAdmin   Boolean  @default(false)
+  // Sospeso dall'admin: blocca l'accesso senza cancellare l'account. Indipendente
+  // dal futuro "stato attività" MLM (guadagni/payout) — quello è un altro concetto.
+  suspended Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

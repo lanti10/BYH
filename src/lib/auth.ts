@@ -32,6 +32,7 @@ export async function getCurrentUser() {
 export async function requireRole(role: Role) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
+  if (user.suspended) redirect("/suspended");
   // L'admin è un permesso che si somma al ruolo: chi ce l'ha usa l'app come
   // trainer (o cliente) e in più entra nel pannello, senza dover scegliere.
   if (role === "ADMIN") {
@@ -50,5 +51,6 @@ export function canAdmin(user: { role: string; isAdmin: boolean }) {
 export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
+  if (user.suspended) redirect("/suspended");
   return user;
 }
