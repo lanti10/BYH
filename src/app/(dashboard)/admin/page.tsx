@@ -57,14 +57,17 @@ export default async function AdminDashboard() {
 
       <div>
         <h2 className="mb-3 px-1 font-semibold text-slate-900">{t("adm.areas")}</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        {/* grid-cols-1 esplicito: una colonna implicita ha min-width auto e si
+            allarga sul testo lungo invece di troncarlo, facendo scorrere la pagina
+            in orizzontale. Tailwind genera minmax(0, 1fr), che è il rimedio. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {AREAS.map((a) => {
             const Icon = a.icon;
             return (
               <Link
                 key={a.href}
                 href={a.href}
-                className="flex items-center gap-4 rounded-3xl glass p-5 transition-shadow hover:shadow-md"
+                className="flex min-w-0 items-center gap-4 rounded-3xl glass p-5 transition-shadow hover:shadow-md"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
                   <Icon className="h-5 w-5 text-slate-600" />
