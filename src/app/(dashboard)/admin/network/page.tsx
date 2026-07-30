@@ -20,7 +20,7 @@ type TrainerNode = {
 };
 
 export default async function NetworkPage() {
-  await requireRole("ADMIN");
+  const admin = await requireRole("ADMIN");
   const { t } = await getT();
 
   const trainers = await prisma.trainerProfile.findMany({
@@ -39,16 +39,19 @@ export default async function NetworkPage() {
 
   const nodeById = new Map<string, TrainerNode>();
   for (const tr of trainers) {
-    const ownSessions = tr.clients.reduce((sum, c) => sum + (sessionsByClient.get(c.id) ?? 0), 0);
+    // Ogni trainer ha un ClientProfile di sé stesso (per "il mio allenamento") che
+    // non è un vero cliente: va escluso da conteggi ed elenco.
+    const realClients = tr.clients.filter((c) => c.user.id !== tr.user.id);
+    const ownSessions = realClients.reduce((sum, c) => sum + (sessionsByClient.get(c.id) ?? 0), 0);
     nodeById.set(tr.id, {
       id: tr.id,
       userId: tr.user.id,
       name: tr.user.name,
       referredById: tr.referredById,
       referralLevel: tr.referralLevel,
-      ownClients: tr.clients.length,
+      ownClients: realClients.length,
       ownSessions,
-      clientList: tr.clients.map((c) => ({ id: c.id, userId: c.user.id, name: c.user.name })),
+      clientList: realClients.map((c) => ({ id: c.id, userId: c.user.id, name: c.user.name })),
       children: [],
       branchClients: 0,
       branchSessions: 0,
@@ -78,7 +81,12 @@ export default async function NetworkPage() {
   }
   roots.forEach(computeBranch);
 
-  const allOptions = trainers.map((tr) => ({ id: tr.id, name: tr.user.name }));
+  // Il mio stesso profilo admin non deve mai comparire come opzione: questo
+  // strumento serve a correggere collegamenti sbagliati, non a spostare PT
+  // sotto il mio account.
+  const allOptions = trainers
+    .filter((tr) => tr.id !== admin.trainerProfile?.id)
+    .map((tr) => ({ id: tr.id, name: tr.user.name }));
 
   function renderNode(node: TrainerNode, depth: number) {
     const stalled = node.ownClients === 0 && node.children.length === 0;

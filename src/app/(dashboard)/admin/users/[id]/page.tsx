@@ -28,6 +28,12 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   });
   if (!user) notFound();
 
+  // Ogni trainer ha un ClientProfile di sé stesso (per "il mio allenamento"),
+  // non un vero cliente: va escluso dall'elenco. Idem per la sezione "cliente"
+  // quando l'utente visualizzato è il proprio trainer (è il suo stesso auto-cliente).
+  const realClients = user.trainerProfile?.clients.filter((c) => c.user.id !== user.id) ?? [];
+  const isSelfClient = !!user.trainerProfile && user.clientProfile?.trainerId === user.trainerProfile.id;
+
   const [plansCreated, sessionsCompleted] = await Promise.all([
     user.trainerProfile
       ? prisma.workoutPlan.count({ where: { trainerId: user.trainerProfile.id } })
@@ -98,13 +104,13 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
 
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[1.2px] text-slate-400">
-              {t("adm.people.clientsOf")} ({user.trainerProfile.clients.length})
+              {t("adm.people.clientsOf")} ({realClients.length})
             </p>
-            {user.trainerProfile.clients.length === 0 ? (
+            {realClients.length === 0 ? (
               <p className="mt-2 text-sm text-slate-400">{t("adm.people.noClients")}</p>
             ) : (
               <ul className="mt-2 space-y-1.5">
-                {user.trainerProfile.clients.map((c) => (
+                {realClients.map((c) => (
                   <li key={c.id}>
                     <Link href={`/admin/users/${c.user.id}`} className="text-sm text-slate-700 hover:underline">
                       {c.user.name}
@@ -119,7 +125,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         </div>
       )}
 
-      {user.clientProfile && (
+      {user.clientProfile && !isSelfClient && (
         <div className="space-y-4 rounded-3xl glass p-6">
           <p className="text-sm text-slate-600">
             {t("adm.people.trainer")}:{" "}
